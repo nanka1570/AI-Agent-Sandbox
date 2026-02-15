@@ -4,3 +4,4 @@
 # OS files
 .DS_Store
 Thumbs.db
+*:Zone.Identifier git add 2d-platformer/assets/sprites/enemy_bat_sheet.png 2d-platformer/assets/sprites/enemy_slime_sheet.png
