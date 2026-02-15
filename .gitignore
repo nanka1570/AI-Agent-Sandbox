@@ -1,0 +1,6 @@
+# Build artifacts
+2d-platformer/build/
+
+# OS files
+.DS_Store
+Thumbs.db
