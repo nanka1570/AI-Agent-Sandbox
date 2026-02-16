@@ -3,7 +3,6 @@
 
 #include "System/ResourceManager.h"
 
-#include <stdexcept>
 #include <iostream>
 
 std::unordered_map<std::string, sf::Texture> ResourceManager::textures;
@@ -21,5 +20,6 @@ sf::Texture& ResourceManager::getTexture(const std::string& filename)
     if (!tex.loadFromFile(filename)) {
         std::cerr << "[ResourceManager] Failed to load: " << filename << std::endl;
     }
+    tex.setSmooth(false);
     return tex;
 }

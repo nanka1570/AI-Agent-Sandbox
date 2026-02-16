@@ -78,7 +78,13 @@ void Bat::updateAI(float dt, const sf::Vector2f& playerPos)
         hoverTimer += dt;
         float targetY = spawnPoint.y + std::sin(hoverTimer * 2.f) * hoverRange;
         velocity.y = (targetY - position.y) * 3.f;
-        velocity.x = 0.f;
+        // スポーン地点へ徐々に帰還
+        float dx = spawnPoint.x - position.x;
+        if (std::abs(dx) > 2.f) {
+            velocity.x = (dx > 0.f) ? 30.f : -30.f;
+        } else {
+            velocity.x = 0.f;
+        }
     }
     // 突進中は速度を維持（そのまま直進）
 }

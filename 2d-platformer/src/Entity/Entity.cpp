@@ -1,11 +1,8 @@
 #include "Entity/Entity.h"
 
-// スプライトを現在位置に合わせて描画する（デフォルト実装）
-// Playerは仮の矩形を描画するためオーバーライドしている
-void Entity::render(sf::RenderWindow& window)
+// デフォルトの描画処理（派生クラスでオーバーライドされる）
+void Entity::render(sf::RenderWindow& /*window*/)
 {
-    sprite.setPosition(position);
-    window.draw(sprite);
 }
 
 // --- 位置・速度のアクセサ ---

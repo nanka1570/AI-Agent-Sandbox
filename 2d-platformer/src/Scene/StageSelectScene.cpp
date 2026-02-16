@@ -3,12 +3,15 @@
 // 左右キーで選択、Spaceで決定、Escでタイトルへ戻る
 
 #include "Scene/StageSelectScene.h"
+#include "System/AudioManager.h"
 #include "System/ResourceManager.h"
 #include "GameData.h"
 
 StageSelectScene::StageSelectScene()
     : selectedStage(GameData::currentStage - 1)  // 前回のステージを初期選択
 {
+    // タイトルBGMを継続（同じファイルなら再起動しない）
+    AudioManager::playBGM("assets/audio/bgm/title.ogg");
     // ステージフレーム画像（128x128）を読み込む
     stageFrameSprites[0].setTexture(ResourceManager::getTexture("assets/sprites/ui/ui_stage_frame_1.png"));
     stageFrameSprites[1].setTexture(ResourceManager::getTexture("assets/sprites/ui/ui_stage_frame_2.png"));
@@ -23,13 +26,16 @@ void StageSelectScene::handleInput(const sf::Event& event)
     // ステージ選択（左右キー）
     if (key == sf::Keyboard::Left || key == sf::Keyboard::A) {
         selectedStage = (selectedStage - 1 + STAGE_COUNT) % STAGE_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
     if (key == sf::Keyboard::Right || key == sf::Keyboard::D) {
         selectedStage = (selectedStage + 1) % STAGE_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
 
     // 決定
     if (key == sf::Keyboard::Space || key == sf::Keyboard::Return) {
+        AudioManager::playSE("assets/audio/se/se_select.ogg");
         GameData::currentStage = selectedStage + 1;  // 1-based
         nextScene = SceneType::GamePlay;
     }

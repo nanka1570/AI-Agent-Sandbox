@@ -3,12 +3,20 @@
 // 上下キーでメニュー選択、SpaceまたはEnterで決定
 
 #include "Scene/ResultScene.h"
+#include "System/AudioManager.h"
 #include "System/ResourceManager.h"
 
 ResultScene::ResultScene(bool cleared)
     : isCleared(cleared)
     , selectedIndex(MENU_STAGE_SELECT)
 {
+    // リザルトBGM（ジングル、ループなし）
+    if (isCleared) {
+        AudioManager::playBGM("assets/audio/bgm/game-clear.ogg", false);
+    } else {
+        AudioManager::playBGM("assets/audio/bgm/game-over.ogg", false);
+    }
+
     // リザルトテキスト画像（400x100, 画面中央上部）
     if (isCleared) {
         resultTextSprite.setTexture(ResourceManager::getTexture("assets/sprites/ui/text_stage_clear.png"));
@@ -39,13 +47,16 @@ void ResultScene::handleInput(const sf::Event& event)
     // メニュー選択（上下キー）
     if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
         selectedIndex = (selectedIndex - 1 + MENU_COUNT) % MENU_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
     if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
         selectedIndex = (selectedIndex + 1) % MENU_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
 
     // 決定
     if (key == sf::Keyboard::Space || key == sf::Keyboard::Return) {
+        AudioManager::playSE("assets/audio/se/se_select.ogg");
         if (selectedIndex == MENU_STAGE_SELECT) {
             nextScene = SceneType::StageSelect;
         } else if (selectedIndex == MENU_TITLE) {

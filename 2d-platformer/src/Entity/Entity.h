@@ -8,7 +8,6 @@
 
 class Entity {
 protected:
-    sf::Sprite sprite;           // スプライト（テクスチャ適用後に使用）
     sf::Vector2f position;       // ワールド座標上の位置
     sf::Vector2f velocity;       // 現在の速度（px/s）
     sf::FloatRect hitbox;        // 当たり判定の矩形サイズ

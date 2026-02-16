@@ -9,9 +9,6 @@ class Entity;
 class TileMap;
 
 namespace Collision {
-    // AABB同士の重なり判定
-    bool intersects(const sf::FloatRect& a, const sf::FloatRect& b);
-
     // エンティティとタイルマップの衝突を解決する
     // X軸の移動→衝突解決、Y軸の移動→衝突解決の順で処理する
     // 戻り値: エンティティが地面に接地していればtrue

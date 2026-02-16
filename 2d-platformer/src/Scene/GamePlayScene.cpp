@@ -3,6 +3,7 @@
 // GameData::currentStage に応じたステージを読み込む
 
 #include "Scene/GamePlayScene.h"
+#include "System/AudioManager.h"
 #include "System/Collision.h"
 #include "System/ResourceManager.h"
 #include "GameData.h"
@@ -24,7 +25,7 @@ GamePlayScene::GamePlayScene()
         break;
     case 2:
         spawnPoint = sf::Vector2f(64.f, 736.f);    // 左下（row 24の地面の上）
-        goalRect = sf::FloatRect(42.f * 32.f, 1.f * 32.f, 4.f * 32.f, 1.f * 32.f);  // 右上
+        goalRect = sf::FloatRect(42.f * 32.f, 1.f * 32.f, 4.f * 32.f, 2.f * 32.f);  // 右上（隙間2マス）
         break;
     case 3:
         spawnPoint = sf::Vector2f(64.f, 736.f);    // 左下
@@ -51,6 +52,9 @@ GamePlayScene::GamePlayScene()
     player.setPosition(spawnPoint);
     player.setVelocity(sf::Vector2f(0.f, 0.f));
     spawnEnemies();
+
+    // ステージBGM
+    AudioManager::playBGM("assets/audio/bgm/stage" + std::to_string(stageId) + ".ogg");
 }
 
 // ステージに応じた敵の初期配置
@@ -111,11 +115,14 @@ void GamePlayScene::handleInput(const sf::Event& event)
     if (paused) {
         if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
             pauseSelectedIndex = (pauseSelectedIndex - 1 + PAUSE_MENU_COUNT) % PAUSE_MENU_COUNT;
+            AudioManager::playSE("assets/audio/se/se_cursor.ogg");
         }
         if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
             pauseSelectedIndex = (pauseSelectedIndex + 1) % PAUSE_MENU_COUNT;
+            AudioManager::playSE("assets/audio/se/se_cursor.ogg");
         }
         if (key == sf::Keyboard::Space || key == sf::Keyboard::Return) {
+            AudioManager::playSE("assets/audio/se/se_select.ogg");
             if (pauseSelectedIndex == PAUSE_RESUME) {
                 paused = false;
             } else if (pauseSelectedIndex == PAUSE_STAGE_SELECT) {
@@ -173,6 +180,7 @@ void GamePlayScene::update(float dt)
 
     // 7. ゴール判定
     if (goalRect.intersects(player.getHitbox())) {
+        AudioManager::playSE("assets/audio/se/se_goal.ogg");
         nextScene = SceneType::ResultClear;
     }
 }

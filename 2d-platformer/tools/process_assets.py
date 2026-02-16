@@ -8,7 +8,8 @@ from PIL import Image
 from collections import deque
 import os
 
-BASE = '/home/nanka/projects/2d-platformer/assets/sprites'
+BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                    'assets', 'sprites')
 
 
 def safe_save(img, path):
@@ -22,21 +23,32 @@ def safe_save(img, path):
     img.save(path)
 
 
-def flood_fill_remove_bg(img, threshold=55):
+
+def flood_fill_remove_bg(img, threshold=55, quiet=False):
     """Remove background connected to image edges via flood fill.
-    Only removes pixels that are connected to the edge AND close to
-    the sampled background color. This preserves interior details."""
+    Combined alpha + RGB check: a pixel is background if it's semi-transparent
+    OR its RGB color is close to the sampled background color."""
     img = img.convert('RGBA')
     w, h = img.size
     px = img.load()
 
-    # Sample background from corners + edge midpoints
+    # Sample background color from non-transparent edge pixels
     pts = [(0, 0), (w-1, 0), (0, h-1), (w-1, h-1),
            (w//2, 0), (w//2, h-1), (0, h//2), (w-1, h//2)]
-    samples = [px[x, y][:3] for x, y in pts]
-    bg_r = sum(s[0] for s in samples) // len(samples)
-    bg_g = sum(s[1] for s in samples) // len(samples)
-    bg_b = sum(s[2] for s in samples) // len(samples)
+    opaque_samples = []
+    for x, y in pts:
+        r, g, b, a = px[x, y]
+        if a > 32:
+            opaque_samples.append((r, g, b))
+    if opaque_samples:
+        bg_r = sum(s[0] for s in opaque_samples) // len(opaque_samples)
+        bg_g = sum(s[1] for s in opaque_samples) // len(opaque_samples)
+        bg_b = sum(s[2] for s in opaque_samples) // len(opaque_samples)
+    else:
+        bg_r, bg_g, bg_b = 255, 255, 255  # default to white
+
+    if not quiet:
+        print(f"    (combined mode: bg_color=({bg_r},{bg_g},{bg_b}), rgb_threshold={threshold})")
 
     th_sq = threshold * threshold
     visited = bytearray(w * h)
@@ -50,6 +62,7 @@ def flood_fill_remove_bg(img, threshold=55):
         queue.append(y * w)
         queue.append(w - 1 + y * w)
 
+    removed = 0
     while queue:
         idx = queue.popleft()
         if visited[idx]:
@@ -59,10 +72,18 @@ def flood_fill_remove_bg(img, threshold=55):
         x = idx % w
         y = idx // w
         r, g, b, a = px[x, y]
-        dsq = (r - bg_r)**2 + (g - bg_g)**2 + (b - bg_b)**2
 
-        if dsq < th_sq:
-            px[x, y] = (r, g, b, 0)
+        # Background if: semi-transparent OR color close to bg
+        is_bg = False
+        if a < 200:
+            is_bg = True
+        else:
+            dsq = (r - bg_r)**2 + (g - bg_g)**2 + (b - bg_b)**2
+            is_bg = (dsq < th_sq)
+
+        if is_bg:
+            px[x, y] = (0, 0, 0, 0)
+            removed += 1
             if x > 0 and not visited[idx - 1]:
                 queue.append(idx - 1)
             if x < w - 1 and not visited[idx + 1]:
@@ -72,6 +93,27 @@ def flood_fill_remove_bg(img, threshold=55):
             if y < h - 1 and not visited[idx + w]:
                 queue.append(idx + w)
 
+    if not quiet:
+        print(f"    (flood fill removed {removed} background pixels)")
+    return img
+
+
+def quantize_alpha(img):
+    """Hard alpha quantization: alpha < 200 → 0, alpha >= 200 → 255."""
+    w, h = img.size
+    px = img.load()
+    cleaned = 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 200:
+                if a > 0:
+                    cleaned += 1
+                px[x, y] = (0, 0, 0, 0)
+            elif a < 255:
+                px[x, y] = (r, g, b, 255)
+    if cleaned > 0:
+        print(f"    (quantized: {cleaned} semi-transparent pixels removed)")
     return img
 
 
@@ -79,11 +121,15 @@ def process_spritesheet(path, src_cols, src_rows, label_w,
                         target_cell_w, target_cell_h,
                         target_cols, target_rows,
                         row_map=None, align='bottom-center',
-                        bg_threshold=55):
-    """Process a spritesheet: flood-fill bg removal, cell-by-cell extraction."""
-    print(f"  Loading and removing background...")
+                        bg_threshold=55, cleanup=True):
+    """Process a spritesheet: flood-fill bg removal, cell-by-cell extraction.
+    cleanup=True: flood fill + per-cell cleanup + alpha quantization
+    cleanup=False: just extract and resize (no bg removal)"""
     img = Image.open(path).convert('RGBA')
-    img = flood_fill_remove_bg(img, bg_threshold)
+
+    if cleanup:
+        print(f"  Removing background (full image)...")
+        img = flood_fill_remove_bg(img, bg_threshold)
 
     w, h = img.size
     content_w = w - label_w
@@ -110,6 +156,10 @@ def process_spritesheet(path, src_cols, src_rows, label_w,
             x2 = int(label_w + (col + 1) * cell_w)
             y2 = int((src_row + 1) * cell_h)
             cell = img.crop((x1, y1, x2, y2))
+
+            # Per-cell flood fill from cell edges (catches bg missed by full-image pass)
+            if cleanup:
+                cell = flood_fill_remove_bg(cell, bg_threshold, quiet=True)
 
             # Find non-transparent content bounds
             bbox = cell.getbbox()
@@ -139,25 +189,26 @@ def process_spritesheet(path, src_cols, src_rows, label_w,
             dy = dst_row * target_cell_h + paste_y
             output.paste(content, (dx, dy), content)
 
+    if cleanup:
+        print(f"  Final alpha cleanup...")
+        output = quantize_alpha(output)
     return output
 
 
 # ===================================================================
 # PLAYER SHEET
-# Source: 1024x559, 6 cols x 5 rows (row 4 = misc items, skip)
+# Source: 6 cols x 8 rows (rows match code 1:1), no labels
 # Target: 288x384 (6x8 grid of 48x48 cells)
 # ===================================================================
 print("=== Player Sheet ===")
-# Row map: [Idle, Running, Jumping, Falling, Attacking, Dashing, WallSlide, Hit]
-#        -> [src0, src1,    src2,    src3,    src2,      src1,    src0,      src3]
 player = process_spritesheet(
     f'{BASE}/player_sheet.png',
-    src_cols=6, src_rows=5, label_w=0,
+    src_cols=6, src_rows=8, label_w=0,
     target_cell_w=48, target_cell_h=48,
     target_cols=6, target_rows=8,
-    row_map=[0, 1, 2, 3, 2, 1, 0, 3],
+    row_map=[0, 1, 2, 3, 4, 5, 6, 7],
     align='bottom-center',
-    bg_threshold=55
+    cleanup=False  # プレイヤーは元素材をそのまま使う
 )
 safe_save(player, f'{BASE}/player_sheet.png')
 print(f"  Saved: {player.size[0]}x{player.size[1]}")
@@ -165,17 +216,17 @@ print(f"  Saved: {player.size[0]}x{player.size[1]}")
 
 # ===================================================================
 # SLIME SHEET
-# Source: 1024x559, 6 cols x 3 rows, labels on left ~70px
+# Source: 4 cols x 3 rows, no labels
 # Target: 128x96 (4x3 grid of 32x32 cells)
 # ===================================================================
 print("\n=== Slime Sheet ===")
 slime = process_spritesheet(
     f'{BASE}/enemy_slime_sheet.png',
-    src_cols=6, src_rows=3, label_w=70,
+    src_cols=4, src_rows=3, label_w=0,
     target_cell_w=32, target_cell_h=32,
     target_cols=4, target_rows=3,
     align='bottom-center',
-    bg_threshold=60  # Higher for near-white bg with grid lines
+    bg_threshold=65
 )
 safe_save(slime, f'{BASE}/enemy_slime_sheet.png')
 print(f"  Saved: {slime.size[0]}x{slime.size[1]}")
@@ -183,17 +234,17 @@ print(f"  Saved: {slime.size[0]}x{slime.size[1]}")
 
 # ===================================================================
 # BAT SHEET
-# Source: 1024x559, 6 cols x 3 rows, labels on left ~90px
+# Source: 4 cols x 3 rows, no labels
 # Target: 128x96 (4x3 grid of 32x32 cells)
 # ===================================================================
 print("\n=== Bat Sheet ===")
 bat = process_spritesheet(
     f'{BASE}/enemy_bat_sheet.png',
-    src_cols=6, src_rows=3, label_w=90,
+    src_cols=4, src_rows=3, label_w=0,
     target_cell_w=32, target_cell_h=32,
     target_cols=4, target_rows=3,
     align='center',   # Bat pivot is center
-    bg_threshold=55
+    bg_threshold=65
 )
 safe_save(bat, f'{BASE}/enemy_bat_sheet.png')
 print(f"  Saved: {bat.size[0]}x{bat.size[1]}")

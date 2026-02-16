@@ -134,10 +134,10 @@ void TileMap::buildStage2()
     addPlatform(2, 26, 4);
     addPlatform(3, 34, 4);
 
-    // ゴール台座（右上）
-    addPlatform(2, 42, 4);
-    addPlatform(3, 42, 1);
-    addPlatform(3, 45, 1);
+    // ゴール台座（右上、天井との隙間を2マス確保）
+    addPlatform(3, 42, 4);
+    addPlatform(4, 42, 1);
+    addPlatform(4, 45, 1);
 }
 
 // ==================================================================

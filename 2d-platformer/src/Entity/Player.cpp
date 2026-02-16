@@ -1,9 +1,8 @@
 #include "Entity/Player.h"
 #include "Map/TileMap.h"
+#include "System/AudioManager.h"
 #include "System/Collision.h"
 #include "System/ResourceManager.h"
-
-#include <iostream>
 
 // --- コンストラクタ ---
 
@@ -31,21 +30,6 @@ Player::Player()
     playerSprite.setOrigin(CELL_W / 2.f, static_cast<float>(CELL_H));
     setupAnimations();
 
-    // デバッグ: スプライトシート情報をコンソール出力
-    {
-        auto texSize = playerSprite.getTexture()->getSize();
-        std::cout << "[Player] Spritesheet size: "
-                  << texSize.x << "x" << texSize.y << std::endl;
-        std::cout << "[Player] Frame size: "
-                  << CELL_W << "x" << CELL_H << std::endl;
-        std::cout << "[Player] Grid: "
-                  << texSize.x / CELL_W << " cols x "
-                  << texSize.y / CELL_H << " rows" << std::endl;
-        std::cout << "[Player] Hitbox: "
-                  << PLAYER_WIDTH << "x" << PLAYER_HEIGHT << std::endl;
-        std::cout << "[Player] Origin: ("
-                  << CELL_W / 2 << ", " << CELL_H << ")" << std::endl;
-    }
 }
 
 // --- アニメーション設定 ---
@@ -72,17 +56,6 @@ void Player::setupAnimations()
     // WallJump は Jumping のアニメーションを共用
     animations[State::WallJump].setup(2, 2, CELL_W, CELL_H, 0.4f, false);
 
-    // デバッグ: 各アクションのフレーム数を出力
-    std::cout << "[Player] Animation frames:" << std::endl;
-    std::cout << "  Idle:      row=0, frames=1" << std::endl;
-    std::cout << "  Running:   row=1, frames=6" << std::endl;
-    std::cout << "  Jumping:   row=2, frames=2" << std::endl;
-    std::cout << "  Falling:   row=3, frames=2" << std::endl;
-    std::cout << "  Attacking: row=4, frames=4" << std::endl;
-    std::cout << "  Dashing:   row=5, frames=2" << std::endl;
-    std::cout << "  WallSlide: row=6, frames=2" << std::endl;
-    std::cout << "  Hit:       row=7, frames=1" << std::endl;
-    std::cout << "  WallJump:  row=2, frames=2 (shared with Jumping)" << std::endl;
 }
 
 // --- アニメーション更新 ---
@@ -111,6 +84,7 @@ void Player::handleInput(const sf::Event& event)
                    currentState != State::Attacking) {
             velocity.y = jumpForce;
             isOnGround = false;
+            AudioManager::playSE("assets/audio/se/se_jump.ogg");
         }
     }
 
@@ -261,6 +235,7 @@ void Player::takeDamage(int amount)
     currentState = State::Hit;
     velocity.y = -200.f;
     velocity.x = facingRight ? -100.f : 100.f;
+    AudioManager::playSE("assets/audio/se/se_damage.ogg");
 }
 
 // --- アクション開始 ---
@@ -270,6 +245,7 @@ void Player::startAttack()
     currentState = State::Attacking;
     attackTimer = attackDuration;
     velocity.x = 0.f;
+    AudioManager::playSE("assets/audio/se/se_sword.ogg");
 }
 
 void Player::startDash()
@@ -279,6 +255,7 @@ void Player::startDash()
     dashCooldownTimer = dashCooldown;
     velocity.x = facingRight ? dashSpeed : -dashSpeed;
     velocity.y = 0.f;
+    AudioManager::playSE("assets/audio/se/se_dash.ogg");
 }
 
 void Player::startWallJump()
@@ -290,6 +267,7 @@ void Player::startWallJump()
     wallJumpTimer = WALL_JUMP_LOCK_TIME;
     isOnGround = false;
     isTouchingWall = false;
+    AudioManager::playSE("assets/audio/se/se_jump.ogg");
 }
 
 // --- 壁接触判定 ---

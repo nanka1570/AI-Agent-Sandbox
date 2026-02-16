@@ -4,6 +4,7 @@
 
 #include "Entity/Enemy.h"
 #include "Map/TileMap.h"
+#include "System/AudioManager.h"
 #include "System/Collision.h"
 
 Enemy::Enemy()
@@ -30,10 +31,12 @@ void Enemy::update(float dt, const TileMap& map)
     if (aiState == AIState::Hit) {
         hitTimer -= dt;
         velocity.y += gravity * dt;
+        Collision::resolveMapCollision(*this, map, dt);
         if (hitTimer <= 0.f) {
             if (!alive) return;  // HPが0なら消滅
             aiState = AIState::Patrol;
         }
+        return;
     }
 
     // 重力を適用（地上型の敵用、Batはオーバーライドで無効化）
@@ -66,6 +69,7 @@ void Enemy::takeDamage(int amount)
     hitTimer = HIT_DURATION;
     // 小さなノックバック（上に跳ねる）
     velocity.y = -150.f;
+    AudioManager::playSE("assets/audio/se/se_damage.ogg");
 }
 
 bool Enemy::isInHitState() const

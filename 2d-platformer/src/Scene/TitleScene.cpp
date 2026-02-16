@@ -3,10 +3,12 @@
 // 上下キーでメニュー選択、Spaceで決定
 
 #include "Scene/TitleScene.h"
+#include "System/AudioManager.h"
 #include "System/ResourceManager.h"
 
 TitleScene::TitleScene()
 {
+    AudioManager::playBGM("assets/audio/bgm/title.ogg");
     // ロゴスプライト（400x200, 画面中央上部）
     logoSprite.setTexture(ResourceManager::getTexture("assets/sprites/ui/logo_title.png"));
     // 内部解像度 640x360 に対してロゴを中央配置
@@ -34,13 +36,16 @@ void TitleScene::handleInput(const sf::Event& event)
     // メニュー選択（上下キー）
     if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
         selectedIndex = (selectedIndex - 1 + MENU_COUNT) % MENU_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
     if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
         selectedIndex = (selectedIndex + 1) % MENU_COUNT;
+        AudioManager::playSE("assets/audio/se/se_cursor.ogg");
     }
 
     // 決定
     if (key == sf::Keyboard::Space || key == sf::Keyboard::Return) {
+        AudioManager::playSE("assets/audio/se/se_select.ogg");
         if (selectedIndex == MENU_START) {
             nextScene = SceneType::StageSelect;
         } else if (selectedIndex == MENU_QUIT) {

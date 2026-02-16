@@ -6,6 +6,7 @@
 #include "Map/TileMap.h"
 #include "System/Collision.h"
 #include "System/ResourceManager.h"
+#include <cmath>
 
 Slime::Slime(float x, float y)
     : moveSpeed(60.f)
@@ -94,7 +95,7 @@ void Slime::update(float dt, const TileMap& map)
     Collision::resolveMapCollision(*this, map, dt);
 
     // 壁にぶつかったら反転（X位置が変わらなかった場合）
-    if (velocity.x == 0.f && prevX == position.x && aiState == AIState::Patrol) {
+    if (std::abs(velocity.x) < 0.01f && std::abs(prevX - position.x) < 0.1f && aiState == AIState::Patrol) {
         facingRight = !facingRight;
     }
 

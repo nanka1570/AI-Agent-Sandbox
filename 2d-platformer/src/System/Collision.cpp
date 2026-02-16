@@ -6,11 +6,6 @@
 #include "Entity/Entity.h"
 #include "Map/TileMap.h"
 
-bool Collision::intersects(const sf::FloatRect& a, const sf::FloatRect& b)
-{
-    return a.intersects(b);
-}
-
 // エンティティのマップ衝突を解決する
 // 手順:
 //   1. X軸方向に移動して、壁にめり込んだら押し戻す
