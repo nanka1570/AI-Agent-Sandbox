@@ -12,6 +12,8 @@ kakeibo-app/.next/
 kakeibo-app/dist/
 kakeibo-app/.env
 kakeibo-app/.env.local
+kakeibo-app/dev.db
+kakeibo-app/dev.db-journal
 kakeibo-app/prisma/dev.db
 kakeibo-app/prisma/dev.db-journal
 kakeibo-app/coverage/
