@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(cat | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE_PATH\" =~ \\.(ts|tsx)$ ]] && [ -f \"$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc\" ]; then cd \"$CLAUDE_PROJECT_DIR\" && npx tsc --noEmit 2>&1 | tail -20; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "このセッションでPhaseの作業が完了した場合、git commit と git push origin main が実行されたか確認してください。未実行なら {\"ok\": false, \"reason\": \"Phase作業が完了しましたが、git commit/push がまだです。変更をコミットしてプッシュしてください。\"} を返してください。Phase作業が完了していない場合やすでにpush済みなら {\"ok\": true} を返してください。",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && echo '=== Git Status ===' && git status --short 2>/dev/null && echo '' && echo '=== Progress ===' && cat docs/progress.md 2>/dev/null || echo 'progress.md not found'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
