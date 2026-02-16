@@ -10,7 +10,7 @@ model: opus
 ## 作業手順
 1. CLAUDE.md を読み、コーディング規約を確認する
 2. docs/progress.md で現在のPhaseを確認する
-3. docs/requirements.md で該当Phaseの仕様を確認する
+3. docs/01_要件定義書_v1_0.md で該当Phaseの仕様を確認する
 4. 仕様に従ってコードを実装する
 
 ## 実装規約
