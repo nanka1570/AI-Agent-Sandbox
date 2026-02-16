@@ -40,6 +40,28 @@
 - フォームバリデーションは Zod スキーマで統一
 - 1ファイル = 1コンポーネント
 
+## UI実装ルール
+- onClick は `onClick={() => handleXxx()}` で統一
+- ボタン配置: 左=非破壊（キャンセル/閉じる）、右=主要アクション（保存/登録）
+- 非破壊ボタン: shadcn/ui `variant="outline"`
+- 破壊的ボタン（削除等）: shadcn/ui `variant="destructive"`
+- 破壊的操作は必ず確認ダイアログを出す
+- 処理中はボタンを disabled にする（二重送信防止）
+- ボタンラベル: モード切替は名詞形（「編集」）、実行は動詞形（「保存する」）
+
+## 開発スタイル（人間との協働ルール）
+- オーバーエンジニアリングはしない。MVP に必要十分な実装を心がける
+- 編集を提案する前に、必ず関連するファイルを読み込んで理解すること
+- 修正時は before/after のコード比較を提示すること
+- 一度に大量の修正をしない。優先度をつけて段階的に進める（最大3箇所）
+- 修正理由を「なぜ問題か」「放置するとどうなるか」で説明すること
+- 使用頻度の低い技術の深掘りはしない
+
+## よく遭遇するエラーと対策
+- `next/router` ではなく `next/navigation` を使う（App Router）
+- Prisma のカラム名は camelCase（Supabase の snake_case とは異なる）
+- フォームのチェックボックスは `checked` 属性を使う（`value` ではない）
+
 ## Git コミットメッセージ規約
 - feat: 新機能追加
 - fix: バグ修正
@@ -63,6 +85,11 @@
 - 現在のフェーズは docs/progress.md で管理
 - 各Phase完了時は必ずコミット＆プッシュ (`git push origin main`)
 - 完了基準を満たしてからコミットすること
+
+## カスタムスキル
+- `.claude/skills/learning-tracker-SKILL.md` — 学習記録・振り返り用スキル
+- `.claude/skills/code-review-SKILL.md` — 汎用コードレビュースキル
+- `.claude/skills/react-code-review-SKILL.md` — kakeibo-app 専用 React コードレビュースキル
 
 ## 注意事項
 - .env.local は絶対にコミットしない
