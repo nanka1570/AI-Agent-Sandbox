@@ -8,7 +8,11 @@ description: 指定したPhaseを自動実装する
 ## 手順
 
 1. `docs/progress.md` を読み、現在のPhase状況を確認する
-2. `docs/01_要件定義書_v1_0.md` を読み、Phase $ARGUMENTS の仕様を確認する
+2. 設計書を確認する:
+   - `docs/01_要件定義書_v1_0.md`（要件）
+   - `docs/02_基本設計書_v1_0.md`（API仕様）
+   - `docs/04_画面設計書_v1_0.md`（画面仕様）
+   - `docs/05_詳細設計書_v1_0.md`（詳細仕様）
 3. `CLAUDE.md` を読み、コーディング規約を確認する
 4. Phase $ARGUMENTS の作業内容を実装する
 5. 完了基準を全て満たしているか確認する:
@@ -23,5 +27,6 @@ description: 指定したPhaseを自動実装する
 
 ## コミットメッセージ
 docs/01_要件定義書_v1_0.md の該当Phaseに記載されたコミットメッセージを使用する。
+docs/progress.md の該当Phaseを完了に更新する。
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
