@@ -1,16 +1,19 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Noto_Sans_JP, Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const notoSansJP = Noto_Sans_JP({
+  variable: '--font-noto-sans-jp',
   subsets: ['latin'],
+  weight: ['700', '900'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
   subsets: ['latin'],
+  weight: ['500', '700'],
 });
 
 export const metadata: Metadata = {
@@ -18,12 +21,12 @@ export const metadata: Metadata = {
   description: '給料日とクレジットカード支払日を管理する家計簿アプリ',
 };
 
-// ナビゲーションリンク定義
+// ナビゲーションリンク定義（英語表記: design_spec.md準拠）
 const navLinks = [
-  { href: '/', label: 'ダッシュボード' },
-  { href: '/credit-cards', label: 'クレカ管理' },
-  { href: '/salary', label: '給料管理' },
-  { href: '/payments', label: '支払い管理' },
+  { href: '/', label: 'DASHBOARD' },
+  { href: '/credit-cards', label: 'CARDS' },
+  { href: '/salary', label: 'SALARY' },
+  { href: '/payments', label: 'PAYMENTS' },
 ];
 
 export default function RootLayout({
@@ -33,18 +36,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="border-b bg-white">
-          <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/" className="text-lg font-bold text-gray-900">
-              家計簿
+      <body className={`${notoSansJP.variable} ${spaceGrotesk.variable} antialiased`}>
+        <header className="bg-background">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 border-2 border-border bg-white px-4 py-2 text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+            >
+              家計簿 APP
             </Link>
-            <ul className="flex gap-6">
+            <ul className="hidden gap-3 md:flex">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-600 transition-colors hover:text-gray-900"
+                    className="inline-block border-2 border-border bg-white px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-secondary active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
                   >
                     {link.label}
                   </Link>
@@ -54,6 +60,7 @@ export default function RootLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

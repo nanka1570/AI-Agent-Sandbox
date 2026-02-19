@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kakeibo App - 8-Bit Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        retroBg: "#2b2b2b",
+                        retroCard: "#f0f0f0",
+                        retroPrimary: "#5d5fe6", /* Blue-Purple */
+                        retroSuccess: "#00cc66", /* Green */
+                        retroDanger: "#ff3333", /* Red */
+                        retroAccent: "#ffcc00", /* Yellow */
+                    },
+                    fontFamily: {
+                        pixel: ['"DotGothic16"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px 0px rgba(0,0,0,0.5)',
+                        'pixel-inset': 'inset 4px 4px 0px 0px rgba(0,0,0,0.2)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'DotGothic16', sans-serif;
+            background-color: #2b2b2b;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #333;
+        }
+
+        /* Pixel Corners Concept */
+        .pixel-box {
+            position: relative;
+            background: #f0f0f0;
+            border: 4px solid #000;
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .pixel-box::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            bottom: -4px;
+            left: -4px;
+            box-shadow: inset 0 0 0 4px #f0f0f0;
+            z-index: -1;
+        }
+
+        .pixel-btn {
+            background: #fff;
+            border: 2px solid #000;
+            border-bottom-width: 4px;
+            border-right-width: 4px;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            border-bottom-width: 2px;
+            border-right-width: 2px;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col p-4 md:p-8 gap-8">
+    <div class="crt-overlay"></div>
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto w-full z-10">
+        <div class="px-4 py-2 bg-retroPrimary border-4 border-white text-white shadow-pixel flex items-center gap-2">
+            <i data-lucide="gamepad-2" class="w-6 h-6"></i>
+            <h1 class="text-xl tracking-widest">KAKEIBO QUEST</h1>
+        </div>
+
+        <nav class="flex gap-2">
+            <a href="#" class="pixel-btn px-4 py-1 bg-retroAccent hover:bg-yellow-300">STATUS</a>
+            <a href="#" class="pixel-btn px-4 py-1 hover:bg-gray-200">ITEM</a>
+            <a href="#" class="pixel-btn px-4 py-1 hover:bg-gray-200">QUEST</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto w-full space-y-8 z-10">
+
+        <!-- Date Selector -->
+        <div class="flex items-center justify-between text-white">
+            <h2 class="text-2xl">LEVEL: <span class="text-retroAccent">2024-02</span></h2>
+            <div
+                class="bg-black border-2 border-white px-4 py-1 flex items-center gap-2 cursor-pointer hover:bg-gray-800">
+                <span>SELECT LEVEL</span>
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </div>
+        </div>
+
+        <!-- Summary Cards (Pixel Art Style) -->
+        <div class="grid gap-6 md:grid-cols-3">
+
+            <!-- Income -->
+            <div class="pixel-box p-6 relative">
+                <div
+                    class="absolute -top-3 -right-3 bg-retroSuccess text-white px-2 border-2 border-black text-xs transform rotate-3">
+                    BOWUS</div>
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="coins" class="w-5 h-5 text-retroSuccess"></i>
+                    <span class="font-bold">INCOME (G)</span>
+                </div>
+                <div class="text-3xl tracking-tighter text-retroSuccess drop-shadow-md">
+                    + 245,000
+                </div>
+                <div class="w-full bg-gray-300 h-2 mt-4 border border-black">
+                    <div class="bg-retroSuccess h-full w-[100%]"></div>
+                </div>
+            </div>
+
+            <!-- Expense -->
+            <div class="pixel-box p-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="sword" class="w-5 h-5 text-retroDanger"></i>
+                    <span class="font-bold">DAMAGE</span>
+                </div>
+                <div class="text-3xl tracking-tighter text-retroDanger drop-shadow-md">
+                    - 82,000
+                </div>
+                <div class="w-full bg-gray-300 h-2 mt-4 border border-black">
+                    <div class="bg-retroDanger h-full w-[35%]"></div>
+                </div>
+            </div>
+
+            <!-- Balance -->
+            <div class="pixel-box p-6 bg-retroPrimary text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 opacity-20">
+                    <i data-lucide="crown" class="w-16 h-16"></i>
+                </div>
+                <div class="font-bold mb-2">CURRENT HP (YEN)</div>
+                <div class="text-4xl tracking-widest drop-shadow-md mt-2">
+                    163,000
+                </div>
+                <div class="text-xs mt-2 text-yellow-300 animate-pulse">>> READY TO SAVE?</div>
+            </div>
+        </div>
+
+        <!-- Charts Area -->
+        <div class="grid gap-6 md:grid-cols-2">
+            <!-- Bar Chart -->
+            <div class="pixel-box p-6">
+                <h3 class="text-lg font-bold mb-4 border-b-2 border-black w-fit">BATTLE LOG</h3>
+                <div class="h-48 flex items-end justify-between gap-4 px-2 border-b-4 border-black">
+                    <!-- Bars (Blocky) -->
+                    <div class="w-full flex flex-col gap-1 items-center">
+                        <div class="w-8 bg-retroSuccess h-24 border-2 border-black relative group"></div>
+                        <div class="w-8 bg-retroDanger h-10 border-2 border-black relative group -mt-2 ml-2"></div>
+                        <span class="text-xs mt-1">LV.11</span>
+                    </div>
+                    <div class="w-full flex flex-col gap-1 items-center">
+                        <div class="w-8 bg-retroSuccess h-20 border-2 border-black relative group"></div>
+                        <div class="w-8 bg-retroDanger h-16 border-2 border-black relative group -mt-2 ml-2"></div>
+                        <span class="text-xs mt-1">LV.12</span>
+                    </div>
+                    <div class="w-full flex flex-col gap-1 items-center">
+                        <div class="w-8 bg-retroSuccess h-28 border-2 border-black relative group">
+                            <div class="absolute -top-6 left-0 w-full text-center text-[10px] bg-black text-white">MAX
+                            </div>
+                        </div>
+                        <div class="w-8 bg-retroDanger h-8 border-2 border-black relative group -mt-2 ml-2"></div>
+                        <span class="text-xs mt-1 text-retroPrimary font-bold">LV.01</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div class="pixel-box p-0 overflow-hidden flex flex-col">
+                <h3 class="text-lg font-bold p-4 bg-black text-white">BOSS BATTLES</h3>
+
+                <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+                    <!-- Row 1 -->
+                    <div
+                        class="border-2 border-black p-2 flex items-center justify-between bg-white hover:bg-gray-100 cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-retroDanger border border-black"></div>
+                            <div>
+                                <div class="font-bold">RAKUTEN CARD</div>
+                                <div class="text-xs text-gray-500">HP: 45,000</div>
+                            </div>
+                        </div>
+                        <div class="bg-retroAccent px-2 border border-black text-xs font-bold">LOCKED</div>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div
+                        class="border-2 border-black p-2 flex items-center justify-between bg-white hover:bg-gray-100 cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-retroPrimary border border-black"></div>
+                            <div>
+                                <div class="font-bold">HOME RENT</div>
+                                <div class="text-xs text-gray-500">HP: 80,000</div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-300 px-2 border border-black text-xs font-bold text-gray-500">UNKOWN</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center text-white text-xs opacity-50 py-8">
+        INSERT COIN TO CONTINUE...
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
