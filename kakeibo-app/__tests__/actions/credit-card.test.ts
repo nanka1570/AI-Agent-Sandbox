@@ -15,6 +15,9 @@ vi.mock("@/lib/db", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
+vi.mock("@/lib/auth", () => ({
+  requireAuth: vi.fn().mockResolvedValue("user-1"),
+}));
 
 // モックされた prisma を取得
 import { prisma } from "@/lib/db";
@@ -26,6 +29,7 @@ const mockDelete = vi.mocked(prisma.creditCard.delete);
 // テスト用のダミーデータ
 const mockCard = {
   id: "card-1",
+  userId: "user-1",
   name: "楽天カード",
   closingDay: 31,
   paymentDay: 27,

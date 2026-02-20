@@ -41,18 +41,20 @@ model CreditCard {
 
 // 支払い
 model Payment {
-  id           String     @id @default(cuid())
-  userId       String     // Supabase Auth の user.id
-  creditCardId String
-  creditCard   CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
-  categoryId   String?
-  category     Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  month        String     // 対象月 "2026-03"
-  amount       Int        // 確定金額（円）
-  status       String     @default("unconfirmed") // unconfirmed | confirmed | paid
-  memo         String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id               String     @id @default(cuid())
+  userId           String     // Supabase Auth の user.id
+  creditCardId     String
+  creditCard       CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  categoryId       String?
+  category         Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  month            String     // 対象月 "2026-03"
+  amount           Int        // 確定金額（円）
+  status           String     @default("unconfirmed") // unconfirmed | confirmed | paid
+  memo             String?
+  isRecurring      Boolean    @default(false)   // 毎月繰り返し支払いかどうか
+  recurringGroupId String?    // 繰り返しグループID（同じグループの支払いに同じIDが付く）
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@index([userId])
 }

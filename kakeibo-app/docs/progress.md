@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase 7 完了（次: Phase 8）
+## 現在のPhase: Phase 8 完了（次: Phase 9）
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -20,13 +20,14 @@
 | Phase B計画 | 計画 | Phase B 計画書作成 | ✅ 完了 | — |
 | Phase 6 | 基盤構築 | 認証 + DB移行 + デプロイ | ✅ 完了 | `feat: Phase 6 - 基盤構築（認証 + DB移行）` |
 | Phase 7 | カテゴリ+予算 | カテゴリ管理 + 予算管理 | ✅ 完了 | `feat: Phase 7 - カテゴリ管理 + 予算管理` |
-| Phase 8 | UX改善 | クイック入力、検索強化、繰り返し支払い | ⏳ 未着手 | — |
+| Phase 8 | UX改善 | クイック入力、検索強化、繰り返し支払い | ✅ 完了 | `feat: Phase 8 - UX改善（クイック入力・検索フィルター・繰り返し支払い）` |
 | Phase 9 | PWA対応 | スマホインストール + オフライン | ⏳ 未着手 | — |
 | Phase 10 | 収益化 | AdSense + CSVエクスポート + 法的ページ | ⏳ 未着手 | — |
 | Phase 11 | レポート | 月次/年次分析レポート | ⏳ 未着手 | — |
 
 ## 更新履歴
 
+- 2026-02-20: Phase 8 完了 — クイック入力FAB（ダッシュボード右下、ダイアログ式）、支払い一覧にカテゴリフィルター・キーワード検索追加、PaymentスキーマにisRecurring/recurringGroupId追加、繰り返し支払い（翌月から3ヶ月自動生成）、繰り返しグループ一括削除、テスト修正（requireAuthモック・ResizeObserverモック追加）、全79テストPASS
 - 2026-02-20: Phase 7 完了 — Category/Budgetテーブル追加、デフォルトカテゴリ8種自動作成、カテゴリCRUD、予算upsert/削除、予算管理ページ（BudgetManager）、支払いにカテゴリ選択追加、ダッシュボードにカテゴリ別予算消化率・カテゴリ別円グラフ追加、ナビにBUDGETタブ追加
 - 2026-02-20: Phase 6 完了 — SQLite→Supabase PostgreSQL DB移行、Supabase Auth統合（ログイン/登録/パスワードリセット）、認証ミドルウェア、全Server Actions/ページにuserIdフィルタ追加、ログアウトボタン追加
 - 2026-02-20: Phase B 計画策定完了 — 09_PhaseB計画書_v1_0.md 作成、Phase 6〜11 の全体ロードマップ策定

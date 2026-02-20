@@ -16,6 +16,7 @@ vi.mock("next/navigation", () => ({
 const mockSalaries = [
   {
     id: "s1",
+    userId: "user-1",
     month: "2026-02",
     payDay: 25,
     amount: 250000,
@@ -25,6 +26,7 @@ const mockSalaries = [
   },
   {
     id: "s2",
+    userId: "user-1",
     month: "2026-01",
     payDay: 25,
     amount: 240000,

@@ -14,6 +14,9 @@ vi.mock("@/lib/db", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
+vi.mock("@/lib/auth", () => ({
+  requireAuth: vi.fn().mockResolvedValue("user-1"),
+}));
 
 import { prisma } from "@/lib/db";
 const mockCreate = vi.mocked(prisma.salary.create);
@@ -23,6 +26,7 @@ const mockDelete = vi.mocked(prisma.salary.delete);
 
 const mockSalary = {
   id: "sal-1",
+  userId: "user-1",
   month: "2026-02",
   payDay: 25,
   amount: 250000,

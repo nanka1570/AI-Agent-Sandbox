@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
 const mockCards = [
   {
     id: "c1",
+    userId: "user-1",
     name: "楽天カード",
     closingDay: 31,
     paymentDay: 27,
@@ -27,6 +28,7 @@ const mockCards = [
   },
   {
     id: "c2",
+    userId: "user-1",
     name: "三井住友カード",
     closingDay: 15,
     paymentDay: 10,

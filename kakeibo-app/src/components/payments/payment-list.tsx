@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Receipt } from "lucide-react";
+import { Pencil, Trash2, Receipt, Repeat, Search } from "lucide-react";
 import { format, subMonths } from "date-fns";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput, type PaymentStatus } from "@/types";
-import { createPayment, updatePayment, deletePayment } from "@/lib/actions/payment";
+import {
+  createPayment,
+  updatePayment,
+  deletePayment,
+  deleteRecurringPayments,
+} from "@/lib/actions/payment";
 import { formatCurrency, formatMonth } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -81,6 +87,12 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   const [editTarget, setEditTarget] = useState<PaymentWithCard | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentWithCard | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  // 繰り返し削除モード: "single" = この支払いだけ, "group" = グループ全体
+  const [deleteMode, setDeleteMode] = useState<"single" | "group">("single");
+
+  // Phase 8b: フィルター状態
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterKeyword, setFilterKeyword] = useState<string>("");
 
   const monthOptions = generateMonthOptions();
 
@@ -92,10 +104,32 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       month: currentMonth,
       amount: undefined,
       memo: "",
+      isRecurring: false,
     },
   });
 
   const isSubmitting = form.formState.isSubmitting;
+
+  // Phase 8b: クライアントサイドフィルタリング
+  const filteredPayments = useMemo(() => {
+    return payments.filter((payment) => {
+      // カテゴリフィルター
+      if (filterCategory !== "all") {
+        if (!payment.categoryId || payment.categoryId !== filterCategory) {
+          return false;
+        }
+      }
+      // キーワード検索（メモの部分一致）
+      if (filterKeyword.trim() !== "") {
+        const keyword = filterKeyword.trim().toLowerCase();
+        const memo = (payment.memo ?? "").toLowerCase();
+        if (!memo.includes(keyword)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [payments, filterCategory, filterKeyword]);
 
   // 月フィルター変更時にURLを更新（Server Componentを再レンダリング）
   function handleMonthChange(month: string) {
@@ -104,7 +138,14 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
 
   function handleOpenCreate() {
     setEditTarget(null);
-    form.reset({ creditCardId: "", categoryId: "", month: currentMonth, amount: undefined, memo: "" });
+    form.reset({
+      creditCardId: "",
+      categoryId: "",
+      month: currentMonth,
+      amount: undefined,
+      memo: "",
+      isRecurring: false,
+    });
     setIsFormOpen(true);
   }
 
@@ -116,6 +157,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       month: payment.month,
       amount: payment.amount,
       memo: payment.memo ?? "",
+      isRecurring: payment.isRecurring,
     });
     setIsFormOpen(true);
   }
@@ -140,7 +182,14 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     }
   }
 
-  async function handleDelete() {
+  // 削除ダイアログを開く
+  function handleOpenDelete(payment: PaymentWithCard) {
+    setDeleteTarget(payment);
+    setDeleteMode("single");
+  }
+
+  // 単件削除
+  async function handleDeleteSingle() {
     if (!deleteTarget) return;
     setIsDeleting(true);
     const result = await deletePayment(deleteTarget.id);
@@ -150,6 +199,28 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       setDeleteTarget(null);
     } else {
       toast.error(result.error);
+    }
+  }
+
+  // 繰り返しグループ一括削除
+  async function handleDeleteGroup() {
+    if (!deleteTarget?.recurringGroupId) return;
+    setIsDeleting(true);
+    const result = await deleteRecurringPayments(deleteTarget.recurringGroupId);
+    setIsDeleting(false);
+    if (result.success) {
+      toast("繰り返しグループを削除しました");
+      setDeleteTarget(null);
+    } else {
+      toast.error(result.error);
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteMode === "group") {
+      await handleDeleteGroup();
+    } else {
+      await handleDeleteSingle();
     }
   }
 
@@ -173,13 +244,64 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
         </div>
       </div>
 
+      {/* Phase 8b: フィルターバー */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* カテゴリフィルター */}
+        <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
+          <SelectTrigger className="w-[160px] border-2 border-border bg-white text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <SelectValue placeholder="カテゴリ" />
+          </SelectTrigger>
+          <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <SelectItem value="all">すべてのカテゴリ</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full border border-border"
+                    style={{ backgroundColor: cat.color }}
+                  />
+                  {cat.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* キーワード検索 */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="メモで検索"
+            value={filterKeyword}
+            onChange={(e) => setFilterKeyword(e.target.value)}
+            className="w-[200px] border-2 border-border bg-white pl-8 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          />
+        </div>
+
+        {/* フィルター件数表示 */}
+        {(filterCategory !== "all" || filterKeyword.trim() !== "") && (
+          <span className="text-sm text-muted-foreground">
+            {filteredPayments.length} / {payments.length} 件
+          </span>
+        )}
+      </div>
+
       {/* テーブル */}
-      <div className="mt-6">
-        {payments.length === 0 ? (
+      <div className="mt-4">
+        {filteredPayments.length === 0 ? (
           <EmptyState
             icon={Receipt}
-            title="この月の支払いデータがありません"
-            description="新規登録ボタンから追加してください。"
+            title={
+              payments.length === 0
+                ? "この月の支払いデータがありません"
+                : "条件に一致する支払いがありません"
+            }
+            description={
+              payments.length === 0
+                ? "新規登録ボタンから追加してください。"
+                : "フィルター条件を変更してください。"
+            }
           />
         ) : (
           <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -195,7 +317,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <TableRow key={payment.id} className="border-b-2 border-border hover:bg-secondary/20">
                     <TableCell className="font-bold">{payment.creditCard.name}</TableCell>
                     <TableCell>
@@ -211,7 +333,15 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell>{formatMonth(payment.month)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        {formatMonth(payment.month)}
+                        {/* 繰り返しアイコン */}
+                        {payment.isRecurring && (
+                          <Repeat className="h-3.5 w-3.5 text-primary" aria-label="繰り返し" />
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-bold font-mono">{formatCurrency(payment.amount)}</TableCell>
                     <TableCell>
                       <StatusBadge paymentId={payment.id} status={payment.status as PaymentStatus} />
@@ -221,7 +351,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(payment)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(payment)}>
+                        <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleOpenDelete(payment)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -329,6 +459,26 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                   </FormItem>
                 )}
               />
+              {/* Phase 8c: 毎月繰り返しチェックボックス（新規登録時のみ表示） */}
+              {!editTarget && (
+                <FormField
+                  control={form.control}
+                  name="isRecurring"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value ?? false}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal">
+                        毎月繰り返し（翌月から3ヶ月分を自動登録）
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              )}
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setIsFormOpen(false)}>キャンセル</Button>
                 <Button type="submit" disabled={isSubmitting}>{editTarget ? "更新する" : "登録する"}</Button>
@@ -345,6 +495,35 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             <AlertDialogTitle>この支払いデータを削除しますか？</AlertDialogTitle>
             <AlertDialogDescription>この操作は取り消せません。</AlertDialogDescription>
           </AlertDialogHeader>
+
+          {/* 繰り返しグループの場合、削除モード選択を表示 */}
+          {deleteTarget?.isRecurring && deleteTarget.recurringGroupId && (
+            <div className="space-y-2 py-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="deleteMode"
+                  value="single"
+                  checked={deleteMode === "single"}
+                  onChange={() => setDeleteMode("single")}
+                  className="accent-primary"
+                />
+                <span className="text-sm">この支払いだけ削除</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="deleteMode"
+                  value="group"
+                  checked={deleteMode === "group"}
+                  onChange={() => setDeleteMode("group")}
+                  className="accent-primary"
+                />
+                <span className="text-sm">繰り返しグループ全て削除</span>
+              </label>
+            </div>
+          )}
+
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>キャンセル</AlertDialogCancel>
             <AlertDialogAction variant="destructive" disabled={isDeleting} onClick={() => handleDelete()}>削除する</AlertDialogAction>

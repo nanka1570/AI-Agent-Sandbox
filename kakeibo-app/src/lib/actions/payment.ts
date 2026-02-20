@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { format, addMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { paymentSchema, type PaymentInput, type ActionResult } from "@/types";
@@ -34,6 +35,12 @@ export async function createPayment(
     return { success: false, error: "指定されたクレジットカードが見つかりません" };
   }
 
+  const isRecurring = parsed.data.isRecurring ?? false;
+
+  // 繰り返し支払いの場合、グループIDを生成
+  const recurringGroupId = isRecurring ? crypto.randomUUID() : null;
+
+  // メインの支払いを作成
   const payment = await prisma.payment.create({
     data: {
       userId,
@@ -42,9 +49,31 @@ export async function createPayment(
       month: parsed.data.month,
       amount: parsed.data.amount,
       memo: parsed.data.memo ?? null,
+      isRecurring,
+      recurringGroupId,
     },
     include: { creditCard: true, category: true },
   });
+
+  // 繰り返し支払いの場合、翌月から3ヶ月分を自動生成
+  if (isRecurring) {
+    const baseDate = new Date(parsed.data.month + "-01");
+    for (let i = 1; i <= 3; i++) {
+      const futureMonth = format(addMonths(baseDate, i), "yyyy-MM");
+      await prisma.payment.create({
+        data: {
+          userId,
+          creditCardId: parsed.data.creditCardId,
+          categoryId: parsed.data.categoryId || null,
+          month: futureMonth,
+          amount: parsed.data.amount,
+          memo: parsed.data.memo ?? null,
+          isRecurring: true,
+          recurringGroupId,
+        },
+      });
+    }
+  }
 
   revalidatePath("/payments");
   revalidatePath("/");
@@ -138,4 +167,31 @@ export async function updatePaymentStatus(
   revalidatePath("/");
 
   return { success: true, data: payment };
+}
+
+/**
+ * 繰り返しグループの支払いを一括削除する
+ */
+export async function deleteRecurringPayments(
+  recurringGroupId: string
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+
+  // 指定グループの支払いが存在するか確認（自分のデータのみ）
+  const payments = await prisma.payment.findMany({
+    where: { recurringGroupId, userId },
+  });
+
+  if (payments.length === 0) {
+    return { success: false, error: "繰り返しグループの支払いが見つかりません" };
+  }
+
+  await prisma.payment.deleteMany({
+    where: { recurringGroupId, userId },
+  });
+
+  revalidatePath("/payments");
+  revalidatePath("/");
+
+  return { success: true, data: undefined };
 }

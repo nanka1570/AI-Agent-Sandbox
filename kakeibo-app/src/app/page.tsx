@@ -1,7 +1,7 @@
 import { format, subMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
-import { ensureDefaultCategories } from "@/lib/actions/category";
+import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
 import { getBudgets } from "@/lib/actions/budget";
 import { formatCurrency, formatMonth, formatDay } from "@/lib/utils";
 import {
@@ -17,6 +17,7 @@ import { MonthSelector } from "@/components/month-selector";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { BudgetProgress } from "@/components/budget/budget-progress";
+import { QuickInputFab } from "@/components/quick-input/quick-input-fab";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus } from "@/types";
 import {
@@ -89,6 +90,13 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   // --- 予算データ（当月） ---
   const budgets = await getBudgets(userId, currentMonth);
+
+  // --- クイック入力用データ ---
+  const creditCards = await prisma.creditCard.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+  });
+  const categories = await getCategories(userId);
 
   return (
     <>
@@ -204,6 +212,9 @@ export default async function DashboardPage({ searchParams }: Props) {
           <BudgetProgress budgets={budgets} payments={payments} />
         </div>
       )}
+
+      {/* クイック入力FAB */}
+      <QuickInputFab creditCards={creditCards} categories={categories} />
     </>
   );
 }

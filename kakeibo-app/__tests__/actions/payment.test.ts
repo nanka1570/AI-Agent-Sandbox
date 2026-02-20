@@ -12,13 +12,18 @@ vi.mock("@/lib/db", () => ({
     payment: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
   },
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}));
+vi.mock("@/lib/auth", () => ({
+  requireAuth: vi.fn().mockResolvedValue("user-1"),
 }));
 
 import { prisma } from "@/lib/db";
@@ -30,6 +35,7 @@ const mockDelete = vi.mocked(prisma.payment.delete);
 
 const mockCard = {
   id: "card-1",
+  userId: "user-1",
   name: "楽天カード",
   closingDay: 31,
   paymentDay: 27,
@@ -40,11 +46,15 @@ const mockCard = {
 
 const mockPayment = {
   id: "pay-1",
+  userId: "user-1",
   creditCardId: "card-1",
+  categoryId: null,
   month: "2026-02",
   amount: 50000,
   status: "unconfirmed",
   memo: null,
+  isRecurring: false,
+  recurringGroupId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   creditCard: mockCard,

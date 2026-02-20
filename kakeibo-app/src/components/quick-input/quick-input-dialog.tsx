@@ -1,0 +1,204 @@
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import type { CreditCard, Category } from "@/generated/prisma/client";
+import { paymentSchema, type PaymentInput } from "@/types";
+import { createPayment } from "@/lib/actions/payment";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  creditCards: CreditCard[];
+  categories: Category[];
+};
+
+export function QuickInputDialog({
+  open,
+  onOpenChange,
+  creditCards,
+  categories,
+}: Props) {
+  const currentMonth = format(new Date(), "yyyy-MM");
+
+  const form = useForm<PaymentInput>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      creditCardId: "",
+      categoryId: "",
+      month: currentMonth,
+      amount: undefined,
+      memo: "",
+      isRecurring: false,
+    },
+  });
+
+  const isSubmitting = form.formState.isSubmitting;
+
+  async function onSubmit(values: PaymentInput) {
+    const result = await createPayment(values);
+    if (result.success) {
+      toast("登録しました");
+      form.reset({
+        creditCardId: "",
+        categoryId: "",
+        month: currentMonth,
+        amount: undefined,
+        memo: "",
+        isRecurring: false,
+      });
+      onOpenChange(false);
+    } else {
+      toast.error(result.error);
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!isSubmitting) onOpenChange(v);
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>クイック入力</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
+            {/* 金額 */}
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>金額（円） *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="50000"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* カテゴリ */}
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>カテゴリ</FormLabel>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="border-2 border-border bg-white">
+                        <SelectValue placeholder="カテゴリを選択（任意）" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full border border-border"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            {cat.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* クレジットカード */}
+            <FormField
+              control={form.control}
+              name="creditCardId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>クレジットカード *</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="border-2 border-border bg-white">
+                        <SelectValue placeholder="カードを選択" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      {creditCards.map((card) => (
+                        <SelectItem key={card.id} value={card.id}>
+                          {card.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* ボタン */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => onOpenChange(false)}
+              >
+                キャンセル
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                登録する
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

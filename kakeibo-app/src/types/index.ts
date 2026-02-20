@@ -50,6 +50,7 @@ export const paymentSchema = z.object({
     .int("整数で入力してください")
     .min(1, "1円以上で入力してください"),
   memo: z.string().optional(),
+  isRecurring: z.boolean().optional(),
 });
 
 export type PaymentInput = z.infer<typeof paymentSchema>;
