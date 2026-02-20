@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase 5a（単体テスト + 結合テスト）
+## 現在のPhase: Phase 5b（E2Eテスト + テスト結果報告書 + README）
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -15,11 +15,12 @@
 | Phase 4c | 実装 | 支払い管理 | ✅ 完了 | `feat: Phase 4c - 支払い管理` |
 | Phase 4d | 実装 | ダッシュボード + グラフ | ✅ 完了 | `feat: Phase 4d - ダッシュボード + グラフ` |
 | Phase 4e | 実装 | UI/UXポリッシュ | ✅ 完了 | `feat: Phase 4e - UI/UXポリッシュ` |
-| Phase 5a | テスト | 単体テスト + 結合テスト | ⬜ 未着手 | - |
+| Phase 5a | テスト | 単体テスト + 結合テスト | ✅ 完了 | `test: Phase 5a - 単体テスト + 結合テスト` |
 | Phase 5b | テスト | E2Eテスト + テスト結果報告書 + README | ⬜ 未着手 | - |
 
 ## 更新履歴
 
+- 2026-02-20: Phase 5a 完了 — Vitest 79件全PASS（UT-VL 12件、UT-CC 10件、UT-SL 11件、UT-PM 12件、UT-DB 8件、CT-CC 5件、CT-SL 6件、CT-PM 8件、CT-DB 7件）、dashboard.ts集計ロジック切り出し、cleanup設定追加
 - 2026-02-20: Phase 4e 完了 — BottomNav（モバイル固定下部ナビ）、loading.tsx（Skeleton）、error.tsx（エラーハンドリング）、レイアウト余白調整（pb-20）
 - 2026-02-20: Phase 4d 完了 — ダッシュボード実装、サマリーカード3枚（給料合計・支払い合計・残額）、支払い予定テーブル、月別支出推移BarChart、クレカ別支出PieChart、MonthSelector共通化
 - 2026-02-20: Phase 4c 完了 — 支払い管理実装、Select/Badge導入、ステータスバッジ（Neo-Brutalism タグ風）、月別フィルター、paymentSchema・Server Actions・PaymentList作成

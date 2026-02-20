@@ -1,6 +1,15 @@
 import { format, subMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { formatCurrency, formatMonth, formatDay } from "@/lib/utils";
+import {
+  calcTotalSalary,
+  calcTotalPayment,
+  calcStatusBreakdown,
+  calcBalance,
+  calcConfirmedBalance,
+  calcMonthlyData,
+  calcCategoryData,
+} from "@/lib/dashboard";
 import { MonthSelector } from "@/components/month-selector";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
@@ -27,31 +36,24 @@ export default async function DashboardPage({ searchParams }: Props) {
   const salaries = await prisma.salary.findMany({
     where: { month: currentMonth },
   });
-  const totalSalary = salaries.reduce((sum, s) => sum + s.amount, 0);
+  const totalSalary = calcTotalSalary(salaries);
 
   const payments = await prisma.payment.findMany({
     where: { month: currentMonth },
     include: { creditCard: true },
   });
-  const totalPayment = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalPayment = calcTotalPayment(payments);
 
   // ステータス別集計
-  const statusBreakdown = {
-    unconfirmed: payments
-      .filter((p) => p.status === "unconfirmed")
-      .reduce((sum, p) => sum + p.amount, 0),
-    confirmed: payments
-      .filter((p) => p.status === "confirmed")
-      .reduce((sum, p) => sum + p.amount, 0),
-    paid: payments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + p.amount, 0),
-  };
+  const statusBreakdown = calcStatusBreakdown(payments);
 
   // 残額
-  const balance = totalSalary - totalPayment;
-  const confirmedBalance =
-    totalSalary - (statusBreakdown.confirmed + statusBreakdown.paid);
+  const balance = calcBalance(totalSalary, totalPayment);
+  const confirmedBalance = calcConfirmedBalance(
+    totalSalary,
+    statusBreakdown.confirmed,
+    statusBreakdown.paid
+  );
 
   // --- 支払い予定（支払い日順ソート） ---
   const sortedPayments = [...payments].sort(
@@ -69,27 +71,13 @@ export default async function DashboardPage({ searchParams }: Props) {
     where: { month: { in: months } },
   });
 
-  const monthlyData = months.map((m) => ({
-    month: format(new Date(m + "-01"), "M月"),
-    total: allPayments
-      .filter((p) => p.month === m)
-      .reduce((sum, p) => sum + p.amount, 0),
+  const monthlyData = calcMonthlyData(allPayments, months).map((d) => ({
+    month: format(new Date(d.month + "-01"), "M月"),
+    total: d.total,
   }));
 
   // --- クレカ別支出（当月） ---
-  const cardTotals = new Map<string, { name: string; total: number }>();
-  for (const p of payments) {
-    const existing = cardTotals.get(p.creditCardId);
-    if (existing) {
-      existing.total += p.amount;
-    } else {
-      cardTotals.set(p.creditCardId, {
-        name: p.creditCard.name,
-        total: p.amount,
-      });
-    }
-  }
-  const categoryData = Array.from(cardTotals.values());
+  const categoryData = calcCategoryData(payments);
 
   return (
     <>
