@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatMonth } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { ExportButton } from "@/components/payments/export-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -240,6 +241,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
               ))}
             </SelectContent>
           </Select>
+          <ExportButton month={currentMonth} />
           <Button onClick={() => handleOpenCreate()}>+ 新規登録</Button>
         </div>
       </div>

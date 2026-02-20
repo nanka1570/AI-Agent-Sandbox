@@ -18,6 +18,7 @@ import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { BudgetProgress } from "@/components/budget/budget-progress";
 import { QuickInputFab } from "@/components/quick-input/quick-input-fab";
+import { AdBanner } from "@/components/ads/ad-banner";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus } from "@/types";
 import {
@@ -199,6 +200,9 @@ export default async function DashboardPage({ searchParams }: Props) {
         <MonthlyChart data={monthlyData} />
         <CategoryChart data={categoryData} />
       </div>
+
+      {/* 広告スペース */}
+      <AdBanner />
 
       {/* カテゴリ別予算消化率 */}
       {budgets.length > 0 && (
