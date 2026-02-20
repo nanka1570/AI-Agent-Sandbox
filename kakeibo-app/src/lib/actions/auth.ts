@@ -45,8 +45,8 @@ export async function register(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  // メール確認が必要なためリダイレクトせず、成功を返してページ側で案内を表示する
+  return { success: true, data: undefined };
 }
 
 /**

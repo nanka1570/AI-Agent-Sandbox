@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,15 +35,51 @@ export default function RegisterPage() {
 
     try {
       const result = await register(email, password);
-      // redirect が成功した場合、ここには到達しない
       if (!result.success) {
         setError(result.error);
+      } else {
+        setEmailSent(true);
       }
     } catch {
       // redirect は例外をthrowするため、Next.js が自動的に処理する
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // メール送信完了画面
+  if (emailSent) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <h1 className="inline-block border-2 border-border bg-primary px-6 py-3 text-2xl font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            家計簿 APP
+          </h1>
+        </div>
+        <div className="space-y-4 border-2 border-border bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="border-2 border-emerald-500 bg-emerald-50 p-4 text-center">
+            <p className="text-lg font-black text-emerald-800">
+              確認メールを送信しました
+            </p>
+            <p className="mt-2 text-sm font-bold text-emerald-700">
+              {email}
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            メール内の「メールアドレスを確認する」リンクをクリックすると、ログインできるようになります。
+          </p>
+          <p className="text-xs text-muted-foreground">
+            メールが届かない場合は迷惑メールフォルダをご確認ください。
+          </p>
+          <Link
+            href="/login"
+            className="block w-full border-2 border-border bg-primary py-2 text-center text-sm font-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+          >
+            ログイン画面へ
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
