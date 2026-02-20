@@ -47,7 +47,7 @@ export function CategoryChart({ data }: Props) {
   return (
     <div className="border-2 border-border bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
       <h3 className="mb-6 flex items-center gap-2 text-xl font-black">
-        <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">BREAKDOWN</span>
+        <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">内訳</span>
         利用内訳
       </h3>
       <ResponsiveContainer width="100%" height={240}>

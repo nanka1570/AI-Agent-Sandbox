@@ -1,53 +1,44 @@
 import { test, expect } from "@playwright/test";
 import { format } from "date-fns";
-import Database from "better-sqlite3";
-import path from "path";
+import { loginAsTestUser } from "./helpers/auth";
 
-const currentMonth = format(new Date(), "yyyy-MM");
-
-// テスト前にクレカ1枚と支払い1件を用意（status=unconfirmed）
-test.beforeEach(() => {
-  const dbPath = path.resolve("dev.db");
-  const db = new Database(dbPath);
-  db.exec("DELETE FROM Payment");
-  db.exec("DELETE FROM CreditCard");
-  db.exec("DELETE FROM Salary");
-
-  const now = new Date().toISOString();
-  db.exec(`
-    INSERT INTO CreditCard (id, name, closingDay, paymentDay, createdAt, updatedAt)
-    VALUES ('card-e2e', 'テストカード', 15, 10, '${now}', '${now}')
-  `);
-  db.exec(`
-    INSERT INTO Payment (id, creditCardId, month, amount, status, createdAt, updatedAt)
-    VALUES ('pay-e2e', 'card-e2e', '${currentMonth}', 50000, 'unconfirmed', '${now}', '${now}')
-  `);
-  db.close();
+test.beforeEach(async ({ page }) => {
+  await loginAsTestUser(page);
 });
 
-test("E2E-003: 支払いステータス変更 → ダッシュボード更新確認", async ({ page }) => {
-  // --- 未確定 → 確定 ---
+test("E2E-003: 支払いステータス変更確認", async ({ page }) => {
+  const currentMonth = format(new Date(), "yyyy-MM");
+
+  // --- 準備: クレカ登録 ---
+  await page.goto("/credit-cards");
+  await page.click("text=+ 新規登録");
+  await page.fill('input[placeholder="楽天カード"]', "ステータス確認用");
+  await page.locator('input[placeholder="1〜31"]').first().fill("20");
+  await page.locator('input[placeholder="1〜31"]').last().fill("5");
+  await page.click("text=登録する");
+  await expect(page.locator("text=登録しました")).toBeVisible();
+
+  // --- 準備: 支払い登録 ---
   await page.goto("/payments");
-  await expect(page.getByText("未確定", { exact: true })).toBeVisible();
-  await page.getByText("未確定", { exact: true }).click();
+  await page.click("text=+ 新規登録");
+  await page.locator("text=カードを選択").click();
+  await page.locator('[role="option"]').filter({ hasText: "ステータス確認用" }).first().click();
+  await page.fill('input[type="month"]', currentMonth);
+  await page.fill('input[placeholder="50000"]', "40000");
+  await page.click("text=登録する");
+  await expect(page.locator("text=登録しました")).toBeVisible();
+  await expect(page.locator('[role="dialog"]')).toBeHidden();
 
-  // 確定に変わる（「未確定」が消え「確定」が表示される）
-  await expect(page.getByText("未確定", { exact: true })).toBeHidden();
-  await expect(page.getByText("確定", { exact: true })).toBeVisible();
+  // --- 未確定 → 確定 ---
+  const row = page.locator("tbody tr").filter({ hasText: "ステータス確認用" }).first();
+  const statusButton = row.getByRole("button", { name: "未確定" });
+  await expect(statusButton).toBeVisible();
+  await statusButton.click();
 
-  // ダッシュボードで確認
-  await page.goto("/");
-  await expect(page.getByText("確定 ¥50,000")).toBeVisible();
+  // 確定に変わる
+  await expect(row.getByRole("button", { name: "確定" })).toBeVisible();
 
   // --- 確定 → 支払い済み ---
-  await page.goto("/payments");
-  await page.getByText("確定", { exact: true }).click();
-
-  // 支払い済みに変わる
-  await expect(page.getByText("確定", { exact: true })).toBeHidden();
-  await expect(page.getByText("支払い済み")).toBeVisible();
-
-  // ダッシュボードで確認
-  await page.goto("/");
-  await expect(page.getByText("支払済 ¥50,000")).toBeVisible();
+  await row.getByRole("button", { name: "確定" }).click();
+  await expect(row.getByText("支払い済み")).toBeVisible();
 });

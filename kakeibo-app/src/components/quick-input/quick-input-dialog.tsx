@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { formatCurrencyJP } from "@/lib/utils";
 import type { CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput } from "@/types";
 import { createPayment } from "@/lib/actions/payment";
@@ -24,6 +25,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -116,6 +118,11 @@ export function QuickInputDialog({
                       }
                     />
                   </FormControl>
+                  {field.value ? (
+                    <FormDescription className="font-bold text-foreground">
+                      = {formatCurrencyJP(field.value)}
+                    </FormDescription>
+                  ) : null}
                   <FormMessage />
                 </FormItem>
               )}
@@ -151,6 +158,9 @@ export function QuickInputDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormDescription className="text-xs">
+                    カテゴリの追加・編集は「予算」タブから行えます
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -163,20 +173,26 @@ export function QuickInputDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>クレジットカード *</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="border-2 border-border bg-white">
-                        <SelectValue placeholder="カードを選択" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                      {creditCards.map((card) => (
-                        <SelectItem key={card.id} value={card.id}>
-                          {card.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {creditCards.length === 0 ? (
+                    <p className="text-sm text-muted-foreground border-2 border-dashed border-border rounded-md px-3 py-2">
+                      先にカードを登録してください
+                    </p>
+                  ) : (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="border-2 border-border bg-white">
+                          <SelectValue placeholder="カードを選択" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        {creditCards.map((card) => (
+                          <SelectItem key={card.id} value={card.id}>
+                            {card.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

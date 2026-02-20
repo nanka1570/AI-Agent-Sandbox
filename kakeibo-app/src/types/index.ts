@@ -18,6 +18,11 @@ export const creditCardSchema = z.object({
     .int("整数で入力してください")
     .min(1, "1〜31の範囲で入力してください")
     .max(31, "1〜31の範囲で入力してください"),
+  paymentMonthOffset: z
+    .number()
+    .int()
+    .min(0, "0〜2の範囲で選択してください")
+    .max(2, "0〜2の範囲で選択してください"),
   memo: z.string().optional(),
 });
 

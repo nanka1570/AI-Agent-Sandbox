@@ -34,14 +34,14 @@ export const viewport: Viewport = {
   themeColor: '#6366f1',
 };
 
-// ナビゲーションリンク定義（英語表記: design_spec.md準拠）
+// ナビゲーションリンク定義
 const navLinks = [
-  { href: '/', label: 'DASHBOARD' },
-  { href: '/credit-cards', label: 'CARDS' },
-  { href: '/salary', label: 'SALARY' },
-  { href: '/payments', label: 'PAYMENTS' },
-  { href: '/budget', label: 'BUDGET' },
-  { href: '/reports', label: 'REPORTS' },
+  { href: '/', label: 'ダッシュボード' },
+  { href: '/credit-cards', label: 'カード' },
+  { href: '/salary', label: '給料' },
+  { href: '/payments', label: '支払い' },
+  { href: '/budget', label: '予算' },
+  { href: '/reports', label: 'レポート' },
 ];
 
 export default function RootLayout({

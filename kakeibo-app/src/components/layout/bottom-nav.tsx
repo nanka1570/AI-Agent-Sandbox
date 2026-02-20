@@ -6,12 +6,12 @@ import { LayoutDashboard, CreditCard, Banknote, Receipt, Wallet, BarChart3 } fro
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "HOME", icon: LayoutDashboard },
-  { href: "/credit-cards", label: "CARDS", icon: CreditCard },
-  { href: "/salary", label: "SALARY", icon: Banknote },
-  { href: "/payments", label: "PAYMENTS", icon: Receipt },
-  { href: "/budget", label: "BUDGET", icon: Wallet },
-  { href: "/reports", label: "REPORTS", icon: BarChart3 },
+  { href: "/", label: "ホーム", icon: LayoutDashboard },
+  { href: "/credit-cards", label: "カード", icon: CreditCard },
+  { href: "/salary", label: "給料", icon: Banknote },
+  { href: "/payments", label: "支払い", icon: Receipt },
+  { href: "/budget", label: "予算", icon: Wallet },
+  { href: "/reports", label: "レポート", icon: BarChart3 },
 ];
 
 export function BottomNav() {

@@ -16,7 +16,7 @@ import {
 } from "@/types";
 import { createCategory, updateCategory, deleteCategory } from "@/lib/actions/category";
 import { upsertBudget } from "@/lib/actions/budget";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP } from "@/lib/utils";
 import { MonthSelector } from "@/components/month-selector";
 import { EmptyState } from "@/components/empty-state";
 import { Progress } from "@/components/ui/progress";
@@ -49,6 +49,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormDescription,
   FormItem,
   FormLabel,
   FormMessage,
@@ -462,6 +463,11 @@ export function BudgetManager({
                         }
                       />
                     </FormControl>
+                    {field.value ? (
+                      <FormDescription className="font-bold text-foreground">
+                        = {formatCurrencyJP(field.value)}
+                      </FormDescription>
+                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}

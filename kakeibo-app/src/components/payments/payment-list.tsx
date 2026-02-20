@@ -15,7 +15,7 @@ import {
   deletePayment,
   deleteRecurringPayments,
 } from "@/lib/actions/payment";
-import { formatCurrency, formatMonth } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatMonth } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { ExportButton } from "@/components/payments/export-button";
@@ -55,6 +55,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -422,6 +423,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormDescription className="text-xs">
+                      カテゴリの追加・編集は「予算」タブから行えます
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -446,6 +450,11 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                     <FormControl>
                       <Input type="number" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
+                    {field.value ? (
+                      <FormDescription className="font-bold text-foreground">
+                        = {formatCurrencyJP(field.value)}
+                      </FormDescription>
+                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}

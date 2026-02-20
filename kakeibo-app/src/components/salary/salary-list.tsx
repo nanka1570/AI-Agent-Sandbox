@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import type { Salary } from "@/generated/prisma/client";
 import { salarySchema, type SalaryInput } from "@/types";
 import { createSalary, updateSalary, deleteSalary } from "@/lib/actions/salary";
-import { formatCurrency, formatDay, formatMonth } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatDay, formatMonth } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormDescription,
   FormItem,
   FormLabel,
   FormMessage,
@@ -214,6 +215,11 @@ export function SalaryList({ salaries }: Props) {
                     <FormControl>
                       <Input type="number" placeholder="250000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
+                    {field.value ? (
+                      <FormDescription className="font-bold text-foreground">
+                        = {formatCurrencyJP(field.value)}
+                      </FormDescription>
+                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}

@@ -10,11 +10,11 @@ import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 // Payment にリレーション（creditCard, category）を含めた型
 type PaymentWithCard = Payment & { creditCard: CreditCard; category: Category | null };
 
-// ステータス遷移マップ
-const STATUS_TRANSITIONS: Record<string, string | null> = {
+// ステータス遷移マップ（循環: 支払い済み → 未確定に戻れる）
+const STATUS_TRANSITIONS: Record<string, string> = {
   unconfirmed: "confirmed",
   confirmed: "paid",
-  paid: null,
+  paid: "unconfirmed",
 };
 
 export async function createPayment(
@@ -153,9 +153,6 @@ export async function updatePaymentStatus(
   }
 
   const nextStatus = STATUS_TRANSITIONS[existing.status];
-  if (!nextStatus) {
-    return { success: false, error: "これ以上ステータスを変更できません" };
-  }
 
   const payment = await prisma.payment.update({
     where: { id, userId },

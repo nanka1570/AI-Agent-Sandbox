@@ -56,6 +56,51 @@ export function calcMonthlyData(
   }));
 }
 
+// 資金繰りステータス計算
+type PaymentForCashFlow = {
+  id: string;
+  amount: number;
+  creditCard: { name: string; paymentDay: number; paymentMonthOffset: number };
+};
+
+export type CashFlowItem = {
+  id: string;
+  cardName: string;
+  paymentDay: number;
+  paymentMonthOffset: number;
+  amount: number;
+  isSafe: boolean; // true = 給料入金後, false = 給料入金前
+};
+
+/**
+ * 給料支給日と各支払いの実際の支払日を比較して、資金繰りの安全性を返す
+ * - paymentMonthOffset > 0: 支払いは翌月以降 → 給料入金後なので安全
+ * - paymentMonthOffset = 0: 同月内 → 給料日 <= 支払日 なら安全
+ */
+export function calcCashFlowStatus(
+  salaryPayDay: number,
+  payments: PaymentForCashFlow[]
+): CashFlowItem[] {
+  return payments
+    .map((p) => {
+      const { paymentDay, paymentMonthOffset, name } = p.creditCard;
+      const isSafe = paymentMonthOffset > 0 || salaryPayDay <= paymentDay;
+      return {
+        id: p.id,
+        cardName: name,
+        paymentDay,
+        paymentMonthOffset,
+        amount: p.amount,
+        isSafe,
+      };
+    })
+    .sort((a, b) => {
+      // 月オフセット昇順 → 同月内は支払日昇順
+      if (a.paymentMonthOffset !== b.paymentMonthOffset) return a.paymentMonthOffset - b.paymentMonthOffset;
+      return a.paymentDay - b.paymentDay;
+    });
+}
+
 // クレカ別集計（円グラフ用 - 旧互換）
 export function calcCategoryData(
   payments: PaymentLike[]

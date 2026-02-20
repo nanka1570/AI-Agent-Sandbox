@@ -23,7 +23,7 @@ const STATUS_CONFIG: Record<
   paid: {
     label: "支払い済み",
     className: "border-solid bg-black text-white",
-    clickable: false,
+    clickable: true,
   },
 };
 

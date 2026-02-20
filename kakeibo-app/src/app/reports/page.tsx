@@ -95,7 +95,7 @@ export default async function ReportsPage({ searchParams }: Props) {
       <div className="mt-8">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
           <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
-            RANKING
+            ランキング
           </span>
           カテゴリ別年間ランキング
         </h2>
@@ -150,7 +150,7 @@ export default async function ReportsPage({ searchParams }: Props) {
       <div className="mt-8">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
           <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
-            MONTHLY
+            月次詳細
           </span>
           月次詳細
         </h2>

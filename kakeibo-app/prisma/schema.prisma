@@ -29,8 +29,9 @@ model CreditCard {
   id         String    @id @default(cuid())
   userId     String    // Supabase Auth の user.id
   name       String    // カード名
-  closingDay Int       // 締め日（1-31）
-  paymentDay Int       // 支払い日（1-31）
+  closingDay         Int  // 締め日（1-31）
+  paymentDay         Int  // 支払い日（1-31）
+  paymentMonthOffset Int  @default(0) // 支払月オフセット（0=当月, 1=翌月, 2=翌々月）
   memo       String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

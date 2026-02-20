@@ -8,7 +8,14 @@ import { Pencil, Trash2, CreditCard } from "lucide-react";
 import type { CreditCard as CreditCardType } from "@/generated/prisma/client";
 import { creditCardSchema, type CreditCardInput } from "@/types";
 import { createCreditCard, updateCreditCard, deleteCreditCard } from "@/lib/actions/credit-card";
-import { formatDay } from "@/lib/utils";
+import { formatDay, formatPaymentDay } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,6 +62,7 @@ export function CreditCardList({ cards }: Props) {
       name: "",
       closingDay: undefined,
       paymentDay: undefined,
+      paymentMonthOffset: 0,
       memo: "",
     },
   });
@@ -63,7 +71,7 @@ export function CreditCardList({ cards }: Props) {
 
   function handleOpenCreate() {
     setEditTarget(null);
-    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, memo: "" });
+    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, paymentMonthOffset: 0, memo: "" });
     setIsFormOpen(true);
   }
 
@@ -73,6 +81,7 @@ export function CreditCardList({ cards }: Props) {
       name: card.name,
       closingDay: card.closingDay,
       paymentDay: card.paymentDay,
+      paymentMonthOffset: card.paymentMonthOffset,
       memo: card.memo ?? "",
     });
     setIsFormOpen(true);
@@ -134,7 +143,7 @@ export function CreditCardList({ cards }: Props) {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-black text-lg">{card.name}</p>
                       <p className="mt-1 text-sm font-bold">
-                        締め日: {formatDay(card.closingDay)} / 支払い日: {formatDay(card.paymentDay)}
+                        締め日: {formatDay(card.closingDay)} / 支払い日: {formatPaymentDay(card.paymentDay, card.paymentMonthOffset)}
                       </p>
                       {card.memo && (
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{card.memo}</p>
@@ -196,6 +205,31 @@ export function CreditCardList({ cards }: Props) {
                     <FormControl>
                       <Input type="number" placeholder="1〜31" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="paymentMonthOffset"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>支払月 *</FormLabel>
+                    <Select
+                      value={String(field.value)}
+                      onValueChange={(v) => field.onChange(Number(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-2 border-border bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <SelectItem value="0">当月</SelectItem>
+                        <SelectItem value="1">翌月</SelectItem>
+                        <SelectItem value="2">翌々月</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
