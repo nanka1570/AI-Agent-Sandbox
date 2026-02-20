@@ -35,9 +35,15 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 認証不要ページはスキップ
-  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
+  // 認証不要ページ（未認証でもアクセス可能）
+  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback", "/offline", "/privacy", "/terms"];
   const isPublicPath = publicPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  // 認証ページ（認証済みならダッシュボードにリダイレクト）
+  const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+  const isAuthPath = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
 
@@ -48,8 +54,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 認証済みでログインページにアクセスした場合、ダッシュボードにリダイレクト
-  if (user && isPublicPath) {
+  // 認証済みで認証ページにアクセスした場合、ダッシュボードにリダイレクト
+  if (user && isAuthPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_JP, Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
 import { Toaster } from '@/components/ui/sonner';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { LogoutButton } from '@/components/layout/logout-button';
+import { SwRegister } from '@/components/pwa/sw-register';
 import './globals.css';
 
 const notoSansJP = Noto_Sans_JP({
@@ -21,6 +22,16 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: '家計簿アプリ',
   description: '給料日とクレジットカード支払日を管理する家計簿アプリ',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '家計簿 APP',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#6366f1',
 };
 
 // ナビゲーションリンク定義（英語表記: design_spec.md準拠）
@@ -66,7 +77,15 @@ export default function RootLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 pb-20 pt-6 md:pb-6">{children}</main>
+        <footer className="mx-auto max-w-5xl px-4 pb-24 md:pb-8">
+          <div className="flex items-center justify-center gap-4 border-t-2 border-border pt-4 text-xs text-muted-foreground">
+            <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link>
+            <span>|</span>
+            <Link href="/terms" className="hover:underline">利用規約</Link>
+          </div>
+        </footer>
         <BottomNav />
+        <SwRegister />
         <Toaster position="top-right" richColors />
       </body>
     </html>

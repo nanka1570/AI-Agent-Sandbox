@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 背景: インディゴ角丸四角 -->
+  <rect width="512" height="512" rx="64" fill="#6366f1"/>
+  <!-- Neo-Brutalism ボーダー -->
+  <rect x="4" y="4" width="504" height="504" rx="60" fill="none" stroke="#000" stroke-width="8"/>
+  <!-- 「家」テキスト -->
+  <text x="256" y="320" font-family="Arial Black, sans-serif" font-size="220" fill="white" text-anchor="middle" font-weight="900">家</text>
+  <!-- Neo-Brutalism シャドウ効果 -->
+  <rect x="8" y="8" width="504" height="504" rx="60" fill="none" stroke="#000" stroke-width="4" opacity="0.3" transform="translate(4,4)"/>
+</svg>

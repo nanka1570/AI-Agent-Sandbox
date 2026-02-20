@@ -1,0 +1,17 @@
+{
+  "name": "家計簿 APP",
+  "short_name": "家計簿",
+  "description": "給料とクレジットカード支払いを管理する家計簿アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
