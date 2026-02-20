@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase B 全完了（Phase 6〜11）
+## 現在のPhase: Vercel 本番デプロイ完了
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -26,6 +26,8 @@
 | Phase 11 | レポート | 月次/年次分析レポート | ✅ 完了 | `feat: Phase 11 - レポート機能（月次/年次分析）` |
 
 ## 更新履歴
+
+- 2026-02-21: Vercel 本番デプロイ完了 — https://simple-kakeibo-app.vercel.app/ で公開。postinstall に prisma generate 追加、Supabase マイグレーション手動適用、新規登録後のメール確認案内画面を追加
 
 - 2026-02-20: Phase 11 完了 — レポートページ（/reports）新規作成、年間サマリーカード3枚（収入/支出/収支）、月別支出推移折れ線グラフ、カテゴリ別年間ランキング、月次詳細（前月比表示）、年セレクター、BottomNav+ヘッダーにREPORTSタブ追加
 - 2026-02-20: Phase 10 完了 — AdBannerプレースホルダー（ダッシュボードのグラフ下）、CSVエクスポート（Server Action + ExportButton、BOM付きUTF-8、支払い一覧ヘッダーに配置）、プライバシーポリシーページ、利用規約ページ、middleware.tsに/privacy・/termsを公開パス追加（認証済みでもアクセス可能に分離）、レイアウトにフッター追加
