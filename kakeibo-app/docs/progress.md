@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase 4b（給料管理CRUD）
+## 現在のPhase: Phase 4c（支払い管理）
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -11,7 +11,7 @@
 | Phase 2 | 基本設計 | 基本設計書 + 画面設計書 + テスト計画書 + テスト環境 | ✅ 完了 | `docs: Phase 2 - 基本設計（基本設計書 + 画面設計書 + テスト計画書 + テスト環境）` |
 | Phase 3 | 詳細設計 | 詳細設計書（全機能） + テスト仕様書（全テストケース） | ✅ 完了 | `docs: Phase 3 - 詳細設計（詳細設計書 + テスト仕様書）` |
 | Phase 4a | 実装 | クレジットカード管理CRUD | ✅ 完了 | `feat: Phase 4a - クレジットカード管理CRUD` |
-| Phase 4b | 実装 | 給料管理CRUD | ⬜ 未着手 | - |
+| Phase 4b | 実装 | 給料管理CRUD | ✅ 完了 | `feat: Phase 4b - 給料管理CRUD` |
 | Phase 4c | 実装 | 支払い管理 | ⬜ 未着手 | - |
 | Phase 4d | 実装 | ダッシュボード + グラフ | ⬜ 未着手 | - |
 | Phase 4e | 実装 | UI/UXポリッシュ | ⬜ 未着手 | - |
@@ -20,6 +20,7 @@
 
 ## 更新履歴
 
+- 2026-02-20: Phase 4b 完了 — 給料管理CRUD実装、Table導入、salarySchema・Server Actions・SalaryList作成
 - 2026-02-20: Phase 4a 完了 — クレジットカード管理CRUD実装、shadcn/ui導入、Neo-Brutalism（Retro Pop Edition）デザイン適用、型定義・Server Actions・EmptyState・Toaster作成
 - 2026-02-18: Phase 3 完了 — 詳細設計書（全5セクション）、テスト仕様書（82テストケース）作成、要件定義書に未確定金額表示を追記
 - 2026-02-17: Phase 2 完了 — 基本設計書、画面設計書、テスト計画書作成、Vitest環境セットアップ

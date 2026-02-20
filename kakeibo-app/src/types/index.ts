@@ -22,3 +22,20 @@ export const creditCardSchema = z.object({
 });
 
 export type CreditCardInput = z.infer<typeof creditCardSchema>;
+
+// 給料
+export const salarySchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/, "YYYY-MM形式で入力してください"),
+  payDay: z
+    .number()
+    .int("整数で入力してください")
+    .min(1, "1〜31の範囲で入力してください")
+    .max(31, "1〜31の範囲で入力してください"),
+  amount: z
+    .number()
+    .int("整数で入力してください")
+    .min(1, "1円以上で入力してください"),
+  memo: z.string().optional(),
+});
+
+export type SalaryInput = z.infer<typeof salarySchema>;
