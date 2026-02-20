@@ -7,6 +7,7 @@ import {
   calcConfirmedBalance,
   calcMonthlyData,
   calcCategoryData,
+  calcCashFlowStatus,
 } from "@/lib/dashboard";
 
 // テスト用のダミーデータ
@@ -88,5 +89,56 @@ describe("ダッシュボード集計ロジック", () => {
     const smbc = result.find((r) => r.name === "三井住友カード");
     expect(rakuten?.total).toBe(80000);
     expect(smbc?.total).toBe(20000);
+  });
+});
+
+describe("calcCashFlowStatus", () => {
+  const payments = [
+    {
+      id: "p1",
+      amount: 30000,
+      creditCard: { name: "翌月払いカード", paymentDay: 10, paymentMonthOffset: 1 },
+    },
+    {
+      id: "p2",
+      amount: 50000,
+      creditCard: { name: "当月払い（給料後）", paymentDay: 27, paymentMonthOffset: 0 },
+    },
+    {
+      id: "p3",
+      amount: 20000,
+      creditCard: { name: "当月払い（給料前）", paymentDay: 5, paymentMonthOffset: 0 },
+    },
+  ];
+
+  // 給料日25日
+  it("翌月払いは常に安全（isSafe=true）", () => {
+    const result = calcCashFlowStatus(25, payments);
+    const p1 = result.find((r) => r.id === "p1");
+    expect(p1?.isSafe).toBe(true);
+  });
+
+  it("当月払い・支払日>=給料日は安全（isSafe=true）", () => {
+    const result = calcCashFlowStatus(25, payments);
+    const p2 = result.find((r) => r.id === "p2");
+    expect(p2?.isSafe).toBe(true);
+  });
+
+  it("当月払い・支払日<給料日は危険（isSafe=false）", () => {
+    const result = calcCashFlowStatus(25, payments);
+    const p3 = result.find((r) => r.id === "p3");
+    expect(p3?.isSafe).toBe(false);
+  });
+
+  it("月オフセット昇順→支払日昇順でソートされる", () => {
+    const result = calcCashFlowStatus(25, payments);
+    // p3(offset=0,day=5), p2(offset=0,day=27), p1(offset=1,day=10) の順になるはず
+    expect(result[0].id).toBe("p3");
+    expect(result[1].id).toBe("p2");
+    expect(result[2].id).toBe("p1");
+  });
+
+  it("支払いなしは空配列を返す", () => {
+    expect(calcCashFlowStatus(25, [])).toEqual([]);
   });
 });

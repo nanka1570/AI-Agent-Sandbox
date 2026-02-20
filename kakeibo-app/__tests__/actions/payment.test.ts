@@ -39,6 +39,7 @@ const mockCard = {
   name: "楽天カード",
   closingDay: 31,
   paymentDay: 27,
+  paymentMonthOffset: 0,
   memo: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -154,12 +155,13 @@ describe("updatePaymentStatus", () => {
     if (result.success) expect(result.data.status).toBe("paid");
   });
 
-  // UT-PM-011: paid → エラー
-  it("paidからの遷移はエラー", async () => {
+  // UT-PM-011: paid → unconfirmed（循環型に変更済み）
+  it("paid → unconfirmedに遷移成功", async () => {
     mockFindUnique.mockResolvedValue({ ...mockPayment, status: "paid" } as never);
+    mockUpdate.mockResolvedValue({ ...mockPayment, status: "unconfirmed" } as never);
     const result = await updatePaymentStatus("pay-1");
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toContain("変更できません");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.status).toBe("unconfirmed");
   });
 
   // UT-PM-012: 存在しないID

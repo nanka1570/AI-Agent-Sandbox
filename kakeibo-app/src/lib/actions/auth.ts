@@ -5,6 +5,23 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import type { ActionResult } from "@/types";
 
+// Supabase 英語エラーメッセージを日本語に変換
+function translateAuthError(message: string): string {
+  if (message.includes("Invalid login credentials")) {
+    return "メールアドレスまたはパスワードが正しくありません";
+  }
+  if (message.includes("Email not confirmed")) {
+    return "メールアドレスの確認が完了していません。確認メールのリンクをクリックしてください";
+  }
+  if (message.includes("Too many requests") || message.includes("rate limit")) {
+    return "しばらく時間をおいてから再度お試しください";
+  }
+  if (message.includes("User already registered")) {
+    return "このメールアドレスはすでに登録されています";
+  }
+  return "エラーが発生しました。もう一度お試しください";
+}
+
 /**
  * メールアドレス + パスワードでログインする
  */
@@ -20,7 +37,7 @@ export async function login(
   });
 
   if (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: translateAuthError(error.message) };
   }
 
   revalidatePath("/", "layout");
@@ -42,7 +59,7 @@ export async function register(
   });
 
   if (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: translateAuthError(error.message) };
   }
 
   // メール確認が必要なためリダイレクトせず、成功を返してページ側で案内を表示する

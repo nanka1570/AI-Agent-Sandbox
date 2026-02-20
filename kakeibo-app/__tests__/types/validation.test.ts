@@ -13,6 +13,7 @@ describe("creditCardSchema", () => {
       name: "テスト",
       closingDay: 15,
       paymentDay: 10,
+      paymentMonthOffset: 0,
     });
     expect(result.success).toBe(true);
   });
@@ -23,6 +24,7 @@ describe("creditCardSchema", () => {
       name: "",
       closingDay: 15,
       paymentDay: 10,
+      paymentMonthOffset: 0,
     });
     expect(result.success).toBe(false);
   });
@@ -33,6 +35,7 @@ describe("creditCardSchema", () => {
       name: "a".repeat(50),
       closingDay: 15,
       paymentDay: 10,
+      paymentMonthOffset: 0,
     });
     expect(result.success).toBe(true);
   });
@@ -43,6 +46,31 @@ describe("creditCardSchema", () => {
       name: "a".repeat(51),
       closingDay: 15,
       paymentDay: 10,
+      paymentMonthOffset: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // UT-VL-013: paymentMonthOffset 正常値（0,1,2）
+  it("paymentMonthOffset 0/1/2でparse成功", () => {
+    for (const offset of [0, 1, 2]) {
+      const result = creditCardSchema.safeParse({
+        name: "テスト",
+        closingDay: 15,
+        paymentDay: 10,
+        paymentMonthOffset: offset,
+      });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  // UT-VL-014: paymentMonthOffset 不正値（3）
+  it("paymentMonthOffset 3でparse失敗", () => {
+    const result = creditCardSchema.safeParse({
+      name: "テスト",
+      closingDay: 15,
+      paymentDay: 10,
+      paymentMonthOffset: 3,
     });
     expect(result.success).toBe(false);
   });

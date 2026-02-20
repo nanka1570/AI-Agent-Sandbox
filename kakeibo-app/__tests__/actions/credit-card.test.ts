@@ -33,6 +33,7 @@ const mockCard = {
   name: "楽天カード",
   closingDay: 31,
   paymentDay: 27,
+  paymentMonthOffset: 0,
   memo: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -46,7 +47,7 @@ describe("createCreditCard", () => {
   // UT-CC-001: 正常登録
   it("正常な入力で登録成功", async () => {
     mockCreate.mockResolvedValue(mockCard);
-    const result = await createCreditCard({ name: "楽天カード", closingDay: 31, paymentDay: 27 });
+    const result = await createCreditCard({ name: "楽天カード", closingDay: 31, paymentDay: 27, paymentMonthOffset: 0 });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.name).toBe("楽天カード");
   });
@@ -92,7 +93,7 @@ describe("updateCreditCard", () => {
   it("正常な入力で編集成功", async () => {
     mockFindUnique.mockResolvedValue(mockCard);
     mockUpdate.mockResolvedValue({ ...mockCard, name: "更新名" });
-    const result = await updateCreditCard("card-1", { name: "更新名", closingDay: 15, paymentDay: 10 });
+    const result = await updateCreditCard("card-1", { name: "更新名", closingDay: 15, paymentDay: 10, paymentMonthOffset: 0 });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.name).toBe("更新名");
   });
@@ -100,7 +101,7 @@ describe("updateCreditCard", () => {
   // UT-CC-008: 存在しないID
   it("存在しないIDで編集エラー", async () => {
     mockFindUnique.mockResolvedValue(null);
-    const result = await updateCreditCard("nonexistent", { name: "テスト", closingDay: 15, paymentDay: 10 });
+    const result = await updateCreditCard("nonexistent", { name: "テスト", closingDay: 15, paymentDay: 10, paymentMonthOffset: 0 });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("見つかりません");
   });
