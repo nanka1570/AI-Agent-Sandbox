@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 認証不要ページはスキップ
-  const publicPaths = ["/login", "/register", "/forgot-password"];
+  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

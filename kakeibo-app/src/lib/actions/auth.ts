@@ -59,6 +59,25 @@ export async function logout(): Promise<void> {
 }
 
 /**
+ * パスワードを新しいものに変更する（リセットフロー用）
+ */
+export async function updatePassword(
+  newPassword: string
+): Promise<ActionResult<void>> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  redirect("/login");
+}
+
+/**
  * パスワードリセットメールを送信する
  */
 export async function resetPassword(
@@ -66,8 +85,10 @@ export async function resetPassword(
 ): Promise<ActionResult<void>> {
   const supabase = await createClient();
 
+  // リセットリンクからアプリの /auth/callback に戻り、そこで /reset-password に遷移する
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/callback`,
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
   });
 
   if (error) {
