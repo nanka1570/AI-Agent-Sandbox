@@ -6,6 +6,7 @@ import { register } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -160,6 +161,16 @@ export default function RegisterPage() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "登録中..." : "アカウントを作成"}
         </Button>
+
+        {/* 区切り線 */}
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">または</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* Google ログイン */}
+        <GoogleLoginButton />
 
         {/* リンク */}
         <div className="text-center text-sm">

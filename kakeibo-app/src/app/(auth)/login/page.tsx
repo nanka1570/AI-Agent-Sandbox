@@ -6,6 +6,7 @@ import { login } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -92,6 +93,16 @@ export default function LoginPage() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "ログイン中..." : "ログイン"}
         </Button>
+
+        {/* 区切り線 */}
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">または</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* Google ログイン */}
+        <GoogleLoginButton />
 
         {/* リンク */}
         <div className="flex flex-col items-center gap-2 text-sm">
