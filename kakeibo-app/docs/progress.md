@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase 5b（E2Eテスト + テスト結果報告書 + README）
+## 現在のPhase: 全Phase完了
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -16,10 +16,11 @@
 | Phase 4d | 実装 | ダッシュボード + グラフ | ✅ 完了 | `feat: Phase 4d - ダッシュボード + グラフ` |
 | Phase 4e | 実装 | UI/UXポリッシュ | ✅ 完了 | `feat: Phase 4e - UI/UXポリッシュ` |
 | Phase 5a | テスト | 単体テスト + 結合テスト | ✅ 完了 | `test: Phase 5a - 単体テスト + 結合テスト` |
-| Phase 5b | テスト | E2Eテスト + テスト結果報告書 + README | ⬜ 未着手 | - |
+| Phase 5b | テスト | E2Eテスト + テスト結果報告書 + README | ✅ 完了 | `test: Phase 5b - E2Eテスト + テスト結果報告書 + README` |
 
 ## 更新履歴
 
+- 2026-02-20: Phase 5b 完了 — Playwright E2E 3件全PASS（E2E-001〜003）、テスト結果報告書（08_テスト結果報告書_v1_0.md）作成、README更新、全82テスト100%合格
 - 2026-02-20: Phase 5a 完了 — Vitest 79件全PASS（UT-VL 12件、UT-CC 10件、UT-SL 11件、UT-PM 12件、UT-DB 8件、CT-CC 5件、CT-SL 6件、CT-PM 8件、CT-DB 7件）、dashboard.ts集計ロジック切り出し、cleanup設定追加
 - 2026-02-20: Phase 4e 完了 — BottomNav（モバイル固定下部ナビ）、loading.tsx（Skeleton）、error.tsx（エラーハンドリング）、レイアウト余白調整（pb-20）
 - 2026-02-20: Phase 4d 完了 — ダッシュボード実装、サマリーカード3枚（給料合計・支払い合計・残額）、支払い予定テーブル、月別支出推移BarChart、クレカ別支出PieChart、MonthSelector共通化

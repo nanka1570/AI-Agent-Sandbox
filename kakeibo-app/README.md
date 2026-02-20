@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kakeibo-app（家計簿アプリ）
 
-## Getting Started
+給料日とクレジットカードの支払日を管理し、収支を可視化する個人向け家計簿Webアプリ。
 
-First, run the development server:
+## 機能
+
+- **ダッシュボード** — 給料合計・支払い合計・残額のサマリー、支払い予定一覧、月次推移グラフ、クレカ別支出グラフ
+- **クレジットカード管理** — カードの登録・編集・削除（締め日・支払い日）
+- **給料管理** — 月別の給料登録・編集・削除
+- **支払い管理** — クレカ別の支払い登録、ステータス管理（未確定→確定→支払い済み）
+
+## 技術スタック
+
+| カテゴリ | 技術 |
+|----------|------|
+| フレームワーク | Next.js 16 (App Router) |
+| 言語 | TypeScript |
+| DB | SQLite (Prisma v7) |
+| UI | shadcn/ui + Tailwind CSS v4 |
+| グラフ | Recharts |
+| バリデーション | Zod v4 + React Hook Form |
+| テスト | Vitest + React Testing Library + Playwright |
+
+## セットアップ
 
 ```bash
+# 依存インストール
+npm install
+
+# DB作成
+npx prisma db push
+
+# Prisma Client生成
+npx prisma generate
+
+# 開発サーバー起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 でアクセス。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## テスト
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 単体テスト + コンポーネントテスト（79件）
+npm test
 
-## Learn More
+# E2Eテスト（3件）※ 開発サーバー起動中に実行
+npm run test:e2e
+```
 
-To learn more about Next.js, take a look at the following resources:
+## ディレクトリ構成
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+kakeibo-app/
+├── src/
+│   ├── app/                  # Next.js App Router ページ
+│   │   ├── page.tsx          # ダッシュボード
+│   │   ├── credit-cards/     # クレカ管理
+│   │   ├── salary/           # 給料管理
+│   │   └── payments/         # 支払い管理
+│   ├── components/           # UIコンポーネント
+│   ├── lib/
+│   │   ├── actions/          # Server Actions（CRUD）
+│   │   ├── db.ts             # Prisma クライアント
+│   │   ├── dashboard.ts      # ダッシュボード集計ロジック
+│   │   └── utils.ts          # ユーティリティ関数
+│   ├── types/                # Zodスキーマ・型定義
+│   └── generated/prisma/     # Prisma生成コード
+├── prisma/
+│   └── schema.prisma         # データモデル定義
+├── __tests__/                # 単体・コンポーネントテスト
+├── e2e/                      # E2Eテスト
+└── docs/                     # 設計ドキュメント
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ドキュメント
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| No. | ドキュメント |
+|-----|-------------|
+| 01 | 要件定義書 |
+| 02 | 基本設計書 |
+| 03 | 画面設計書 |
+| 04 | 詳細設計書 |
+| 05 | テスト計画書 |
+| 06 | テスト環境構築手順書 |
+| 07 | テスト仕様書 |
+| 08 | テスト結果報告書 |
