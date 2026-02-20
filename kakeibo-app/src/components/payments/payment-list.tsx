@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Pencil, Trash2, Receipt } from "lucide-react";
 import { format, subMonths } from "date-fns";
-import type { Payment, CreditCard } from "@/generated/prisma/client";
+import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput, type PaymentStatus } from "@/types";
 import { createPayment, updatePayment, deletePayment } from "@/lib/actions/payment";
 import { formatCurrency, formatMonth } from "@/lib/utils";
@@ -56,11 +56,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-type PaymentWithCard = Payment & { creditCard: CreditCard };
+type PaymentWithCard = Payment & { creditCard: CreditCard; category: Category | null };
 
 type Props = {
   payments: PaymentWithCard[];
   creditCards: CreditCard[];
+  categories: Category[];
   currentMonth: string;
 };
 
@@ -74,7 +75,7 @@ function generateMonthOptions(): { value: string; label: string }[] {
   });
 }
 
-export function PaymentList({ payments, creditCards, currentMonth }: Props) {
+export function PaymentList({ payments, creditCards, categories, currentMonth }: Props) {
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<PaymentWithCard | null>(null);
@@ -87,6 +88,7 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       creditCardId: "",
+      categoryId: "",
       month: currentMonth,
       amount: undefined,
       memo: "",
@@ -102,7 +104,7 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
 
   function handleOpenCreate() {
     setEditTarget(null);
-    form.reset({ creditCardId: "", month: currentMonth, amount: undefined, memo: "" });
+    form.reset({ creditCardId: "", categoryId: "", month: currentMonth, amount: undefined, memo: "" });
     setIsFormOpen(true);
   }
 
@@ -110,6 +112,7 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
     setEditTarget(payment);
     form.reset({
       creditCardId: payment.creditCardId,
+      categoryId: payment.categoryId ?? "",
       month: payment.month,
       amount: payment.amount,
       memo: payment.memo ?? "",
@@ -184,6 +187,7 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
               <TableHeader>
                 <TableRow className="border-b-2 border-border bg-muted">
                   <TableHead className="font-black">カード</TableHead>
+                  <TableHead className="font-black">カテゴリ</TableHead>
                   <TableHead className="font-black">対象月</TableHead>
                   <TableHead className="font-black">金額</TableHead>
                   <TableHead className="font-black">ステータス</TableHead>
@@ -194,6 +198,19 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
                 {payments.map((payment) => (
                   <TableRow key={payment.id} className="border-b-2 border-border hover:bg-secondary/20">
                     <TableCell className="font-bold">{payment.creditCard.name}</TableCell>
+                    <TableCell>
+                      {payment.category ? (
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-3 w-3 rounded-full border border-border"
+                            style={{ backgroundColor: payment.category.color }}
+                          />
+                          <span className="text-sm">{payment.category.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>{formatMonth(payment.month)}</TableCell>
                     <TableCell className="font-bold font-mono">{formatCurrency(payment.amount)}</TableCell>
                     <TableCell>
@@ -240,6 +257,36 @@ export function PaymentList({ payments, creditCards, currentMonth }: Props) {
                       <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         {creditCards.map((card) => (
                           <SelectItem key={card.id} value={card.id}>{card.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>カテゴリ</FormLabel>
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="border-2 border-border bg-white">
+                          <SelectValue placeholder="カテゴリを選択（任意）" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-block h-3 w-3 rounded-full border border-border"
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              {cat.name}
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

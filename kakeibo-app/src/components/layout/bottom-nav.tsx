@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CreditCard, Banknote, Receipt } from "lucide-react";
+import { LayoutDashboard, CreditCard, Banknote, Receipt, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/credit-cards", label: "CARDS", icon: CreditCard },
   { href: "/salary", label: "SALARY", icon: Banknote },
   { href: "/payments", label: "PAYMENTS", icon: Receipt },
+  { href: "/budget", label: "BUDGET", icon: Wallet },
 ];
 
 export function BottomNav() {

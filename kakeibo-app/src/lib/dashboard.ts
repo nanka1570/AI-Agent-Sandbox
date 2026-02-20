@@ -56,7 +56,7 @@ export function calcMonthlyData(
   }));
 }
 
-// クレカ別集計（円グラフ用）
+// クレカ別集計（円グラフ用 - 旧互換）
 export function calcCategoryData(
   payments: PaymentLike[]
 ): { name: string; total: number }[] {
@@ -73,4 +73,29 @@ export function calcCategoryData(
     }
   }
   return Array.from(cardTotals.values());
+}
+
+// カテゴリ別集計（円グラフ用 - カテゴリベース）
+type PaymentWithCategoryLike = {
+  amount: number;
+  categoryId: string | null;
+  category: { name: string; color: string } | null;
+};
+
+export function calcCategoryBreakdown(
+  payments: PaymentWithCategoryLike[]
+): { name: string; total: number; color: string }[] {
+  const categoryTotals = new Map<string, { name: string; total: number; color: string }>();
+  for (const p of payments) {
+    const key = p.categoryId ?? "__uncategorized__";
+    const name = p.category?.name ?? "未分類";
+    const color = p.category?.color ?? "#999999";
+    const existing = categoryTotals.get(key);
+    if (existing) {
+      existing.total += p.amount;
+    } else {
+      categoryTotals.set(key, { name, total: p.amount, color });
+    }
+  }
+  return Array.from(categoryTotals.values());
 }

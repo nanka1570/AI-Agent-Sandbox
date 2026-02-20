@@ -13,14 +13,15 @@ import { formatCurrency } from "@/lib/utils";
 type ChartData = {
   name: string;
   total: number;
+  color?: string;
 };
 
 type Props = {
   data: ChartData[];
 };
 
-// design_spec.md のチャートカラー
-const COLORS = [
+// カテゴリに色がない場合のフォールバックカラー
+const FALLBACK_COLORS = [
   "hsl(265 89% 66%)", // Violet
   "hsl(188 90% 45%)", // Cyan
   "hsl(340 90% 60%)", // Pink
@@ -62,8 +63,8 @@ export function CategoryChart({ data }: Props) {
             strokeWidth={2}
             label={renderLabel}
           >
-            {data.map((_, index) => (
-              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+            {data.map((entry, index) => (
+              <Cell key={index} fill={entry.color ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]} />
             ))}
           </Pie>
           <Tooltip formatter={(value) => formatCurrency(Number(value))} />

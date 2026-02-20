@@ -1,6 +1,8 @@
 import { format, subMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { ensureDefaultCategories } from "@/lib/actions/category";
+import { getBudgets } from "@/lib/actions/budget";
 import { formatCurrency, formatMonth, formatDay } from "@/lib/utils";
 import {
   calcTotalSalary,
@@ -9,11 +11,12 @@ import {
   calcBalance,
   calcConfirmedBalance,
   calcMonthlyData,
-  calcCategoryData,
+  calcCategoryBreakdown,
 } from "@/lib/dashboard";
 import { MonthSelector } from "@/components/month-selector";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
+import { BudgetProgress } from "@/components/budget/budget-progress";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus } from "@/types";
 import {
@@ -34,6 +37,9 @@ export default async function DashboardPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
 
+  // デフォルトカテゴリを初回のみ作成
+  await ensureDefaultCategories(userId);
+
   // --- 当月データ取得 ---
   const salaries = await prisma.salary.findMany({
     where: { month: currentMonth, userId },
@@ -42,7 +48,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const payments = await prisma.payment.findMany({
     where: { month: currentMonth, userId },
-    include: { creditCard: true },
+    include: { creditCard: true, category: true },
   });
   const totalPayment = calcTotalPayment(payments);
 
@@ -78,8 +84,11 @@ export default async function DashboardPage({ searchParams }: Props) {
     total: d.total,
   }));
 
-  // --- クレカ別支出（当月） ---
-  const categoryData = calcCategoryData(payments);
+  // --- カテゴリ別支出（当月の円グラフ用） ---
+  const categoryData = calcCategoryBreakdown(payments);
+
+  // --- 予算データ（当月） ---
+  const budgets = await getBudgets(userId, currentMonth);
 
   return (
     <>
@@ -182,6 +191,19 @@ export default async function DashboardPage({ searchParams }: Props) {
         <MonthlyChart data={monthlyData} />
         <CategoryChart data={categoryData} />
       </div>
+
+      {/* カテゴリ別予算消化率 */}
+      {budgets.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
+            <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
+              BUDGET
+            </span>
+            予算消化率
+          </h2>
+          <BudgetProgress budgets={budgets} payments={payments} />
+        </div>
+      )}
     </>
   );
 }

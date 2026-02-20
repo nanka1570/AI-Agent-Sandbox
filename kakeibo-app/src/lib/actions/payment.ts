@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { paymentSchema, type PaymentInput, type ActionResult } from "@/types";
-import type { Payment, CreditCard } from "@/generated/prisma/client";
+import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 
-// Payment にリレーション（creditCard）を含めた型
-type PaymentWithCard = Payment & { creditCard: CreditCard };
+// Payment にリレーション（creditCard, category）を含めた型
+type PaymentWithCard = Payment & { creditCard: CreditCard; category: Category | null };
 
 // ステータス遷移マップ
 const STATUS_TRANSITIONS: Record<string, string | null> = {
@@ -38,11 +38,12 @@ export async function createPayment(
     data: {
       userId,
       creditCardId: parsed.data.creditCardId,
+      categoryId: parsed.data.categoryId || null,
       month: parsed.data.month,
       amount: parsed.data.amount,
       memo: parsed.data.memo ?? null,
     },
-    include: { creditCard: true },
+    include: { creditCard: true, category: true },
   });
 
   revalidatePath("/payments");
@@ -79,15 +80,17 @@ export async function updatePayment(
     where: { id, userId },
     data: {
       creditCardId: parsed.data.creditCardId,
+      categoryId: parsed.data.categoryId || null,
       month: parsed.data.month,
       amount: parsed.data.amount,
       memo: parsed.data.memo ?? null,
     },
-    include: { creditCard: true },
+    include: { creditCard: true, category: true },
   });
 
   revalidatePath("/payments");
   revalidatePath("/");
+  revalidatePath("/budget");
 
   return { success: true, data: payment };
 }
@@ -128,7 +131,7 @@ export async function updatePaymentStatus(
   const payment = await prisma.payment.update({
     where: { id, userId },
     data: { status: nextStatus },
-    include: { creditCard: true },
+    include: { creditCard: true, category: true },
   });
 
   revalidatePath("/payments");

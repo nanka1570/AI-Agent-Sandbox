@@ -45,6 +45,8 @@ model Payment {
   userId       String     // Supabase Auth の user.id
   creditCardId String
   creditCard   CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  categoryId   String?
+  category     Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   month        String     // 対象月 "2026-03"
   amount       Int        // 確定金額（円）
   status       String     @default("unconfirmed") // unconfirmed | confirmed | paid
@@ -52,5 +54,36 @@ model Payment {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
+  @@index([userId])
+}
+
+// カテゴリ
+model Category {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   // チャート表示用 "#FF6384"
+  sortOrder Int      @default(0)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  payments  Payment[]
+  budgets   Budget[]
+
+  @@index([userId])
+}
+
+// 予算
+model Budget {
+  id         String   @id @default(cuid())
+  userId     String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  month      String   // "2026-03"
+  amount     Int      // 予算額（円）
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, categoryId, month])
   @@index([userId])
 }

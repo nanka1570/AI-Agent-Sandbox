@@ -29,6 +29,7 @@ const navLinks = [
   { href: '/credit-cards', label: 'CARDS' },
   { href: '/salary', label: 'SALARY' },
   { href: '/payments', label: 'PAYMENTS' },
+  { href: '/budget', label: 'BUDGET' },
 ];
 
 export default function RootLayout({

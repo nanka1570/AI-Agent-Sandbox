@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
 import { PaymentList } from "@/components/payments/payment-list";
 
 type Props = {
@@ -12,10 +13,13 @@ export default async function PaymentsPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
 
-  // 月別の支払い一覧（クレカ情報含む）
+  // デフォルトカテゴリを初回のみ作成
+  await ensureDefaultCategories(userId);
+
+  // 月別の支払い一覧（クレカ・カテゴリ情報含む）
   const payments = await prisma.payment.findMany({
     where: { month: currentMonth, userId },
-    include: { creditCard: true },
+    include: { creditCard: true, category: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -25,10 +29,14 @@ export default async function PaymentsPage({ searchParams }: Props) {
     orderBy: { name: "asc" },
   });
 
+  // カテゴリ一覧（登録ダイアログのセレクト用）
+  const categories = await getCategories(userId);
+
   return (
     <PaymentList
       payments={payments}
       creditCards={creditCards}
+      categories={categories}
       currentMonth={currentMonth}
     />
   );
