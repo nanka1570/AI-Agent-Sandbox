@@ -27,6 +27,7 @@
 
 ## 更新履歴
 
+- 2026-02-21: テスト更新 + ログインエラー日本語化 — formatCurrencyJP/formatPaymentDay/calcCashFlowStatus/paymentMonthOffset の新規テスト追加、既存テスト修正（paymentMonthOffset 対応・循環ステータス仕様更新）、全95テスト PASS、ログイン失敗・メール未確認・重複登録エラーを日本語化
 - 2026-02-21: Vercel 本番デプロイ完了 — https://simple-kakeibo-app.vercel.app/ で公開。postinstall に prisma generate 追加、Supabase マイグレーション手動適用、新規登録後のメール確認案内画面を追加
 
 - 2026-02-20: Phase 11 完了 — レポートページ（/reports）新規作成、年間サマリーカード3枚（収入/支出/収支）、月別支出推移折れ線グラフ、カテゴリ別年間ランキング、月次詳細（前月比表示）、年セレクター、BottomNav+ヘッダーにREPORTSタブ追加
