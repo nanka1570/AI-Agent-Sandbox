@@ -1,8 +1,197 @@
-export default function DashboardPage() {
+import { format, subMonths } from "date-fns";
+import { prisma } from "@/lib/db";
+import { formatCurrency, formatMonth, formatDay } from "@/lib/utils";
+import { MonthSelector } from "@/components/month-selector";
+import { MonthlyChart } from "@/components/charts/monthly-chart";
+import { CategoryChart } from "@/components/charts/category-chart";
+import { StatusBadge } from "@/components/status-badge";
+import type { PaymentStatus } from "@/types";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type Props = {
+  searchParams: Promise<{ month?: string }>;
+};
+
+export default async function DashboardPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
+
+  // --- 当月データ取得 ---
+  const salaries = await prisma.salary.findMany({
+    where: { month: currentMonth },
+  });
+  const totalSalary = salaries.reduce((sum, s) => sum + s.amount, 0);
+
+  const payments = await prisma.payment.findMany({
+    where: { month: currentMonth },
+    include: { creditCard: true },
+  });
+  const totalPayment = payments.reduce((sum, p) => sum + p.amount, 0);
+
+  // ステータス別集計
+  const statusBreakdown = {
+    unconfirmed: payments
+      .filter((p) => p.status === "unconfirmed")
+      .reduce((sum, p) => sum + p.amount, 0),
+    confirmed: payments
+      .filter((p) => p.status === "confirmed")
+      .reduce((sum, p) => sum + p.amount, 0),
+    paid: payments
+      .filter((p) => p.status === "paid")
+      .reduce((sum, p) => sum + p.amount, 0),
+  };
+
+  // 残額
+  const balance = totalSalary - totalPayment;
+  const confirmedBalance =
+    totalSalary - (statusBreakdown.confirmed + statusBreakdown.paid);
+
+  // --- 支払い予定（支払い日順ソート） ---
+  const sortedPayments = [...payments].sort(
+    (a, b) => a.creditCard.paymentDay - b.creditCard.paymentDay
+  );
+
+  // --- 月別支出推移（直近6ヶ月） ---
+  const months: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = subMonths(new Date(), i);
+    months.push(format(d, "yyyy-MM"));
+  }
+
+  const allPayments = await prisma.payment.findMany({
+    where: { month: { in: months } },
+  });
+
+  const monthlyData = months.map((m) => ({
+    month: format(new Date(m + "-01"), "M月"),
+    total: allPayments
+      .filter((p) => p.month === m)
+      .reduce((sum, p) => sum + p.amount, 0),
+  }));
+
+  // --- クレカ別支出（当月） ---
+  const cardTotals = new Map<string, { name: string; total: number }>();
+  for (const p of payments) {
+    const existing = cardTotals.get(p.creditCardId);
+    if (existing) {
+      existing.total += p.amount;
+    } else {
+      cardTotals.set(p.creditCardId, {
+        name: p.creditCard.name,
+        total: p.amount,
+      });
+    }
+  }
+  const categoryData = Array.from(cardTotals.values());
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
-      <p className="mt-2 text-gray-600">Phase 5 で実装予定</p>
-    </div>
+    <>
+      {/* ヘッダー: タイトル + 月セレクター */}
+      <div className="flex items-center justify-between border-b-4 border-border pb-4">
+        <h1 className="text-2xl font-black">ダッシュボード</h1>
+        <MonthSelector currentMonth={currentMonth} basePath="/" />
+      </div>
+
+      {/* サマリーカード */}
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* 給料合計 */}
+        <div className="border-2 border-border bg-emerald-100 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <p className="text-sm font-bold text-emerald-800">給料合計</p>
+          <p className="mt-2 font-mono text-2xl font-black text-emerald-900">
+            {formatCurrency(totalSalary)}
+          </p>
+        </div>
+
+        {/* 支払い合計 */}
+        <div className="border-2 border-border bg-rose-100 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <p className="text-sm font-bold text-rose-800">支払い合計</p>
+          <p className="mt-2 font-mono text-2xl font-black text-rose-900">
+            {formatCurrency(totalPayment)}
+          </p>
+          <div className="mt-2 space-y-0.5 text-xs text-rose-700">
+            <p>確定 {formatCurrency(statusBreakdown.confirmed)}</p>
+            <p>未確定 {formatCurrency(statusBreakdown.unconfirmed)}</p>
+            <p>支払済 {formatCurrency(statusBreakdown.paid)}</p>
+          </div>
+        </div>
+
+        {/* 残額 */}
+        <div className="border-2 border-border bg-primary p-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <p className="text-sm font-bold text-white/80">残額</p>
+          <p className="mt-2 font-mono text-2xl font-black">
+            {formatCurrency(balance)}
+          </p>
+          <p className="mt-2 text-xs text-white/70">
+            確定分残額 {formatCurrency(confirmedBalance)}
+          </p>
+        </div>
+      </div>
+
+      {/* 支払い予定テーブル */}
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
+          <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
+            SCHEDULE
+          </span>
+          {formatMonth(currentMonth)} の支払い予定
+        </h2>
+        {sortedPayments.length === 0 ? (
+          <div className="border-2 border-dashed border-border bg-white p-8 text-center">
+            <p className="text-muted-foreground">この月の支払い予定はありません</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b-2 border-border bg-muted">
+                  <TableHead className="font-black">カード</TableHead>
+                  <TableHead className="font-black">支払い日</TableHead>
+                  <TableHead className="font-black">金額</TableHead>
+                  <TableHead className="font-black">ステータス</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedPayments.map((payment) => (
+                  <TableRow
+                    key={payment.id}
+                    className="border-b-2 border-border hover:bg-secondary/20"
+                  >
+                    <TableCell className="font-bold">
+                      {payment.creditCard.name}
+                    </TableCell>
+                    <TableCell>
+                      {formatDay(payment.creditCard.paymentDay)}
+                    </TableCell>
+                    <TableCell className="font-bold font-mono">
+                      {formatCurrency(payment.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        paymentId={payment.id}
+                        status={payment.status as PaymentStatus}
+                        readonly
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* グラフ */}
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <MonthlyChart data={monthlyData} />
+        <CategoryChart data={categoryData} />
+      </div>
+    </>
   );
 }
