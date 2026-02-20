@@ -41,6 +41,7 @@ const navLinks = [
   { href: '/salary', label: 'SALARY' },
   { href: '/payments', label: 'PAYMENTS' },
   { href: '/budget', label: 'BUDGET' },
+  { href: '/reports', label: 'REPORTS' },
 ];
 
 export default function RootLayout({
