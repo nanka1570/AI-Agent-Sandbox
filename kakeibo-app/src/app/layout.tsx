@@ -3,6 +3,7 @@ import { Noto_Sans_JP, Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
 import { Toaster } from '@/components/ui/sonner';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { LogoutButton } from '@/components/layout/logout-button';
 import './globals.css';
 
 const notoSansJP = Noto_Sans_JP({
@@ -46,18 +47,21 @@ export default function RootLayout({
             >
               家計簿 APP
             </Link>
-            <ul className="hidden gap-3 md:flex">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="inline-block border-2 border-border bg-white px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-secondary active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div className="hidden items-center gap-3 md:flex">
+              <ul className="flex gap-3">
+                {navLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="inline-block border-2 border-border bg-white px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-secondary active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <LogoutButton />
+            </div>
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 pb-20 pt-6 md:pb-6">{children}</main>

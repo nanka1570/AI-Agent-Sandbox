@@ -1,5 +1,6 @@
 import { format, subMonths } from "date-fns";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
 import { formatCurrency, formatMonth, formatDay } from "@/lib/utils";
 import {
   calcTotalSalary,
@@ -29,17 +30,18 @@ type Props = {
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
+  const userId = await requireAuth();
   const params = await searchParams;
   const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
 
   // --- 当月データ取得 ---
   const salaries = await prisma.salary.findMany({
-    where: { month: currentMonth },
+    where: { month: currentMonth, userId },
   });
   const totalSalary = calcTotalSalary(salaries);
 
   const payments = await prisma.payment.findMany({
-    where: { month: currentMonth },
+    where: { month: currentMonth, userId },
     include: { creditCard: true },
   });
   const totalPayment = calcTotalPayment(payments);
@@ -68,7 +70,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   }
 
   const allPayments = await prisma.payment.findMany({
-    where: { month: { in: months } },
+    where: { month: { in: months }, userId },
   });
 
   const monthlyData = calcMonthlyData(allPayments, months).map((d) => ({

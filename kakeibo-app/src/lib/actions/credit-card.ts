@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
 import { creditCardSchema, type CreditCardInput, type ActionResult } from "@/types";
 import type { CreditCard } from "@/generated/prisma/client";
 
 export async function createCreditCard(
   input: CreditCardInput
 ): Promise<ActionResult<CreditCard>> {
+  const userId = await requireAuth();
+
   const parsed = creditCardSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -15,6 +18,7 @@ export async function createCreditCard(
 
   const card = await prisma.creditCard.create({
     data: {
+      userId,
       name: parsed.data.name,
       closingDay: parsed.data.closingDay,
       paymentDay: parsed.data.paymentDay,
@@ -32,18 +36,20 @@ export async function updateCreditCard(
   id: string,
   input: CreditCardInput
 ): Promise<ActionResult<CreditCard>> {
+  const userId = await requireAuth();
+
   const parsed = creditCardSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await prisma.creditCard.findUnique({ where: { id } });
+  const existing = await prisma.creditCard.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "クレジットカードが見つかりません" };
   }
 
   const card = await prisma.creditCard.update({
-    where: { id },
+    where: { id, userId },
     data: {
       name: parsed.data.name,
       closingDay: parsed.data.closingDay,
@@ -61,12 +67,14 @@ export async function updateCreditCard(
 export async function deleteCreditCard(
   id: string
 ): Promise<ActionResult<void>> {
-  const existing = await prisma.creditCard.findUnique({ where: { id } });
+  const userId = await requireAuth();
+
+  const existing = await prisma.creditCard.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "クレジットカードが見つかりません" };
   }
 
-  await prisma.creditCard.delete({ where: { id } });
+  await prisma.creditCard.delete({ where: { id, userId } });
 
   revalidatePath("/credit-cards");
   revalidatePath("/payments");

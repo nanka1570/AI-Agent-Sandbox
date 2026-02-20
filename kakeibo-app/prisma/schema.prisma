@@ -7,23 +7,27 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // 給料
 model Salary {
   id        String   @id @default(cuid())
+  userId    String   // Supabase Auth の user.id
   payDay    Int      // 支給日（1-31）
   amount    Int      // 手取り額（円）
   month     String   // 対象月 "2026-03"
   memo      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // クレジットカード
 model CreditCard {
   id         String    @id @default(cuid())
+  userId     String    // Supabase Auth の user.id
   name       String    // カード名
   closingDay Int       // 締め日（1-31）
   paymentDay Int       // 支払い日（1-31）
@@ -31,11 +35,14 @@ model CreditCard {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   payments   Payment[]
+
+  @@index([userId])
 }
 
 // 支払い
 model Payment {
   id           String     @id @default(cuid())
+  userId       String     // Supabase Auth の user.id
   creditCardId String
   creditCard   CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
   month        String     // 対象月 "2026-03"
@@ -44,4 +51,6 @@ model Payment {
   memo         String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
+  @@index([userId])
 }

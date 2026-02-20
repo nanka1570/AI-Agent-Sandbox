@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
 import { paymentSchema, type PaymentInput, type ActionResult } from "@/types";
 import type { Payment, CreditCard } from "@/generated/prisma/client";
 
@@ -18,14 +19,16 @@ const STATUS_TRANSITIONS: Record<string, string | null> = {
 export async function createPayment(
   input: PaymentInput
 ): Promise<ActionResult<PaymentWithCard>> {
+  const userId = await requireAuth();
+
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  // クレカ存在確認
+  // クレカ存在確認（自分のカードのみ）
   const card = await prisma.creditCard.findUnique({
-    where: { id: parsed.data.creditCardId },
+    where: { id: parsed.data.creditCardId, userId },
   });
   if (!card) {
     return { success: false, error: "指定されたクレジットカードが見つかりません" };
@@ -33,6 +36,7 @@ export async function createPayment(
 
   const payment = await prisma.payment.create({
     data: {
+      userId,
       creditCardId: parsed.data.creditCardId,
       month: parsed.data.month,
       amount: parsed.data.amount,
@@ -51,26 +55,28 @@ export async function updatePayment(
   id: string,
   input: PaymentInput
 ): Promise<ActionResult<PaymentWithCard>> {
+  const userId = await requireAuth();
+
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await prisma.payment.findUnique({ where: { id } });
+  const existing = await prisma.payment.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "支払いデータが見つかりません" };
   }
 
-  // クレカ存在確認
+  // クレカ存在確認（自分のカードのみ）
   const card = await prisma.creditCard.findUnique({
-    where: { id: parsed.data.creditCardId },
+    where: { id: parsed.data.creditCardId, userId },
   });
   if (!card) {
     return { success: false, error: "指定されたクレジットカードが見つかりません" };
   }
 
   const payment = await prisma.payment.update({
-    where: { id },
+    where: { id, userId },
     data: {
       creditCardId: parsed.data.creditCardId,
       month: parsed.data.month,
@@ -89,12 +95,14 @@ export async function updatePayment(
 export async function deletePayment(
   id: string
 ): Promise<ActionResult<void>> {
-  const existing = await prisma.payment.findUnique({ where: { id } });
+  const userId = await requireAuth();
+
+  const existing = await prisma.payment.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "支払いデータが見つかりません" };
   }
 
-  await prisma.payment.delete({ where: { id } });
+  await prisma.payment.delete({ where: { id, userId } });
 
   revalidatePath("/payments");
   revalidatePath("/");
@@ -105,7 +113,9 @@ export async function deletePayment(
 export async function updatePaymentStatus(
   id: string
 ): Promise<ActionResult<PaymentWithCard>> {
-  const existing = await prisma.payment.findUnique({ where: { id } });
+  const userId = await requireAuth();
+
+  const existing = await prisma.payment.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "支払いデータが見つかりません" };
   }
@@ -116,7 +126,7 @@ export async function updatePaymentStatus(
   }
 
   const payment = await prisma.payment.update({
-    where: { id },
+    where: { id, userId },
     data: { status: nextStatus },
     include: { creditCard: true },
   });

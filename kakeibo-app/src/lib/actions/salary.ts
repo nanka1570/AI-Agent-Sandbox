@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
 import { salarySchema, type SalaryInput, type ActionResult } from "@/types";
 import type { Salary } from "@/generated/prisma/client";
 
 export async function createSalary(
   input: SalaryInput
 ): Promise<ActionResult<Salary>> {
+  const userId = await requireAuth();
+
   const parsed = salarySchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -15,6 +18,7 @@ export async function createSalary(
 
   const salary = await prisma.salary.create({
     data: {
+      userId,
       month: parsed.data.month,
       payDay: parsed.data.payDay,
       amount: parsed.data.amount,
@@ -32,18 +36,20 @@ export async function updateSalary(
   id: string,
   input: SalaryInput
 ): Promise<ActionResult<Salary>> {
+  const userId = await requireAuth();
+
   const parsed = salarySchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await prisma.salary.findUnique({ where: { id } });
+  const existing = await prisma.salary.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "給料データが見つかりません" };
   }
 
   const salary = await prisma.salary.update({
-    where: { id },
+    where: { id, userId },
     data: {
       month: parsed.data.month,
       payDay: parsed.data.payDay,
@@ -61,12 +67,14 @@ export async function updateSalary(
 export async function deleteSalary(
   id: string
 ): Promise<ActionResult<void>> {
-  const existing = await prisma.salary.findUnique({ where: { id } });
+  const userId = await requireAuth();
+
+  const existing = await prisma.salary.findUnique({ where: { id, userId } });
   if (!existing) {
     return { success: false, error: "給料データが見つかりません" };
   }
 
-  await prisma.salary.delete({ where: { id } });
+  await prisma.salary.delete({ where: { id, userId } });
 
   revalidatePath("/salary");
   revalidatePath("/");
