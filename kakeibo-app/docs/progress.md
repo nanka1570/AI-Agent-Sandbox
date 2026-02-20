@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: Phase 4d（ダッシュボード + グラフ）
+## 現在のPhase: Phase 5a（単体テスト + 結合テスト）
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -14,12 +14,13 @@
 | Phase 4b | 実装 | 給料管理CRUD | ✅ 完了 | `feat: Phase 4b - 給料管理CRUD` |
 | Phase 4c | 実装 | 支払い管理 | ✅ 完了 | `feat: Phase 4c - 支払い管理` |
 | Phase 4d | 実装 | ダッシュボード + グラフ | ✅ 完了 | `feat: Phase 4d - ダッシュボード + グラフ` |
-| Phase 4e | 実装 | UI/UXポリッシュ | ⬜ 未着手 | - |
+| Phase 4e | 実装 | UI/UXポリッシュ | ✅ 完了 | `feat: Phase 4e - UI/UXポリッシュ` |
 | Phase 5a | テスト | 単体テスト + 結合テスト | ⬜ 未着手 | - |
 | Phase 5b | テスト | E2Eテスト + テスト結果報告書 + README | ⬜ 未着手 | - |
 
 ## 更新履歴
 
+- 2026-02-20: Phase 4e 完了 — BottomNav（モバイル固定下部ナビ）、loading.tsx（Skeleton）、error.tsx（エラーハンドリング）、レイアウト余白調整（pb-20）
 - 2026-02-20: Phase 4d 完了 — ダッシュボード実装、サマリーカード3枚（給料合計・支払い合計・残額）、支払い予定テーブル、月別支出推移BarChart、クレカ別支出PieChart、MonthSelector共通化
 - 2026-02-20: Phase 4c 完了 — 支払い管理実装、Select/Badge導入、ステータスバッジ（Neo-Brutalism タグ風）、月別フィルター、paymentSchema・Server Actions・PaymentList作成
 - 2026-02-20: Phase 4b 完了 — 給料管理CRUD実装、Table導入、salarySchema・Server Actions・SalaryList作成

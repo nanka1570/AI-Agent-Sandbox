@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Noto_Sans_JP, Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
 import { Toaster } from '@/components/ui/sonner';
+import { BottomNav } from '@/components/layout/bottom-nav';
 import './globals.css';
 
 const notoSansJP = Noto_Sans_JP({
@@ -59,7 +60,8 @@ export default function RootLayout({
             </ul>
           </nav>
         </header>
-        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 pb-20 pt-6 md:pb-6">{children}</main>
+        <BottomNav />
         <Toaster position="top-right" richColors />
       </body>
     </html>
