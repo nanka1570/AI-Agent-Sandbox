@@ -63,6 +63,15 @@
 - `.claude/skills/code-review/SKILL.md` — 汎用コードレビュースキル
 - `.claude/skills/react-code-review/SKILL.md` — kakeibo-app 専用 React コードレビュースキル
 
+## コミュニケーション
+- 作業中は何をしているか説明しながら進める（「これからXXをします」「XXが完了しました」等）
+- 基本概念（E2E、Server Components 等）は分かりやすく説明する
+- セッションが切れた場合、チャット名は「家計簿アプリ（PhaseN〜）」とする
+
+## テスト実行ルール
+- E2Eテストは `--headed` でブラウザを表示しながら実行する
+- E2Eテスト実行コマンド: `npx playwright test --headed --reporter=list`
+
 ## 注意事項
 - .env.local は絶対にコミットしない
 - dev.db（SQLiteファイル）はコミットしない

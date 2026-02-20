@@ -1,6 +1,6 @@
 # 開発進捗
 
-## 現在のPhase: 全Phase完了
+## 現在のPhase: Phase B 計画策定完了（次: Phase 6）
 
 ## 開発方式: 厳密ウォーターフォール（全設計 → 全実装 → 全テスト）
 
@@ -17,9 +17,17 @@
 | Phase 4e | 実装 | UI/UXポリッシュ | ✅ 完了 | `feat: Phase 4e - UI/UXポリッシュ` |
 | Phase 5a | テスト | 単体テスト + 結合テスト | ✅ 完了 | `test: Phase 5a - 単体テスト + 結合テスト` |
 | Phase 5b | テスト | E2Eテスト + テスト結果報告書 + README | ✅ 完了 | `test: Phase 5b - E2Eテスト + テスト結果報告書 + README` |
+| Phase B計画 | 計画 | Phase B 計画書作成 | ✅ 完了 | — |
+| Phase 6 | 基盤構築 | 認証 + DB移行 + デプロイ | ⏳ 未着手 | — |
+| Phase 7 | カテゴリ+予算 | カテゴリ管理 + 予算管理 | ⏳ 未着手 | — |
+| Phase 8 | UX改善 | クイック入力、検索強化、繰り返し支払い | ⏳ 未着手 | — |
+| Phase 9 | PWA対応 | スマホインストール + オフライン | ⏳ 未着手 | — |
+| Phase 10 | 収益化 | AdSense + CSVエクスポート + 法的ページ | ⏳ 未着手 | — |
+| Phase 11 | レポート | 月次/年次分析レポート | ⏳ 未着手 | — |
 
 ## 更新履歴
 
+- 2026-02-20: Phase B 計画策定完了 — 09_PhaseB計画書_v1_0.md 作成、Phase 6〜11 の全体ロードマップ策定
 - 2026-02-20: Phase 5b 完了 — Playwright E2E 3件全PASS（E2E-001〜003）、テスト結果報告書（08_テスト結果報告書_v1_0.md）作成、README更新、全82テスト100%合格
 - 2026-02-20: Phase 5a 完了 — Vitest 79件全PASS（UT-VL 12件、UT-CC 10件、UT-SL 11件、UT-PM 12件、UT-DB 8件、CT-CC 5件、CT-SL 6件、CT-PM 8件、CT-DB 7件）、dashboard.ts集計ロジック切り出し、cleanup設定追加
 - 2026-02-20: Phase 4e 完了 — BottomNav（モバイル固定下部ナビ）、loading.tsx（Skeleton）、error.tsx（エラーハンドリング）、レイアウト余白調整（pb-20）
