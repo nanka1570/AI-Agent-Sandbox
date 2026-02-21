@@ -60,8 +60,8 @@ export default function RootLayout({
             >
               家計簿 APP
             </Link>
-            <div className="hidden items-center gap-3 md:flex">
-              <ul className="flex gap-3">
+            <div className="flex items-center gap-3">
+              <ul className="hidden gap-3 md:flex">
                 {navLinks.map((link) => (
                   <li key={link.href}>
                     <Link
