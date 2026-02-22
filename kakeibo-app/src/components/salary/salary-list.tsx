@@ -161,7 +161,8 @@ export function SalaryList({ salaries }: Props) {
   );
 
   const form = useForm<SalaryInput>({
-    resolver: zodResolver(salarySchema),
+    // z.preprocess により入力型が unknown になるため型アサーションが必要
+    resolver: zodResolver(salarySchema) as ReturnType<typeof zodResolver<SalaryInput, unknown, SalaryInput>>,
     defaultValues: {
       month: currentMonth,
       payDay: undefined,
@@ -316,22 +317,17 @@ export function SalaryList({ salaries }: Props) {
                     <FormLabel>支給日 *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="1"
-                        min="1"
-                        max="31"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="1〜31"
-                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseInt(val, 10));
-                        }}
-                        onKeyDown={(e) => {
-                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits as unknown as number);
                         }}
                       />
                     </FormControl>
@@ -347,21 +343,17 @@ export function SalaryList({ salaries }: Props) {
                     <FormLabel>手取り額（円） *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="1"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="250000"
-                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseInt(val, 10));
-                        }}
-                        onKeyDown={(e) => {
-                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits as unknown as number);
                         }}
                       />
                     </FormControl>

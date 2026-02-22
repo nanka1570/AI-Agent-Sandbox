@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SalaryList } from "@/components/salary/salary-list";
 
@@ -75,9 +75,9 @@ describe("SalaryList", () => {
     const user = userEvent.setup();
     render(<SalaryList salaries={mockSalaries} />);
     await user.click(screen.getByText("+ 新規登録"));
-    // 手取り額に0を入力して送信（type="number" では fireEvent.change で直接値をセット）
+    // 手取り額に0を入力して送信（type="text" なので user.type で入力）
     const amountInput = screen.getByPlaceholderText("250000");
-    fireEvent.change(amountInput, { target: { value: "0" } });
+    await user.type(amountInput, "0");
     await user.click(screen.getByText("登録する"));
     expect(await screen.findByText("1円以上で入力してください")).toBeInTheDocument();
   });

@@ -52,7 +52,8 @@ export function QuickInputDialog({
   const iroiroId = categories.find((c) => c.name === "雑費")?.id ?? "";
 
   const form = useForm<PaymentInput>({
-    resolver: zodResolver(paymentSchema),
+    // z.preprocess により入力型が unknown になるため型アサーションが必要
+    resolver: zodResolver(paymentSchema) as ReturnType<typeof zodResolver<PaymentInput, unknown, PaymentInput>>,
     defaultValues: {
       creditCardId: "",
       categoryId: iroiroId,
@@ -110,21 +111,17 @@ export function QuickInputDialog({
                   <FormLabel>金額（円） *</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="1"
-                      min="1"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="50000"
-                      className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                       name={field.name}
                       ref={field.ref}
                       onBlur={field.onBlur}
-                      value={field.value ?? ""}
+                      value={String(field.value ?? "")}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        field.onChange(val === "" ? undefined : parseInt(val, 10));
-                      }}
-                      onKeyDown={(e) => {
-                        if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                        const digits = e.target.value.replace(/[^0-9]/g, "");
+                        field.onChange(digits as unknown as number);
                       }}
                     />
                   </FormControl>

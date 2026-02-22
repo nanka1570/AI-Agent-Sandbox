@@ -184,7 +184,8 @@ export function CreditCardList({ cards }: Props) {
   );
 
   const form = useForm<CreditCardInput>({
-    resolver: zodResolver(creditCardSchema),
+    // z.preprocess により入力型が unknown になるため型アサーションが必要
+    resolver: zodResolver(creditCardSchema) as ReturnType<typeof zodResolver<CreditCardInput, unknown, CreditCardInput>>,
     defaultValues: {
       name: "",
       closingDay: undefined,
@@ -354,22 +355,17 @@ export function CreditCardList({ cards }: Props) {
                     <FormLabel>締め日 *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="1"
-                        min="1"
-                        max="31"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="1〜31"
-                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseInt(val, 10));
-                        }}
-                        onKeyDown={(e) => {
-                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits as unknown as number);
                         }}
                       />
                     </FormControl>
@@ -385,22 +381,17 @@ export function CreditCardList({ cards }: Props) {
                     <FormLabel>支払い日 *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="1"
-                        min="1"
-                        max="31"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="1〜31"
-                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseInt(val, 10));
-                        }}
-                        onKeyDown={(e) => {
-                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits as unknown as number);
                         }}
                       />
                     </FormControl>
