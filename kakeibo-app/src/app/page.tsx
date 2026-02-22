@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
 import { getBudgets } from "@/lib/actions/budget";
-import { formatCurrency, formatMonth, formatPaymentDay } from "@/lib/utils";
+import { formatCurrency, formatMonth, formatActualPaymentDate } from "@/lib/utils";
+import { autoMarkConfirmedOverdue, autoMarkPaidOverdue } from "@/lib/payment-auto-paid";
 import { PaymentScheduleTable } from "@/components/dashboard/payment-schedule-table";
 import {
   calcTotalSalary,
@@ -36,6 +37,8 @@ type Props = {
 
 export default async function DashboardPage({ searchParams }: Props) {
   const userId = await requireAuth();
+  await autoMarkConfirmedOverdue(userId);
+  await autoMarkPaidOverdue(userId);
   const params = await searchParams;
   const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
 
@@ -179,7 +182,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   >
                     <TableCell className="font-bold">{item.cardName}</TableCell>
                     <TableCell>
-                      {formatPaymentDay(item.paymentDay, item.paymentMonthOffset)}
+                      {formatActualPaymentDate(item.paymentDay, item.paymentMonthOffset, currentMonth)}
                     </TableCell>
                     <TableCell className="font-mono font-bold">
                       {formatCurrency(item.amount)}

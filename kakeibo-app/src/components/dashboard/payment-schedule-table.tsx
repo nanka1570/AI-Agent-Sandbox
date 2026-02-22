@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import type { PaymentStatus } from "@/types";
-import { formatCurrency, formatPaymentDay } from "@/lib/utils";
+import { formatCurrency, formatActualPaymentDate } from "@/lib/utils";
 import { updateCardPaymentsStatus } from "@/lib/actions/payment";
 import { StatusBadge } from "@/components/status-badge";
 import {
@@ -129,7 +129,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
               >
                 <TableCell className="font-bold">{group.cardName}</TableCell>
                 <TableCell>
-                  {formatPaymentDay(group.paymentDay, group.paymentMonthOffset)}
+                  {formatActualPaymentDate(group.paymentDay, group.paymentMonthOffset, currentMonth)}
                 </TableCell>
                 <TableCell className="font-bold font-mono">
                   <span className="flex items-center gap-1.5">

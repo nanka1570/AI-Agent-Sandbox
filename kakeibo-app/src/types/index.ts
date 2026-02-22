@@ -15,24 +15,29 @@ export const creditCardSchema = z.object({
   closingDay: z.preprocess(
     numericPreprocess,
     z
-      .number({ message: "1〜31の範囲で入力してください" })
+      .number({ message: "1〜31の範囲で入力するか末日を選択してください" })
       .int("整数で入力してください")
-      .min(1, "1〜31の範囲で入力してください")
-      .max(31, "1〜31の範囲で入力してください"),
+      .min(1, "1〜31の範囲で入力するか末日を選択してください")
+      .max(32, "1〜31の範囲で入力するか末日を選択してください"),
   ),
   paymentDay: z.preprocess(
     numericPreprocess,
     z
-      .number({ message: "1〜31の範囲で入力してください" })
+      .number({ message: "1〜31の範囲で入力するか末日を選択してください" })
       .int("整数で入力してください")
-      .min(1, "1〜31の範囲で入力してください")
-      .max(31, "1〜31の範囲で入力してください"),
+      .min(1, "1〜31の範囲で入力するか末日を選択してください")
+      .max(32, "1〜31の範囲で入力するか末日を選択してください"),
   ),
   paymentMonthOffset: z
     .number()
     .int()
     .min(0, "0〜2の範囲で選択してください")
     .max(2, "0〜2の範囲で選択してください"),
+  confirmationDay: z.preprocess(
+    numericPreprocess,
+    z.number().int().min(1).max(32)
+  ).optional(),
+  confirmationMonthOffset: z.number().int().min(0).max(2).optional(),
   brand: z.string().optional(),
   memo: z.string().optional(),
 });
@@ -43,6 +48,8 @@ export type CreditCardInput = {
   closingDay: number;
   paymentDay: number;
   paymentMonthOffset: number;
+  confirmationDay?: number;
+  confirmationMonthOffset?: number;
   brand?: string;
   memo?: string;
 };

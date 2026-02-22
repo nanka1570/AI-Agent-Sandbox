@@ -133,7 +133,11 @@ function SortableCardItem({
                 <p className="truncate font-black text-lg">{card.name}</p>
               </div>
               <p className="mt-1 text-sm font-bold">
-                締め日: {formatDay(card.closingDay)} / 支払い日:{" "}
+                締め日: {formatDay(card.closingDay)}
+                {card.confirmationDay != null && (
+                  <> / 確定日: {formatPaymentDay(card.confirmationDay, card.confirmationMonthOffset ?? 0)}</>
+                )}
+                {" "}/ 支払い日:{" "}
                 {formatPaymentDay(card.paymentDay, card.paymentMonthOffset)}
               </p>
               {card.memo && (
@@ -191,6 +195,8 @@ export function CreditCardList({ cards }: Props) {
       closingDay: undefined,
       paymentDay: undefined,
       paymentMonthOffset: 0,
+      confirmationDay: undefined,
+      confirmationMonthOffset: 0,
       brand: "",
       memo: "",
     },
@@ -200,7 +206,7 @@ export function CreditCardList({ cards }: Props) {
 
   function handleOpenCreate() {
     setEditTarget(null);
-    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, paymentMonthOffset: 0, brand: "", memo: "" });
+    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, paymentMonthOffset: 0, confirmationDay: undefined, confirmationMonthOffset: 0, brand: "", memo: "" });
     setIsFormOpen(true);
   }
 
@@ -211,6 +217,8 @@ export function CreditCardList({ cards }: Props) {
       closingDay: card.closingDay,
       paymentDay: card.paymentDay,
       paymentMonthOffset: card.paymentMonthOffset,
+      confirmationDay: card.confirmationDay ?? undefined,
+      confirmationMonthOffset: card.confirmationMonthOffset ?? 0,
       brand: card.brand ?? "",
       memo: card.memo ?? "",
     });
@@ -354,21 +362,104 @@ export function CreditCardList({ cards }: Props) {
                   <FormItem>
                     <FormLabel>締め日 *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="1〜31"
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        value={String(field.value ?? "")}
-                        onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
-                        }}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="1〜31"
+                          disabled={field.value === 32}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/[^0-9]/g, "");
+                            field.onChange(digits as unknown as number);
+                          }}
+                          className={field.value === 32 ? "bg-muted" : ""}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
+                            field.value === 32
+                              ? "border-black bg-black text-white"
+                              : "border-border bg-white hover:bg-secondary"
+                          }`}
+                        >
+                          末日
+                        </button>
+                      </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* 支払い確定日 */}
+              <FormField
+                control={form.control}
+                name="confirmationDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>支払い確定日</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="1〜31（任意）"
+                          disabled={field.value === 32}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/[^0-9]/g, "");
+                            field.onChange(digits === "" ? (undefined as unknown as number) : (digits as unknown as number));
+                          }}
+                          className={field.value === 32 ? "bg-muted" : ""}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
+                            field.value === 32
+                              ? "border-black bg-black text-white"
+                              : "border-border bg-white hover:bg-secondary"
+                          }`}
+                        >
+                          末日
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* 確定月 */}
+              <FormField
+                control={form.control}
+                name="confirmationMonthOffset"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>確定月</FormLabel>
+                    <Select
+                      value={String(field.value ?? 0)}
+                      onValueChange={(v) => field.onChange(Number(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-2 border-border bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <SelectItem value="0">当月</SelectItem>
+                        <SelectItem value="1">翌月</SelectItem>
+                        <SelectItem value="2">翌々月</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -380,20 +471,35 @@ export function CreditCardList({ cards }: Props) {
                   <FormItem>
                     <FormLabel>支払い日 *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="1〜31"
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        value={String(field.value ?? "")}
-                        onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
-                        }}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="1〜31"
+                          disabled={field.value === 32}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/[^0-9]/g, "");
+                            field.onChange(digits as unknown as number);
+                          }}
+                          className={field.value === 32 ? "bg-muted" : ""}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
+                            field.value === 32
+                              ? "border-black bg-black text-white"
+                              : "border-border bg-white hover:bg-secondary"
+                          }`}
+                        >
+                          末日
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

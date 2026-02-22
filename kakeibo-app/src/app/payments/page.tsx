@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
+import { autoMarkConfirmedOverdue, autoMarkPaidOverdue } from "@/lib/payment-auto-paid";
 import { PaymentList } from "@/components/payments/payment-list";
 
 type Props = {
@@ -16,24 +17,9 @@ export default async function PaymentsPage({ searchParams }: Props) {
   // デフォルトカテゴリを初回のみ作成
   await ensureDefaultCategories(userId);
 
-  // 締め日を過ぎた未確定支払いを自動確定
-  const today = new Date();
-  const unconfirmed = await prisma.payment.findMany({
-    where: { userId, status: "unconfirmed" },
-    include: { creditCard: { select: { closingDay: true } } },
-  });
-  const pastIds = unconfirmed
-    .filter((p) => {
-      const [y, m] = p.month.split("-").map(Number);
-      return today > new Date(y, m - 1, p.creditCard.closingDay);
-    })
-    .map((p) => p.id);
-  if (pastIds.length > 0) {
-    await prisma.payment.updateMany({
-      where: { id: { in: pastIds } },
-      data: { status: "confirmed" },
-    });
-  }
+  // 自動ステータス更新（確定日・引き落とし日を過ぎた支払いを自動更新）
+  await autoMarkConfirmedOverdue(userId);
+  await autoMarkPaidOverdue(userId);
 
   // 月別の支払い一覧（クレカ・カテゴリ情報含む）
   const payments = await prisma.payment.findMany({

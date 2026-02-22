@@ -34,6 +34,8 @@ const mockCard = {
   closingDay: 31,
   paymentDay: 27,
   paymentMonthOffset: 0,
+  confirmationDay: null,
+  confirmationMonthOffset: null,
   memo: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -73,11 +75,18 @@ describe("createCreditCard", () => {
     if (!result.success) expect(result.error).toContain("1〜31");
   });
 
-  // UT-CC-005: closingDay 32
-  it("closingDay 32で登録エラー", async () => {
-    const result = await createCreditCard({ name: "テスト", closingDay: 32, paymentDay: 27 });
+  // UT-CC-005: closingDay 32（末日）は有効値
+  it("closingDay 32（末日）で登録成功", async () => {
+    mockCreate.mockResolvedValue({ ...mockCard, closingDay: 32 });
+    const result = await createCreditCard({ name: "テスト", closingDay: 32, paymentDay: 27, paymentMonthOffset: 0 });
+    expect(result.success).toBe(true);
+  });
+
+  // UT-CC-005b: closingDay 33 は範囲外
+  it("closingDay 33で登録エラー", async () => {
+    const result = await createCreditCard({ name: "テスト", closingDay: 33, paymentDay: 27, paymentMonthOffset: 0 });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toContain("1〜31");
+    if (!result.success) expect(result.error).toContain("末日を選択");
   });
 
   // UT-CC-006: paymentDay 0
