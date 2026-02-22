@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import type { PaymentStatus } from "@/types";
 import { formatCurrency, formatPaymentDay } from "@/lib/utils";
-import { updatePaymentStatus, updateCardPaymentsStatus } from "@/lib/actions/payment";
+import { updateCardPaymentsStatus } from "@/lib/actions/payment";
 import { StatusBadge } from "@/components/status-badge";
 import {
   Table,
@@ -192,14 +192,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
                       <StatusBadge
                         paymentId={item.id}
                         status={item.status as PaymentStatus}
-                        onClickOverride={async () => {
-                          const result = await updatePaymentStatus(item.id);
-                          if (result.success) {
-                            router.refresh();
-                          } else {
-                            toast.error(result.error);
-                          }
-                        }}
+                        readonly
                       />
                     </TableCell>
                   </TableRow>
