@@ -16,13 +16,14 @@ const DEFAULT_CATEGORIES = [
   { name: "日用品", color: "#FF9F40" },
   { name: "医療", color: "#C9CBCF" },
   { name: "その他", color: "#7C8798" },
-  { name: "いろいろ", color: "#94A3B8" },
+  { name: "雑費", color: "#94A3B8" },
 ];
 
 /**
  * デフォルトカテゴリを作成する
  * - カテゴリが0件の場合: 全デフォルトカテゴリを作成
- * - 既存ユーザーで「いろいろ」がない場合: 「いろいろ」だけ追加
+ * - 既存ユーザーで「いろいろ」がある場合: 「雑費」に改名
+ * - 既存ユーザーで「雑費」がない場合: 追加
  */
 export async function ensureDefaultCategories(userId: string): Promise<void> {
   const count = await prisma.category.count({ where: { userId } });
@@ -41,15 +42,21 @@ export async function ensureDefaultCategories(userId: string): Promise<void> {
     return;
   }
 
-  // 既存ユーザー: 「いろいろ」がなければ追加
-  const hasIroiro = await prisma.category.findFirst({
+  // 既存ユーザー: 「いろいろ」を「雑費」に改名
+  await prisma.category.updateMany({
     where: { userId, name: "いろいろ" },
+    data: { name: "雑費" },
   });
-  if (!hasIroiro) {
+
+  // 「雑費」がなければ追加
+  const hasZappi = await prisma.category.findFirst({
+    where: { userId, name: "雑費" },
+  });
+  if (!hasZappi) {
     await prisma.category.create({
       data: {
         userId,
-        name: "いろいろ",
+        name: "雑費",
         color: "#94A3B8",
         sortOrder: 99,
         isDefault: true,

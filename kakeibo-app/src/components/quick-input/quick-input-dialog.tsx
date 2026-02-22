@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { formatCurrencyJP } from "@/lib/utils";
+import { AmountPresets } from "@/components/amount-presets";
 import type { CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput } from "@/types";
 import { createPayment } from "@/lib/actions/payment";
@@ -40,9 +41,6 @@ type Props = {
   categories: Category[];
 };
 
-// 金額プリセット（支払い）
-const AMOUNT_PRESETS = [5000, 10000, 30000, 50000, 100000];
-
 export function QuickInputDialog({
   open,
   onOpenChange,
@@ -50,8 +48,8 @@ export function QuickInputDialog({
   categories,
 }: Props) {
   const currentMonth = format(new Date(), "yyyy-MM");
-  // 「いろいろ」カテゴリをデフォルトに
-  const iroiroId = categories.find((c) => c.name === "いろいろ")?.id ?? "";
+  // 「雑費」カテゴリをデフォルトに
+  const iroiroId = categories.find((c) => c.name === "雑費")?.id ?? "";
 
   const form = useForm<PaymentInput>({
     resolver: zodResolver(paymentSchema),
@@ -123,19 +121,11 @@ export function QuickInputDialog({
                       }
                     />
                   </FormControl>
-                  {/* 金額プリセット */}
-                  <div className="flex flex-wrap gap-1">
-                    {AMOUNT_PRESETS.map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => field.onChange(v)}
-                        className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
-                      >
-                        {formatCurrencyJP(v)}
-                      </button>
-                    ))}
-                  </div>
+                  <AmountPresets
+                    storageKey="kakeibo-presets-payment"
+                    defaults={[5000, 10000, 30000, 50000, 100000]}
+                    onSelect={(v) => field.onChange(v)}
+                  />
                   {field.value ? (
                     <FormDescription className="font-bold text-foreground">
                       = {formatCurrencyJP(field.value)}

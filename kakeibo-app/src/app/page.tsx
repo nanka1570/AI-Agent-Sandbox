@@ -71,9 +71,41 @@ export default async function DashboardPage({ searchParams }: Props) {
   const cashFlowItems =
     salaryPayDay !== null ? calcCashFlowStatus(salaryPayDay, payments) : [];
 
-  // --- 支払い予定（支払い日順ソート） ---
-  const sortedPayments = [...payments].sort(
-    (a, b) => a.creditCard.paymentDay - b.creditCard.paymentDay
+  // --- 支払い予定（カードごとに集計・支払い日順ソート） ---
+  const STATUS_PRIORITY: Record<string, number> = { unconfirmed: 0, confirmed: 1, paid: 2 };
+  type CardGroup = {
+    cardId: string;
+    cardName: string;
+    paymentDay: number;
+    paymentMonthOffset: number;
+    totalAmount: number;
+    count: number;
+    worstStatus: PaymentStatus;
+  };
+  const cardMap = new Map<string, CardGroup>();
+  for (const p of payments) {
+    const existing = cardMap.get(p.creditCardId);
+    const pStatus = p.status as PaymentStatus;
+    if (existing) {
+      existing.totalAmount += p.amount;
+      existing.count += 1;
+      if (STATUS_PRIORITY[pStatus] < STATUS_PRIORITY[existing.worstStatus]) {
+        existing.worstStatus = pStatus;
+      }
+    } else {
+      cardMap.set(p.creditCardId, {
+        cardId: p.creditCardId,
+        cardName: p.creditCard.name,
+        paymentDay: p.creditCard.paymentDay,
+        paymentMonthOffset: p.creditCard.paymentMonthOffset,
+        totalAmount: p.amount,
+        count: 1,
+        worstStatus: pStatus,
+      });
+    }
+  }
+  const groupedPayments = [...cardMap.values()].sort(
+    (a, b) => a.paymentDay - b.paymentDay
   );
 
   // --- 月別支出推移（直近6ヶ月） ---
@@ -217,7 +249,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           </span>
           {formatMonth(currentMonth)} の支払い予定
         </h2>
-        {sortedPayments.length === 0 ? (
+        {groupedPayments.length === 0 ? (
           <div className="border-2 border-dashed border-border bg-white p-8 text-center">
             <p className="text-muted-foreground">この月の支払い予定はありません</p>
           </div>
@@ -228,29 +260,34 @@ export default async function DashboardPage({ searchParams }: Props) {
                 <TableRow className="border-b-2 border-border bg-muted">
                   <TableHead className="font-black">カード</TableHead>
                   <TableHead className="font-black">支払い日</TableHead>
-                  <TableHead className="font-black">金額</TableHead>
+                  <TableHead className="font-black">合計金額</TableHead>
                   <TableHead className="font-black">ステータス</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedPayments.map((payment) => (
+                {groupedPayments.map((group) => (
                   <TableRow
-                    key={payment.id}
+                    key={group.cardId}
                     className="border-b-2 border-border hover:bg-secondary/20"
                   >
                     <TableCell className="font-bold">
-                      {payment.creditCard.name}
+                      {group.cardName}
                     </TableCell>
                     <TableCell>
-                      {formatPaymentDay(payment.creditCard.paymentDay, payment.creditCard.paymentMonthOffset)}
+                      {formatPaymentDay(group.paymentDay, group.paymentMonthOffset)}
                     </TableCell>
                     <TableCell className="font-bold font-mono">
-                      {formatCurrency(payment.amount)}
+                      {formatCurrency(group.totalAmount)}
+                      {group.count > 1 && (
+                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                          {group.count}件
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <StatusBadge
-                        paymentId={payment.id}
-                        status={payment.status as PaymentStatus}
+                        paymentId={group.cardId}
+                        status={group.worstStatus}
                         readonly
                       />
                     </TableCell>

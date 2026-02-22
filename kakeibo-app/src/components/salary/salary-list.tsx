@@ -31,6 +31,7 @@ import {
   updateSalaryOrder,
 } from "@/lib/actions/salary";
 import { formatCurrency, formatCurrencyJP, formatDay, formatMonth } from "@/lib/utils";
+import { AmountPresets } from "@/components/amount-presets";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,9 +69,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-// 手取り額プリセット
-const AMOUNT_PRESETS = [150000, 200000, 250000, 300000, 350000];
 
 type Props = {
   salaries: Salary[];
@@ -323,19 +321,11 @@ export function SalaryList({ salaries }: Props) {
                     <FormControl>
                       <Input type="number" placeholder="250000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
-                    {/* 手取り額プリセット */}
-                    <div className="flex flex-wrap gap-1">
-                      {AMOUNT_PRESETS.map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => field.onChange(v)}
-                          className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
-                        >
-                          {formatCurrencyJP(v)}
-                        </button>
-                      ))}
-                    </div>
+                    <AmountPresets
+                      storageKey="kakeibo-presets-salary"
+                      defaults={[150000, 200000, 250000, 300000, 350000]}
+                      onSelect={(v) => field.onChange(v)}
+                    />
                     {field.value ? (
                       <FormDescription className="font-bold text-foreground">
                         = {formatCurrencyJP(field.value)}

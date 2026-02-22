@@ -33,6 +33,7 @@ import {
   updatePaymentOrder,
 } from "@/lib/actions/payment";
 import { formatCurrency, formatCurrencyJP, formatMonth } from "@/lib/utils";
+import { AmountPresets } from "@/components/amount-presets";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { ExportButton } from "@/components/payments/export-button";
@@ -89,9 +90,6 @@ type Props = {
   categories: Category[];
   currentMonth: string;
 };
-
-// 金額プリセット（支払い）
-const AMOUNT_PRESETS = [5000, 10000, 30000, 50000, 100000];
 
 // 直近12ヶ月分の選択肢を生成
 function generateMonthOptions(): { value: string; label: string }[] {
@@ -570,19 +568,11 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                     <FormControl>
                       <Input type="number" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
-                    {/* 金額プリセット */}
-                    <div className="flex flex-wrap gap-1">
-                      {AMOUNT_PRESETS.map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => field.onChange(v)}
-                          className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
-                        >
-                          {formatCurrencyJP(v)}
-                        </button>
-                      ))}
-                    </div>
+                    <AmountPresets
+                      storageKey="kakeibo-presets-payment"
+                      defaults={[5000, 10000, 30000, 50000, 100000]}
+                      onSelect={(v) => field.onChange(v)}
+                    />
                     {field.value ? (
                       <FormDescription className="font-bold text-foreground">
                         = {formatCurrencyJP(field.value)}
