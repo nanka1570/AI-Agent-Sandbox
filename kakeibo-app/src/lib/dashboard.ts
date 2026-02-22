@@ -2,7 +2,7 @@
 
 type SalaryLike = { amount: number };
 type PaymentLike = { amount: number; status: string; creditCardId: string; creditCard: { name: string } };
-type PaymentMonthLike = { amount: number; month: string };
+type PaymentMonthLike = { amount: number; month: string; paymentMonthOffset: number };
 
 // 給料合計
 export function calcTotalSalary(salaries: SalaryLike[]): number {
@@ -43,7 +43,7 @@ export function calcConfirmedBalance(
   return totalSalary - (confirmed + paid);
 }
 
-// 月別集計（棒グラフ用）
+// 月別集計（棒グラフ用）: 引き落とし月ベースで集計
 export function calcMonthlyData(
   allPayments: PaymentMonthLike[],
   months: string[]
@@ -51,7 +51,12 @@ export function calcMonthlyData(
   return months.map((m) => ({
     month: m,
     total: allPayments
-      .filter((p) => p.month === m)
+      .filter((p) => {
+        const [y, mo] = p.month.split("-").map(Number);
+        const d = new Date(y, mo - 1 + p.paymentMonthOffset, 1);
+        const actualMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        return actualMonth === m;
+      })
       .reduce((sum, p) => sum + p.amount, 0),
   }));
 }

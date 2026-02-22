@@ -397,6 +397,32 @@ export function CreditCardList({ cards }: Props) {
                   </FormItem>
                 )}
               />
+              {/* 確定月 */}
+              <FormField
+                control={form.control}
+                name="confirmationMonthOffset"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>確定月</FormLabel>
+                    <Select
+                      value={String(field.value ?? 0)}
+                      onValueChange={(v) => field.onChange(Number(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-2 border-border bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <SelectItem value="0">当月</SelectItem>
+                        <SelectItem value="1">翌月</SelectItem>
+                        <SelectItem value="2">翌々月</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {/* 支払い確定日 */}
               <FormField
                 control={form.control}
@@ -439,15 +465,14 @@ export function CreditCardList({ cards }: Props) {
                   </FormItem>
                 )}
               />
-              {/* 確定月 */}
               <FormField
                 control={form.control}
-                name="confirmationMonthOffset"
+                name="paymentMonthOffset"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>確定月</FormLabel>
+                    <FormLabel>支払月 *</FormLabel>
                     <Select
-                      value={String(field.value ?? 0)}
+                      value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <FormControl>
@@ -502,31 +527,6 @@ export function CreditCardList({ cards }: Props) {
                         </button>
                       </div>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="paymentMonthOffset"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>支払月 *</FormLabel>
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="border-2 border-border bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <SelectItem value="0">当月</SelectItem>
-                        <SelectItem value="1">翌月</SelectItem>
-                        <SelectItem value="2">翌々月</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

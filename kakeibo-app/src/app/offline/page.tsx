@@ -3,24 +3,27 @@
 /**
  * オフラインフォールバックページ
  * ネットワーク接続がない場合にサービスワーカーから返される
+ * (main) ルートグループの外にあるため、ナビゲーションなしで全画面表示される
  */
 export default function OfflinePage() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
-      {/* オフラインアイコン */}
-      <div className="flex h-24 w-24 items-center justify-center border-4 border-border bg-amber-200 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-12">
+      {/* アプリ名 */}
+      <p className="text-sm font-black tracking-widest text-muted-foreground">家計簿 APP</p>
+
+      {/* Wi-Fiオフアイコン */}
+      <div className="flex h-28 w-28 items-center justify-center border-4 border-border bg-amber-200 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="48"
-          height="48"
+          width="56"
+          height="56"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {/* Wi-Fiオフアイコン */}
           <line x1="2" y1="2" x2="22" y2="22" />
           <path d="M8.5 16.5a5 5 0 0 1 7 0" />
           <path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
@@ -33,10 +36,10 @@ export default function OfflinePage() {
 
       {/* メッセージ */}
       <div className="text-center">
-        <h1 className="mb-3 border-4 border-border bg-white px-6 py-3 text-3xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+        <h1 className="mb-4 border-4 border-border bg-white px-8 py-4 text-3xl font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
           オフラインです
         </h1>
-        <p className="mt-4 text-lg font-bold text-muted-foreground">
+        <p className="mt-4 text-base font-bold text-muted-foreground">
           インターネット接続を確認して、
           <br />
           ページをリロードしてください。
@@ -46,7 +49,7 @@ export default function OfflinePage() {
       {/* リロードボタン */}
       <button
         onClick={() => window.location.reload()}
-        className="mt-2 cursor-pointer border-4 border-border bg-indigo-500 px-8 py-3 text-lg font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+        className="cursor-pointer border-4 border-border bg-indigo-500 px-10 py-3 text-lg font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
       >
         リロードする
       </button>

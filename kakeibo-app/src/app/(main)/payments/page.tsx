@@ -21,11 +21,21 @@ export default async function PaymentsPage({ searchParams }: Props) {
   await autoMarkConfirmedOverdue(userId);
   await autoMarkPaidOverdue(userId);
 
-  // 月別の支払い一覧（クレカ・カテゴリ情報含む）
-  const payments = await prisma.payment.findMany({
-    where: { month: currentMonth, userId },
+  // 引き落とし月 = currentMonth となる締め月の候補（最大2ヶ月前まで遡る）
+  const [cy, cm] = currentMonth.split("-").map(Number);
+  const possibleClosingMonths = [0, 1, 2].map((offset) => {
+    const d = new Date(cy, cm - 1 - offset, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const paymentCandidates = await prisma.payment.findMany({
+    where: { month: { in: possibleClosingMonths }, userId },
     include: { creditCard: true, category: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
+  const payments = paymentCandidates.filter((p) => {
+    const [y, m] = p.month.split("-").map(Number);
+    const d = new Date(y, m - 1 + p.creditCard.paymentMonthOffset, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` === currentMonth;
   });
 
   // クレカ一覧（登録ダイアログのセレクト用、自分のカードのみ）

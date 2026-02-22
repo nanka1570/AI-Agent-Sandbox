@@ -62,6 +62,17 @@ export function getActualDay(day: number, year: number, month: number): number {
 }
 
 /**
+ * 締め月とオフセットから実際の引き落とし月を返す ("yyyy-MM" 形式)
+ * @param closingMonth 締め月 "yyyy-MM" 形式
+ * @param paymentMonthOffset 引き落とし月オフセット（0=同月, 1=翌月, 2=翌々月）
+ */
+export function getActualPaymentMonth(closingMonth: string, paymentMonthOffset: number): string {
+  const [year, month] = closingMonth.split("-").map(Number);
+  const d = new Date(year, month - 1 + paymentMonthOffset, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
  * カードの利用期間を "1/29〜2/28" 形式で返す
  * 利用期間 = 前月締め日+1日 〜 今月締め日
  * @param targetMonth 対象月 "yyyy-MM" 形式

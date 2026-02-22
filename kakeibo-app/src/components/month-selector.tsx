@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { format, subMonths } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 import { formatMonth } from "@/lib/utils";
 import {
   Select,
@@ -16,14 +16,28 @@ type Props = {
   basePath: string; // 例: "/" or "/payments"
 };
 
-// 直近12ヶ月分の選択肢を生成
+// 未来3ヶ月 + 今月 + 過去12ヶ月の選択肢を生成（新しい月が上）
 function generateMonthOptions(): { value: string; label: string }[] {
   const now = new Date();
-  return Array.from({ length: 12 }, (_, i) => {
+  const options: { value: string; label: string }[] = [];
+
+  // 未来3ヶ月（翌月→翌々月→3ヶ月後の順）
+  const futureSuffixes = ["来月", "再来月", "3ヶ月後"];
+  for (let i = 3; i >= 1; i--) {
+    const date = addMonths(now, i);
+    const value = format(date, "yyyy-MM");
+    options.push({ value, label: `${formatMonth(value)}（${futureSuffixes[i - 1]}）` });
+  }
+  // 今月
+  const currentValue = format(now, "yyyy-MM");
+  options.push({ value: currentValue, label: `${formatMonth(currentValue)}（今月）` });
+  // 過去12ヶ月
+  for (let i = 1; i <= 12; i++) {
     const date = subMonths(now, i);
     const value = format(date, "yyyy-MM");
-    return { value, label: formatMonth(value) };
-  });
+    options.push({ value, label: formatMonth(value) });
+  }
+  return options;
 }
 
 export function MonthSelector({ currentMonth, basePath }: Props) {

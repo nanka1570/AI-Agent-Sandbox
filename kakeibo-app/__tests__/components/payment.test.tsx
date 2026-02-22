@@ -144,8 +144,8 @@ describe("PaymentList", () => {
   // CT-PM-008: 月別フィルター変更
   it("月フィルターが表示される", () => {
     render(<PaymentList payments={mockPayments} creditCards={creditCards} categories={mockCategories} currentMonth="2026-02" />);
-    // 月フィルターに現在月が表示されていること
-    const monthTexts = screen.getAllByText("2026年02月");
+    // 月フィルターに現在月が表示されていること（「今月」サフィックス付き）
+    const monthTexts = screen.getAllByText(/2026年02月/);
     expect(monthTexts.length).toBeGreaterThanOrEqual(1);
   });
 });

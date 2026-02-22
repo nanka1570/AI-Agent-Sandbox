@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE_PATH=$(cat | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE_PATH\" =~ \\.(ts|tsx)$ ]] && [ -f \"$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc\" ]; then cd \"$CLAUDE_PROJECT_DIR\" && npx tsc --noEmit 2>&1 | tail -20; fi",
+            "command": "FILE_PATH=$(cat | jq -r '.tool_input.file_path // empty'); if echo \"$FILE_PATH\" | grep -qE '\\.(ts|tsx)$' && [ -f \"$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc\" ]; then cd \"$CLAUDE_PROJECT_DIR\" && npx tsc --noEmit 2>&1 | tail -20; fi",
             "timeout": 30
           }
         ]

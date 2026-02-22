@@ -51,9 +51,20 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
   const totalSalary = calcTotalSalary(salaries);
 
-  const payments = await prisma.payment.findMany({
-    where: { month: currentMonth, userId },
+  // 引き落とし月 = currentMonth となる締め月の候補（最大2ヶ月前まで遡る）
+  const [cy, cm] = currentMonth.split("-").map(Number);
+  const possibleClosingMonths = [0, 1, 2].map((offset) => {
+    const d = new Date(cy, cm - 1 - offset, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const paymentCandidates = await prisma.payment.findMany({
+    where: { month: { in: possibleClosingMonths }, userId },
     include: { creditCard: true, category: true },
+  });
+  const payments = paymentCandidates.filter((p) => {
+    const [y, m] = p.month.split("-").map(Number);
+    const d = new Date(y, m - 1 + p.creditCard.paymentMonthOffset, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` === currentMonth;
   });
   const totalPayment = calcTotalPayment(payments);
 
@@ -80,11 +91,20 @@ export default async function DashboardPage({ searchParams }: Props) {
     months.push(format(d, "yyyy-MM"));
   }
 
+  // maxOffset=2 を考慮して 2ヶ月余分に取得し、引き落とし月でグループ化する
+  const chartFetchMonths: string[] = [];
+  for (let i = 7; i >= 0; i--) {
+    chartFetchMonths.push(format(subMonths(new Date(), i), "yyyy-MM"));
+  }
   const allPayments = await prisma.payment.findMany({
-    where: { month: { in: months }, userId },
+    where: { month: { in: chartFetchMonths }, userId },
+    include: { creditCard: { select: { paymentMonthOffset: true } } },
   });
 
-  const monthlyData = calcMonthlyData(allPayments, months).map((d) => ({
+  const monthlyData = calcMonthlyData(
+    allPayments.map((p) => ({ ...p, paymentMonthOffset: p.creditCard.paymentMonthOffset })),
+    months
+  ).map((d) => ({
     month: format(new Date(d.month + "-01"), "M月"),
     total: d.total,
   }));

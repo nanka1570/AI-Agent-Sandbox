@@ -66,17 +66,17 @@ describe("ダッシュボード集計ロジック", () => {
     expect(calcBalance(0, 0)).toBe(0);
   });
 
-  // UT-DB-007: 月別集計（棒グラフ用）
-  it("月別集計を正しく計算する", () => {
+  // UT-DB-007: 月別集計（棒グラフ用）: 引き落とし月ベース
+  it("月別集計を正しく計算する（引き落とし月ベース）", () => {
     const allPayments = [
-      { amount: 30000, month: "2026-01" },
-      { amount: 50000, month: "2026-01" },
-      { amount: 20000, month: "2026-02" },
+      { amount: 30000, month: "2026-01", paymentMonthOffset: 0 },  // 1月引き落とし
+      { amount: 50000, month: "2026-01", paymentMonthOffset: 1 },  // 2月引き落とし
+      { amount: 20000, month: "2026-02", paymentMonthOffset: 0 },  // 2月引き落とし
     ];
     const months = ["2026-01", "2026-02", "2026-03"];
     const result = calcMonthlyData(allPayments, months);
-    expect(result[0].total).toBe(80000);  // 1月: 30000 + 50000
-    expect(result[1].total).toBe(20000);  // 2月: 20000
+    expect(result[0].total).toBe(30000);  // 1月: offset=0の30000のみ
+    expect(result[1].total).toBe(70000);  // 2月: offset=1の50000 + offset=0の20000
     expect(result[2].total).toBe(0);      // 3月: データなし
   });
 
