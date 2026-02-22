@@ -466,6 +466,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
         ) : (
           <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <DndContext
+              id="payment-dnd"
               sensors={sensors}
               collisionDetection={closestCenter}
               modifiers={[restrictToVerticalAxis]}

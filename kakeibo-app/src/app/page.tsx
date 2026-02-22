@@ -182,7 +182,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   >
                     <TableCell className="font-bold">{item.cardName}</TableCell>
                     <TableCell>
-                      {formatActualPaymentDate(item.paymentDay, item.paymentMonthOffset, currentMonth)}
+                      {formatActualPaymentDate(item.paymentDay, 0, currentMonth)}
                     </TableCell>
                     <TableCell className="font-mono font-bold">
                       {formatCurrency(item.amount)}

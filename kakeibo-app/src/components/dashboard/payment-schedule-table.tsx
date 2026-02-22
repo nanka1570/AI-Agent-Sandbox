@@ -129,7 +129,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
               >
                 <TableCell className="font-bold">{group.cardName}</TableCell>
                 <TableCell>
-                  {formatActualPaymentDate(group.paymentDay, group.paymentMonthOffset, currentMonth)}
+                  {formatActualPaymentDate(group.paymentDay, 0, currentMonth)}
                 </TableCell>
                 <TableCell className="font-bold font-mono">
                   <span className="flex items-center gap-1.5">

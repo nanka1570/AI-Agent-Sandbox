@@ -253,6 +253,7 @@ export function SalaryList({ salaries }: Props) {
         ) : (
           <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <DndContext
+              id="salary-dnd"
               sensors={sensors}
               collisionDetection={closestCenter}
               modifiers={[restrictToVerticalAxis]}

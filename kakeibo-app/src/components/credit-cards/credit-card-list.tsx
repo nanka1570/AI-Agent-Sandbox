@@ -287,6 +287,7 @@ export function CreditCardList({ cards }: Props) {
           />
         ) : (
           <DndContext
+            id="credit-card-dnd"
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
