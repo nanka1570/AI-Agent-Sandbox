@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CreditCard, Banknote, Receipt, Wallet, BarChart3 } from "lucide-react";
+import { LayoutDashboard, CreditCard, Banknote, Receipt, Tag, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -10,7 +10,7 @@ const navItems = [
   { href: "/credit-cards", label: "カード", icon: CreditCard },
   { href: "/salary", label: "給料", icon: Banknote },
   { href: "/payments", label: "支払い", icon: Receipt },
-  { href: "/budget", label: "予算", icon: Wallet },
+  { href: "/budget", label: "カテゴリ", icon: Tag },
   { href: "/reports", label: "レポート", icon: BarChart3 },
 ];
 

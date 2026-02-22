@@ -101,6 +101,13 @@ function generateMonthOptions(): { value: string; label: string }[] {
   });
 }
 
+// 締め日を過ぎているか判定（締め日当日の翌日から編集不可）
+function isPastClosing(payment: PaymentWithCard): boolean {
+  const [year, month] = payment.month.split("-").map(Number);
+  const closing = new Date(year, month - 1, payment.creditCard.closingDay);
+  return new Date() > closing;
+}
+
 // ドラッグ可能なテーブル行
 function SortablePaymentRow({
   payment,
@@ -170,6 +177,7 @@ function SortablePaymentRow({
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            disabled={isPastClosing(payment)}
             onClick={() => onEdit(payment)}
           >
             <Pencil className="h-4 w-4" />
@@ -253,7 +261,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   }
 
   function handleOpenCreate() {
-    const iroiroId = categories.find((c) => c.name === "いろいろ")?.id ?? "";
+    const iroiroId = categories.find((c) => c.name === "雑費")?.id ?? "";
     setEditTarget(null);
     form.reset({
       creditCardId: "",
@@ -571,7 +579,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                   <FormItem>
                     <FormLabel>金額（円） *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
                     <AmountPresets
                       storageKey="kakeibo-presets-payment"

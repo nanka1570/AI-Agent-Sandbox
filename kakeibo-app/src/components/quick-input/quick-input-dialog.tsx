@@ -69,13 +69,14 @@ export function QuickInputDialog({
     const result = await createPayment(values);
     if (result.success) {
       toast("登録しました");
+      // カード・カテゴリ・月・繰り返しを保持し、金額とメモのみリセット
       form.reset({
-        creditCardId: "",
-        categoryId: iroiroId,
-        month: currentMonth,
+        creditCardId: values.creditCardId,
+        categoryId: values.categoryId,
+        month: values.month,
         amount: undefined,
         memo: "",
-        isRecurring: false,
+        isRecurring: values.isRecurring,
       });
       onOpenChange(false);
     } else {
@@ -108,7 +109,9 @@ export function QuickInputDialog({
                   <FormLabel>金額（円） *</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="50000"
                       {...field}
                       value={field.value ?? ""}

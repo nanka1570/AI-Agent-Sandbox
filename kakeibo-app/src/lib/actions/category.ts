@@ -9,7 +9,7 @@ import type { Category } from "@/generated/prisma/client";
 // デフォルトカテゴリ定義
 const DEFAULT_CATEGORIES = [
   { name: "食費", color: "#FF6384" },
-  { name: "光熱費", color: "#36A2EB" },
+  { name: "水道光熱費", color: "#36A2EB" },
   { name: "通信費", color: "#FFCE56" },
   { name: "交通費", color: "#4BC0C0" },
   { name: "娯楽", color: "#9966FF" },
@@ -46,6 +46,12 @@ export async function ensureDefaultCategories(userId: string): Promise<void> {
   await prisma.category.updateMany({
     where: { userId, name: "いろいろ" },
     data: { name: "雑費" },
+  });
+
+  // 「光熱費」を「水道光熱費」に改名
+  await prisma.category.updateMany({
+    where: { userId, name: "光熱費" },
+    data: { name: "水道光熱費" },
   });
 
   // 「雑費」がなければ追加
@@ -156,6 +162,24 @@ export async function updateCategory(
   revalidatePath("/");
 
   return { success: true, data: category };
+}
+
+/**
+ * カテゴリの並び順を一括更新する
+ */
+export async function updateCategoryOrder(
+  ids: string[]
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+  await Promise.all(
+    ids.map((id, index) =>
+      prisma.category.update({ where: { id, userId }, data: { sortOrder: index } })
+    )
+  );
+  revalidatePath("/budget");
+  revalidatePath("/payments");
+  revalidatePath("/");
+  return { success: true, data: undefined };
 }
 
 /**

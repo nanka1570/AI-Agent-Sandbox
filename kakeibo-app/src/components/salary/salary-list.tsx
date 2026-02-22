@@ -326,7 +326,7 @@ export function SalaryList({ salaries }: Props) {
                   <FormItem>
                     <FormLabel>手取り額（円） *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="250000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="250000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
                     <AmountPresets
                       storageKey="kakeibo-presets-salary"
