@@ -102,7 +102,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
   if (groups.length === 0) {
     return (
       <div className="border-2 border-dashed border-border bg-white p-8 text-center">
-        <p className="text-muted-foreground">この月の支払い予定はありません</p>
+        <p className="text-muted-foreground">この月に引き落とし予定の支払いはありません</p>
       </div>
     );
   }
@@ -129,7 +129,8 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
               >
                 <TableCell className="font-bold">{group.cardName}</TableCell>
                 <TableCell>
-                  {formatActualPaymentDate(group.paymentDay, group.paymentMonthOffset, currentMonth)}
+                  {/* currentMonth = 引き落とし月のためoffset=0で表示 */}
+                  {formatActualPaymentDate(group.paymentDay, 0, currentMonth)}
                 </TableCell>
                 <TableCell className="font-bold font-mono">
                   <span className="flex items-center gap-1.5">

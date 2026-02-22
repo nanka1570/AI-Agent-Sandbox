@@ -98,7 +98,7 @@ describe("PaymentList", () => {
   // CT-PM-002: 空状態表示
   it("支払い0件で空状態メッセージ表示", () => {
     render(<PaymentList payments={[]} creditCards={creditCards} categories={mockCategories} currentMonth="2026-02" />);
-    expect(screen.getByText("この月の支払いデータがありません")).toBeInTheDocument();
+    expect(screen.getByText("この月に引き落とし予定の支払いはありません")).toBeInTheDocument();
   });
 
   // CT-PM-003: ステータスバッジ表示（未確定）

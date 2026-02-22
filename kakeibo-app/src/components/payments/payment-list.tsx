@@ -33,7 +33,7 @@ import {
   deleteRecurringPayments,
   updatePaymentOrder,
 } from "@/lib/actions/payment";
-import { formatCurrency, formatCurrencyJP, formatMonth, formatBillingPeriod } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatMonth, formatBillingPeriod, formatActualPaymentDate } from "@/lib/utils";
 import { AmountPresets } from "@/components/amount-presets";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
@@ -175,6 +175,9 @@ function SortablePaymentRow({
             <Repeat className="h-3.5 w-3.5 text-primary" aria-label="繰り返し" />
           )}
         </div>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {formatActualPaymentDate(payment.creditCard.paymentDay, payment.creditCard.paymentMonthOffset, payment.month)}
       </TableCell>
       <TableCell className="font-bold font-mono">{formatCurrency(payment.amount)}</TableCell>
       <TableCell>
@@ -407,7 +410,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
         <h1 className="text-2xl font-black">支払い管理</h1>
         <div className="flex items-center gap-3">
           <Select value={currentMonth} onValueChange={(v) => handleMonthChange(v)}>
-            <SelectTrigger className="w-[160px] border-2 border-border bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <SelectTrigger className="w-[220px] border-2 border-border bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -472,7 +475,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             icon={Receipt}
             title={
               items.length === 0
-                ? "この月の支払いデータがありません"
+                ? "この月に引き落とし予定の支払いはありません"
                 : "条件に一致する支払いがありません"
             }
             description={
@@ -501,6 +504,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                       <TableHead className="font-black">カード</TableHead>
                       <TableHead className="font-black">カテゴリ</TableHead>
                       <TableHead className="font-black">利用期間</TableHead>
+                      <TableHead className="font-black">支払日</TableHead>
                       <TableHead className="font-black">金額</TableHead>
                       <TableHead className="font-black">ステータス</TableHead>
                       <TableHead className="font-black text-right">操作</TableHead>
@@ -596,6 +600,14 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                     {selectedCard && field.value && (
                       <FormDescription className="text-xs">
                         利用期間: {formatBillingPeriod(field.value, selectedCard.closingDay)}
+                        <br />
+                        {/* 引き落とし月プレビュー */}
+                        → {formatMonth((() => {
+                            const [y, m] = field.value.split("-").map(Number);
+                            const d = new Date(y, m - 1 + selectedCard.paymentMonthOffset, 1);
+                            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                          })()
+                        )}に表示されます
                       </FormDescription>
                     )}
                     <FormMessage />

@@ -202,7 +202,8 @@ export default async function DashboardPage({ searchParams }: Props) {
                   >
                     <TableCell className="font-bold">{item.cardName}</TableCell>
                     <TableCell>
-                      {formatActualPaymentDate(item.paymentDay, item.paymentMonthOffset, currentMonth)}
+                      {/* currentMonth = 引き落とし月のためoffset=0で表示 */}
+                      {formatActualPaymentDate(item.paymentDay, 0, currentMonth)}
                     </TableCell>
                     <TableCell className="font-mono font-bold">
                       {formatCurrency(item.amount)}
@@ -226,13 +227,13 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* 支払い予定テーブル */}
+      {/* 引き落とし予定テーブル */}
       <div className="mt-8">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
           <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
             支払い予定
           </span>
-          {formatMonth(currentMonth)} の支払い予定
+          {formatMonth(currentMonth)} の引き落とし予定
         </h2>
         <PaymentScheduleTable payments={payments} currentMonth={currentMonth} />
       </div>

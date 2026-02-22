@@ -50,7 +50,7 @@ export function MonthSelector({ currentMonth, basePath }: Props) {
 
   return (
     <Select value={currentMonth} onValueChange={(v) => handleChange(v)}>
-      <SelectTrigger className="w-[160px] border-2 border-border bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+      <SelectTrigger className="w-[220px] border-2 border-border bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
