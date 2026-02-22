@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import type { PaymentStatus } from "@/types";
 import { formatCurrency, formatPaymentDay } from "@/lib/utils";
+import { updatePaymentStatus, updateCardPaymentsStatus } from "@/lib/actions/payment";
 import { StatusBadge } from "@/components/status-badge";
 import {
   Table,
@@ -33,6 +36,7 @@ type CardGroup = {
 
 type Props = {
   payments: PaymentWithRelations[];
+  currentMonth: string;
 };
 
 // ステータス優先度: unconfirmed > confirmed > paid
@@ -40,6 +44,13 @@ const STATUS_PRIORITY: Record<string, number> = {
   unconfirmed: 0,
   confirmed: 1,
   paid: 2,
+};
+
+// ステータス遷移（循環）
+const STATUS_TRANSITIONS: Record<string, string> = {
+  unconfirmed: "confirmed",
+  confirmed: "paid",
+  paid: "unconfirmed",
 };
 
 function groupPayments(payments: PaymentWithRelations[]): CardGroup[] {
@@ -70,7 +81,8 @@ function groupPayments(payments: PaymentWithRelations[]): CardGroup[] {
   return [...cardMap.values()].sort((a, b) => a.paymentDay - b.paymentDay);
 }
 
-export function PaymentScheduleTable({ payments }: Props) {
+export function PaymentScheduleTable({ payments, currentMonth }: Props) {
+  const router = useRouter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const groups = groupPayments(payments);
@@ -112,8 +124,9 @@ export function PaymentScheduleTable({ payments }: Props) {
               {/* グループ行 */}
               <TableRow
                 key={group.cardId}
-                className={`border-b-2 border-border ${group.count > 1 ? "cursor-pointer hover:bg-secondary/20" : "hover:bg-secondary/20"}`}
+                className="border-b-2 border-border hover:bg-secondary/20"
                 onClick={() => group.count > 1 && toggleExpand(group.cardId)}
+                style={{ cursor: group.count > 1 ? "pointer" : "default" }}
               >
                 <TableCell className="font-bold">{group.cardName}</TableCell>
                 <TableCell>
@@ -137,11 +150,26 @@ export function PaymentScheduleTable({ payments }: Props) {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <StatusBadge
-                    paymentId={group.cardId}
-                    status={group.worstStatus}
-                    readonly
-                  />
+                  {/* バッジクリックが行展開に伝播しないよう stopPropagation */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <StatusBadge
+                      paymentId={group.cardId}
+                      status={group.worstStatus}
+                      onClickOverride={async () => {
+                        const nextStatus = STATUS_TRANSITIONS[group.worstStatus];
+                        const result = await updateCardPaymentsStatus(
+                          group.cardId,
+                          currentMonth,
+                          nextStatus
+                        );
+                        if (result.success) {
+                          router.refresh();
+                        } else {
+                          toast.error(result.error);
+                        }
+                      }}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
 
@@ -164,7 +192,14 @@ export function PaymentScheduleTable({ payments }: Props) {
                       <StatusBadge
                         paymentId={item.id}
                         status={item.status as PaymentStatus}
-                        readonly
+                        onClickOverride={async () => {
+                          const result = await updatePaymentStatus(item.id);
+                          if (result.success) {
+                            router.refresh();
+                          } else {
+                            toast.error(result.error);
+                          }
+                        }}
                       />
                     </TableCell>
                   </TableRow>

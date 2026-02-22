@@ -31,17 +31,22 @@ type Props = {
   paymentId: string;
   status: PaymentStatus;
   readonly?: boolean;
+  onClickOverride?: () => Promise<void>; // デフォルトのステータス循環の代わりに呼ばれるカスタムアクション
 };
 
-export function StatusBadge({ paymentId, status, readonly }: Props) {
+export function StatusBadge({ paymentId, status, readonly, onClickOverride }: Props) {
   const config = STATUS_CONFIG[status];
   const isClickable = config.clickable && !readonly;
 
   async function handleClick() {
     if (!isClickable) return;
-    const result = await updatePaymentStatus(paymentId);
-    if (!result.success) {
-      toast.error(result.error);
+    if (onClickOverride) {
+      await onClickOverride();
+    } else {
+      const result = await updatePaymentStatus(paymentId);
+      if (!result.success) {
+        toast.error(result.error);
+      }
     }
   }
 

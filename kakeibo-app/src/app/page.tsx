@@ -211,7 +211,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           </span>
           {formatMonth(currentMonth)} の支払い予定
         </h2>
-        <PaymentScheduleTable payments={payments} />
+        <PaymentScheduleTable payments={payments} currentMonth={currentMonth} />
       </div>
 
       {/* グラフ */}

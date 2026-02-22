@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { format, addMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
-import { paymentSchema, type PaymentInput, type ActionResult } from "@/types";
+import { paymentSchema, paymentStatusSchema, type PaymentInput, type ActionResult } from "@/types";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 
 // Payment にリレーション（creditCard, category）を含めた型
@@ -164,6 +164,30 @@ export async function updatePaymentStatus(
   revalidatePath("/");
 
   return { success: true, data: payment };
+}
+
+// カード単位でそのカードの全支払いのステータスを一括変更する
+export async function updateCardPaymentsStatus(
+  creditCardId: string,
+  month: string,
+  newStatus: string
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+
+  const parsed = paymentStatusSchema.safeParse(newStatus);
+  if (!parsed.success) {
+    return { success: false, error: "無効なステータスです" };
+  }
+
+  await prisma.payment.updateMany({
+    where: { creditCardId, month, userId },
+    data: { status: parsed.data },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/payments");
+
+  return { success: true, data: undefined };
 }
 
 export async function updatePaymentOrder(
