@@ -10,7 +10,7 @@ const navItems = [
   { href: "/credit-cards", label: "カード", icon: CreditCard },
   { href: "/salary", label: "給料", icon: Banknote },
   { href: "/payments", label: "支払い", icon: Receipt },
-  { href: "/budget", label: "カテゴリ", icon: Tag },
+  { href: "/budget", label: "カテゴリ\n/予算", icon: Tag },
   { href: "/reports", label: "レポート", icon: BarChart3 },
 ];
 
@@ -28,7 +28,7 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-2 text-[10px] font-bold transition-colors",
+                  "flex flex-col items-center gap-0.5 py-2 text-[10px] font-bold transition-colors whitespace-pre-line text-center",
                   isActive
                     ? "bg-primary text-white"
                     : "text-muted-foreground hover:text-foreground"

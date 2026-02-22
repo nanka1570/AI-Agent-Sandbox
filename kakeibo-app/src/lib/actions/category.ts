@@ -112,6 +112,19 @@ export async function createCategory(
     },
   });
 
+  // 新規カテゴリ追加後、「その他」を末尾に移動
+  const sonota = await prisma.category.findFirst({ where: { userId, name: "その他" } });
+  if (sonota) {
+    const agg = await prisma.category.aggregate({ where: { userId }, _max: { sortOrder: true } });
+    const maxOrder = agg._max.sortOrder ?? 0;
+    if (sonota.sortOrder < maxOrder) {
+      await prisma.category.update({
+        where: { id: sonota.id },
+        data: { sortOrder: maxOrder + 1 },
+      });
+    }
+  }
+
   revalidatePath("/budget");
   revalidatePath("/payments");
   revalidatePath("/");
@@ -195,10 +208,6 @@ export async function deleteCategory(
   });
   if (!existing) {
     return { success: false, error: "カテゴリが見つかりません" };
-  }
-
-  if (existing.isDefault) {
-    return { success: false, error: "デフォルトカテゴリは削除できません" };
   }
 
   await prisma.category.delete({ where: { id, userId } });

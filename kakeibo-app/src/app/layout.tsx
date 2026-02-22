@@ -40,7 +40,7 @@ const navLinks = [
   { href: '/credit-cards', label: 'カード' },
   { href: '/salary', label: '給料' },
   { href: '/payments', label: '支払い' },
-  { href: '/budget', label: '予算' },
+  { href: '/budget', label: 'カテゴリ / 予算' },
   { href: '/reports', label: 'レポート' },
 ];
 

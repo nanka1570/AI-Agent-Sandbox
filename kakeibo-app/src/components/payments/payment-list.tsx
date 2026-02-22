@@ -16,6 +16,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   useSortable,
@@ -37,6 +38,7 @@ import { AmountPresets } from "@/components/amount-presets";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { ExportButton } from "@/components/payments/export-button";
+import { BulkAllocationDialog } from "@/components/payments/bulk-allocation-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -99,13 +101,6 @@ function generateMonthOptions(): { value: string; label: string }[] {
     const value = format(date, "yyyy-MM");
     return { value, label: formatMonth(value) };
   });
-}
-
-// 締め日を過ぎているか判定（締め日当日の翌日から編集不可）
-function isPastClosing(payment: PaymentWithCard): boolean {
-  const [year, month] = payment.month.split("-").map(Number);
-  const closing = new Date(year, month - 1, payment.creditCard.closingDay);
-  return new Date() > closing;
 }
 
 // ドラッグ可能なテーブル行
@@ -177,7 +172,6 @@ function SortablePaymentRow({
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            disabled={isPastClosing(payment)}
             onClick={() => onEdit(payment)}
           >
             <Pencil className="h-4 w-4" />
@@ -205,9 +199,17 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   const [isDeleting, setIsDeleting] = useState(false);
   // 繰り返し削除モード: "single" = この支払いだけ, "group" = グループ全体
   const [deleteMode, setDeleteMode] = useState<"single" | "group">("single");
+  // 合計から振り分けダイアログ
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
 
   // サーバー再レンダリング後に props と state を同期
   useEffect(() => { setItems(payments); }, [payments]);
+
+  // 連続入力用：前回使用したカード・カテゴリを保持
+  const [lastCardId, setLastCardId] = useState("");
+  const [lastCategoryId, setLastCategoryId] = useState(
+    () => categories.find((c) => c.name === "雑費")?.id ?? ""
+  );
 
   // フィルター状態
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -261,11 +263,10 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   }
 
   function handleOpenCreate() {
-    const iroiroId = categories.find((c) => c.name === "雑費")?.id ?? "";
     setEditTarget(null);
     form.reset({
-      creditCardId: "",
-      categoryId: iroiroId,
+      creditCardId: lastCardId,
+      categoryId: lastCategoryId,
       month: currentMonth,
       amount: undefined,
       memo: "",
@@ -301,6 +302,8 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       const result = await createPayment(values);
       if (result.success) {
         toast("登録しました");
+        setLastCardId(values.creditCardId);
+        setLastCategoryId(values.categoryId ?? "");
         setIsFormOpen(false);
         router.refresh();
       } else {
@@ -395,6 +398,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             </SelectContent>
           </Select>
           <ExportButton month={currentMonth} />
+          <Button variant="outline" onClick={() => setIsBulkOpen(true)}>合計から振り分け</Button>
           <Button onClick={() => handleOpenCreate()}>+ 新規登録</Button>
         </div>
       </div>
@@ -463,6 +467,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -555,7 +560,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                       </SelectContent>
                     </Select>
                     <FormDescription className="text-xs">
-                      カテゴリの追加・編集は「予算」タブから行えます
+                      カテゴリの追加・編集は「カテゴリ / 予算」タブから行えます
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -579,7 +584,18 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                   <FormItem>
                     <FormLabel>金額（円） *</FormLabel>
                     <FormControl>
-                      <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="50000"
+                        {...field}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
+                      />
                     </FormControl>
                     <AmountPresets
                       storageKey="kakeibo-presets-payment"
@@ -634,6 +650,15 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* 合計から振り分けダイアログ */}
+      <BulkAllocationDialog
+        open={isBulkOpen}
+        onOpenChange={setIsBulkOpen}
+        creditCards={creditCards}
+        categories={categories}
+        currentMonth={currentMonth}
+      />
 
       {/* 削除確認ダイアログ */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>

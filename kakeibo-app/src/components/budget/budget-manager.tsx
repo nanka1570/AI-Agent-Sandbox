@@ -15,6 +15,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   useSortable,
@@ -225,16 +226,14 @@ function SortableCategoryRow({
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          {!category.isDefault && (
-            <Button
-              variant="destructive"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onDelete(category)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onDelete(category)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </TableCell>
     </TableRow>
@@ -404,6 +403,7 @@ export function BudgetManager({
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -608,12 +608,11 @@ export function BudgetManager({
                         pattern="[0-9]*"
                         placeholder="30000"
                         {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === "" ? undefined : Number(e.target.value)
-                          )
-                        }
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
                       />
                     </FormControl>
                     {field.value ? (

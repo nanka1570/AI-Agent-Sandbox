@@ -205,6 +205,45 @@ export async function updatePaymentOrder(
 }
 
 /**
+ * 複数の支払いを一括作成する（合計から振り分け入力用）
+ */
+export async function createBulkPayments(
+  rows: PaymentInput[]
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+
+  for (const input of rows) {
+    const parsed = paymentSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+    const card = await prisma.creditCard.findUnique({
+      where: { id: parsed.data.creditCardId, userId },
+    });
+    if (!card) {
+      return { success: false, error: "指定されたクレジットカードが見つかりません" };
+    }
+    await prisma.payment.create({
+      data: {
+        userId,
+        creditCardId: parsed.data.creditCardId,
+        categoryId: parsed.data.categoryId || null,
+        month: parsed.data.month,
+        amount: parsed.data.amount,
+        memo: parsed.data.memo ?? null,
+        isRecurring: false,
+        recurringGroupId: null,
+      },
+    });
+  }
+
+  revalidatePath("/payments");
+  revalidatePath("/");
+
+  return { success: true, data: undefined };
+}
+
+/**
  * 繰り返しグループの支払いを一括削除する
  */
 export async function deleteRecurringPayments(

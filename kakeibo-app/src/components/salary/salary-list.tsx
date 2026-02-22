@@ -16,6 +16,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   useSortable,
@@ -253,6 +254,7 @@ export function SalaryList({ salaries }: Props) {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -313,7 +315,18 @@ export function SalaryList({ salaries }: Props) {
                   <FormItem>
                     <FormLabel>支給日 *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="1〜31" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="1〜31"
+                        {...field}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -326,7 +339,18 @@ export function SalaryList({ salaries }: Props) {
                   <FormItem>
                     <FormLabel>手取り額（円） *</FormLabel>
                     <FormControl>
-                      <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="250000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="250000"
+                        {...field}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
+                      />
                     </FormControl>
                     <AmountPresets
                       storageKey="kakeibo-presets-salary"

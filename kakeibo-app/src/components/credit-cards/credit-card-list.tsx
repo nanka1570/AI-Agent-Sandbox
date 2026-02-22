@@ -353,7 +353,18 @@ export function CreditCardList({ cards }: Props) {
                   <FormItem>
                     <FormLabel>締め日 *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="1〜31" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="1〜31"
+                        {...field}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -366,7 +377,18 @@ export function CreditCardList({ cards }: Props) {
                   <FormItem>
                     <FormLabel>支払い日 *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="1〜31" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="1〜31"
+                        {...field}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(digits === "" ? undefined : Number(digits));
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
