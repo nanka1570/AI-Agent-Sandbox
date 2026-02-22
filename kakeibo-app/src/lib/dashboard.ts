@@ -84,7 +84,8 @@ export function calcCashFlowStatus(
   return payments
     .map((p) => {
       const { paymentDay, paymentMonthOffset, name } = p.creditCard;
-      const isSafe = paymentMonthOffset > 0 || salaryPayDay <= paymentDay;
+      // 引き落とし月で登録する方式のため、給料日と支払日を直接比較する
+      const isSafe = salaryPayDay <= paymentDay;
       return {
         id: p.id,
         cardName: name,
@@ -94,11 +95,7 @@ export function calcCashFlowStatus(
         isSafe,
       };
     })
-    .sort((a, b) => {
-      // 月オフセット昇順 → 同月内は支払日昇順
-      if (a.paymentMonthOffset !== b.paymentMonthOffset) return a.paymentMonthOffset - b.paymentMonthOffset;
-      return a.paymentDay - b.paymentDay;
-    });
+    .sort((a, b) => a.paymentDay - b.paymentDay);
 }
 
 // クレカ別集計（円グラフ用 - 旧互換）

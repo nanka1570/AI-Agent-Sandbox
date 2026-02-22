@@ -111,31 +111,37 @@ describe("calcCashFlowStatus", () => {
     },
   ];
 
-  // 給料日25日
-  it("翌月払いは常に安全（isSafe=true）", () => {
-    const result = calcCashFlowStatus(25, payments);
-    const p1 = result.find((r) => r.id === "p1");
-    expect(p1?.isSafe).toBe(true);
-  });
-
-  it("当月払い・支払日>=給料日は安全（isSafe=true）", () => {
+  // 引き落とし月で登録する方式: 給料日と支払日の直接比較で判定
+  it("給料日(25) <= 支払日(27) は安全（isSafe=true）", () => {
     const result = calcCashFlowStatus(25, payments);
     const p2 = result.find((r) => r.id === "p2");
     expect(p2?.isSafe).toBe(true);
   });
 
-  it("当月払い・支払日<給料日は危険（isSafe=false）", () => {
+  it("給料日(25) > 支払日(5) は危険（isSafe=false）", () => {
     const result = calcCashFlowStatus(25, payments);
     const p3 = result.find((r) => r.id === "p3");
     expect(p3?.isSafe).toBe(false);
   });
 
-  it("月オフセット昇順→支払日昇順でソートされる", () => {
+  it("翌月払い設定でも給料日(25) > 支払日(10) なら危険（isSafe=false）", () => {
     const result = calcCashFlowStatus(25, payments);
-    // p3(offset=0,day=5), p2(offset=0,day=27), p1(offset=1,day=10) の順になるはず
+    const p1 = result.find((r) => r.id === "p1");
+    expect(p1?.isSafe).toBe(false);
+  });
+
+  it("翌月払い設定でも給料日(5) <= 支払日(10) なら安全（isSafe=true）", () => {
+    const result = calcCashFlowStatus(5, payments);
+    const p1 = result.find((r) => r.id === "p1");
+    expect(p1?.isSafe).toBe(true);
+  });
+
+  it("支払日昇順でソートされる", () => {
+    const result = calcCashFlowStatus(25, payments);
+    // p3(day=5), p1(day=10), p2(day=27) の順になるはず
     expect(result[0].id).toBe("p3");
-    expect(result[1].id).toBe("p2");
-    expect(result[2].id).toBe("p1");
+    expect(result[1].id).toBe("p1");
+    expect(result[2].id).toBe("p2");
   });
 
   it("支払いなしは空配列を返す", () => {
