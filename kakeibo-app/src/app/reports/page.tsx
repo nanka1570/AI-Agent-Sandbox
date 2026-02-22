@@ -111,7 +111,10 @@ export default async function ReportsPage({ searchParams }: Props) {
                   <TableHead className="w-16 font-black">順位</TableHead>
                   <TableHead className="font-black">カテゴリ</TableHead>
                   <TableHead className="font-black text-right">年間合計</TableHead>
-                  <TableHead className="w-24 font-black text-right">割合</TableHead>
+                  <TableHead className="w-32 font-black text-right">
+                    支出比率
+                    <span className="block text-xs font-normal text-muted-foreground">年間支出に占める</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

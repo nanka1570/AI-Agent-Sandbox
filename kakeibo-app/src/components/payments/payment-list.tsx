@@ -90,6 +90,9 @@ type Props = {
   currentMonth: string;
 };
 
+// 金額プリセット（支払い）
+const AMOUNT_PRESETS = [5000, 10000, 30000, 50000, 100000];
+
 // 直近12ヶ月分の選択肢を生成
 function generateMonthOptions(): { value: string; label: string }[] {
   const now = new Date();
@@ -249,10 +252,11 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   }
 
   function handleOpenCreate() {
+    const iroiroId = categories.find((c) => c.name === "いろいろ")?.id ?? "";
     setEditTarget(null);
     form.reset({
       creditCardId: "",
-      categoryId: "",
+      categoryId: iroiroId,
       month: currentMonth,
       amount: undefined,
       memo: "",
@@ -566,6 +570,19 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                     <FormControl>
                       <Input type="number" placeholder="50000" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))} />
                     </FormControl>
+                    {/* 金額プリセット */}
+                    <div className="flex flex-wrap gap-1">
+                      {AMOUNT_PRESETS.map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => field.onChange(v)}
+                          className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
+                        >
+                          {formatCurrencyJP(v)}
+                        </button>
+                      ))}
+                    </div>
                     {field.value ? (
                       <FormDescription className="font-bold text-foreground">
                         = {formatCurrencyJP(field.value)}

@@ -23,6 +23,7 @@ export async function createCreditCard(
       closingDay: parsed.data.closingDay,
       paymentDay: parsed.data.paymentDay,
       paymentMonthOffset: parsed.data.paymentMonthOffset,
+      brand: parsed.data.brand ?? null,
       memo: parsed.data.memo ?? null,
     },
   });
@@ -56,6 +57,7 @@ export async function updateCreditCard(
       closingDay: parsed.data.closingDay,
       paymentDay: parsed.data.paymentDay,
       paymentMonthOffset: parsed.data.paymentMonthOffset,
+      brand: parsed.data.brand ?? null,
       memo: parsed.data.memo ?? null,
     },
   });

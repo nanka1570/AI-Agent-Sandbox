@@ -40,6 +40,9 @@ type Props = {
   categories: Category[];
 };
 
+// 金額プリセット（支払い）
+const AMOUNT_PRESETS = [5000, 10000, 30000, 50000, 100000];
+
 export function QuickInputDialog({
   open,
   onOpenChange,
@@ -47,12 +50,14 @@ export function QuickInputDialog({
   categories,
 }: Props) {
   const currentMonth = format(new Date(), "yyyy-MM");
+  // 「いろいろ」カテゴリをデフォルトに
+  const iroiroId = categories.find((c) => c.name === "いろいろ")?.id ?? "";
 
   const form = useForm<PaymentInput>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       creditCardId: "",
-      categoryId: "",
+      categoryId: iroiroId,
       month: currentMonth,
       amount: undefined,
       memo: "",
@@ -68,7 +73,7 @@ export function QuickInputDialog({
       toast("登録しました");
       form.reset({
         creditCardId: "",
-        categoryId: "",
+        categoryId: iroiroId,
         month: currentMonth,
         amount: undefined,
         memo: "",
@@ -118,6 +123,19 @@ export function QuickInputDialog({
                       }
                     />
                   </FormControl>
+                  {/* 金額プリセット */}
+                  <div className="flex flex-wrap gap-1">
+                    {AMOUNT_PRESETS.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => field.onChange(v)}
+                        className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
+                      >
+                        {formatCurrencyJP(v)}
+                      </button>
+                    ))}
+                  </div>
                   {field.value ? (
                     <FormDescription className="font-bold text-foreground">
                       = {formatCurrencyJP(field.value)}

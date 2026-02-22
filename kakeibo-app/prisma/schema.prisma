@@ -33,6 +33,7 @@ model CreditCard {
   closingDay         Int  // 締め日（1-31）
   paymentDay         Int  // 支払い日（1-31）
   paymentMonthOffset Int  @default(0) // 支払月オフセット（0=当月, 1=翌月, 2=翌々月）
+  brand      String?   // "visa" | "mastercard" | "jcb" | "amex" | "other"
   memo       String?
   sortOrder  Int       @default(0) // 表示順
   createdAt  DateTime  @default(now())

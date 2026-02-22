@@ -30,6 +30,27 @@ import {
   updateCreditCardOrder,
 } from "@/lib/actions/credit-card";
 import { formatDay, formatPaymentDay } from "@/lib/utils";
+
+// カードブランド定義
+const BRANDS = [
+  { id: "visa",       label: "Visa",       bg: "bg-blue-600",   text: "text-white" },
+  { id: "mastercard", label: "MC",          bg: "bg-red-600",    text: "text-white" },
+  { id: "jcb",        label: "JCB",         bg: "bg-green-600",  text: "text-white" },
+  { id: "amex",       label: "Amex",        bg: "bg-sky-700",    text: "text-white" },
+  { id: "other",      label: "他",           bg: "bg-gray-400",   text: "text-white" },
+] as const;
+
+// ブランドバッジ（カード一覧に表示）
+function BrandBadge({ brand }: { brand: string | null }) {
+  const found = BRANDS.find((b) => b.id === brand);
+  if (!found) return null;
+  return (
+    <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-black ${found.bg} ${found.text}`}>
+      {found.label}
+    </span>
+  );
+}
+
 import {
   Select,
   SelectContent,
@@ -106,7 +127,10 @@ function SortableCardItem({
               <GripVertical className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-black text-lg">{card.name}</p>
+              <div className="flex items-center gap-2">
+                <BrandBadge brand={card.brand ?? null} />
+                <p className="truncate font-black text-lg">{card.name}</p>
+              </div>
               <p className="mt-1 text-sm font-bold">
                 締め日: {formatDay(card.closingDay)} / 支払い日:{" "}
                 {formatPaymentDay(card.paymentDay, card.paymentMonthOffset)}
@@ -161,6 +185,7 @@ export function CreditCardList({ cards }: Props) {
       closingDay: undefined,
       paymentDay: undefined,
       paymentMonthOffset: 0,
+      brand: "",
       memo: "",
     },
   });
@@ -169,7 +194,7 @@ export function CreditCardList({ cards }: Props) {
 
   function handleOpenCreate() {
     setEditTarget(null);
-    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, paymentMonthOffset: 0, memo: "" });
+    form.reset({ name: "", closingDay: undefined, paymentDay: undefined, paymentMonthOffset: 0, brand: "", memo: "" });
     setIsFormOpen(true);
   }
 
@@ -180,6 +205,7 @@ export function CreditCardList({ cards }: Props) {
       closingDay: card.closingDay,
       paymentDay: card.paymentDay,
       paymentMonthOffset: card.paymentMonthOffset,
+      brand: card.brand ?? "",
       memo: card.memo ?? "",
     });
     setIsFormOpen(true);
@@ -282,6 +308,33 @@ export function CreditCardList({ cards }: Props) {
                   <FormItem>
                     <FormLabel>カード名 *</FormLabel>
                     <FormControl><Input placeholder="楽天カード" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* ブランド選択 */}
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ブランド</FormLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {BRANDS.map((b) => (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => field.onChange(field.value === b.id ? "" : b.id)}
+                          className={`rounded border-2 px-3 py-1 text-sm font-black transition-all ${
+                            field.value === b.id
+                              ? `${b.bg} ${b.text} border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`
+                              : "border-border bg-white hover:bg-secondary"
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

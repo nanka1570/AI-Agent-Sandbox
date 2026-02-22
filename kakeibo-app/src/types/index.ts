@@ -23,6 +23,7 @@ export const creditCardSchema = z.object({
     .int()
     .min(0, "0〜2の範囲で選択してください")
     .max(2, "0〜2の範囲で選択してください"),
+  brand: z.string().optional(),
   memo: z.string().optional(),
 });
 

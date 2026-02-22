@@ -16,24 +16,46 @@ const DEFAULT_CATEGORIES = [
   { name: "日用品", color: "#FF9F40" },
   { name: "医療", color: "#C9CBCF" },
   { name: "その他", color: "#7C8798" },
+  { name: "いろいろ", color: "#94A3B8" },
 ];
 
 /**
- * デフォルトカテゴリを作成する（カテゴリが0件の場合のみ）
+ * デフォルトカテゴリを作成する
+ * - カテゴリが0件の場合: 全デフォルトカテゴリを作成
+ * - 既存ユーザーで「いろいろ」がない場合: 「いろいろ」だけ追加
  */
 export async function ensureDefaultCategories(userId: string): Promise<void> {
   const count = await prisma.category.count({ where: { userId } });
-  if (count > 0) return;
 
-  await prisma.category.createMany({
-    data: DEFAULT_CATEGORIES.map((cat, index) => ({
-      userId,
-      name: cat.name,
-      color: cat.color,
-      sortOrder: index,
-      isDefault: true,
-    })),
+  if (count === 0) {
+    // 新規ユーザー: 全カテゴリを一括作成
+    await prisma.category.createMany({
+      data: DEFAULT_CATEGORIES.map((cat, index) => ({
+        userId,
+        name: cat.name,
+        color: cat.color,
+        sortOrder: index,
+        isDefault: true,
+      })),
+    });
+    return;
+  }
+
+  // 既存ユーザー: 「いろいろ」がなければ追加
+  const hasIroiro = await prisma.category.findFirst({
+    where: { userId, name: "いろいろ" },
   });
+  if (!hasIroiro) {
+    await prisma.category.create({
+      data: {
+        userId,
+        name: "いろいろ",
+        color: "#94A3B8",
+        sortOrder: 99,
+        isDefault: true,
+      },
+    });
+  }
 }
 
 /**
