@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -140,11 +141,15 @@ function SortableSalaryRow({
 }
 
 export function SalaryList({ salaries }: Props) {
+  const router = useRouter();
   const [items, setItems] = useState(salaries);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Salary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Salary | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // サーバー再レンダリング後に props と state を同期
+  useEffect(() => { setItems(salaries); }, [salaries]);
 
   // 現在月をデフォルト値に
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -189,6 +194,7 @@ export function SalaryList({ salaries }: Props) {
       if (result.success) {
         toast("更新しました");
         setIsFormOpen(false);
+        router.refresh();
       } else {
         toast.error(result.error);
       }
@@ -197,6 +203,7 @@ export function SalaryList({ salaries }: Props) {
       if (result.success) {
         toast("登録しました");
         setIsFormOpen(false);
+        router.refresh();
       } else {
         toast.error(result.error);
       }

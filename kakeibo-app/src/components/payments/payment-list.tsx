@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -198,6 +198,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   // 繰り返し削除モード: "single" = この支払いだけ, "group" = グループ全体
   const [deleteMode, setDeleteMode] = useState<"single" | "group">("single");
 
+  // サーバー再レンダリング後に props と state を同期
+  useEffect(() => { setItems(payments); }, [payments]);
+
   // フィルター状態
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterKeyword, setFilterKeyword] = useState<string>("");
@@ -282,6 +285,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       if (result.success) {
         toast("更新しました");
         setIsFormOpen(false);
+        router.refresh();
       } else {
         toast.error(result.error);
       }
@@ -290,6 +294,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       if (result.success) {
         toast("登録しました");
         setIsFormOpen(false);
+        router.refresh();
       } else {
         toast.error(result.error);
       }

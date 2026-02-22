@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
 import { getBudgets } from "@/lib/actions/budget";
 import { formatCurrency, formatMonth, formatPaymentDay } from "@/lib/utils";
+import { PaymentScheduleTable } from "@/components/dashboard/payment-schedule-table";
 import {
   calcTotalSalary,
   calcTotalPayment,
@@ -20,8 +21,6 @@ import { CategoryChart } from "@/components/charts/category-chart";
 import { BudgetProgress } from "@/components/budget/budget-progress";
 import { QuickInputFab } from "@/components/quick-input/quick-input-fab";
 import { AdBanner } from "@/components/ads/ad-banner";
-import { StatusBadge } from "@/components/status-badge";
-import type { PaymentStatus } from "@/types";
 import {
   Table,
   TableBody,
@@ -70,43 +69,6 @@ export default async function DashboardPage({ searchParams }: Props) {
   const salaryPayDay = salaries[0]?.payDay ?? null;
   const cashFlowItems =
     salaryPayDay !== null ? calcCashFlowStatus(salaryPayDay, payments) : [];
-
-  // --- 支払い予定（カードごとに集計・支払い日順ソート） ---
-  const STATUS_PRIORITY: Record<string, number> = { unconfirmed: 0, confirmed: 1, paid: 2 };
-  type CardGroup = {
-    cardId: string;
-    cardName: string;
-    paymentDay: number;
-    paymentMonthOffset: number;
-    totalAmount: number;
-    count: number;
-    worstStatus: PaymentStatus;
-  };
-  const cardMap = new Map<string, CardGroup>();
-  for (const p of payments) {
-    const existing = cardMap.get(p.creditCardId);
-    const pStatus = p.status as PaymentStatus;
-    if (existing) {
-      existing.totalAmount += p.amount;
-      existing.count += 1;
-      if (STATUS_PRIORITY[pStatus] < STATUS_PRIORITY[existing.worstStatus]) {
-        existing.worstStatus = pStatus;
-      }
-    } else {
-      cardMap.set(p.creditCardId, {
-        cardId: p.creditCardId,
-        cardName: p.creditCard.name,
-        paymentDay: p.creditCard.paymentDay,
-        paymentMonthOffset: p.creditCard.paymentMonthOffset,
-        totalAmount: p.amount,
-        count: 1,
-        worstStatus: pStatus,
-      });
-    }
-  }
-  const groupedPayments = [...cardMap.values()].sort(
-    (a, b) => a.paymentDay - b.paymentDay
-  );
 
   // --- 月別支出推移（直近6ヶ月） ---
   const months: string[] = [];
@@ -249,54 +211,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           </span>
           {formatMonth(currentMonth)} の支払い予定
         </h2>
-        {groupedPayments.length === 0 ? (
-          <div className="border-2 border-dashed border-border bg-white p-8 text-center">
-            <p className="text-muted-foreground">この月の支払い予定はありません</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b-2 border-border bg-muted">
-                  <TableHead className="font-black">カード</TableHead>
-                  <TableHead className="font-black">支払い日</TableHead>
-                  <TableHead className="font-black">合計金額</TableHead>
-                  <TableHead className="font-black">ステータス</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groupedPayments.map((group) => (
-                  <TableRow
-                    key={group.cardId}
-                    className="border-b-2 border-border hover:bg-secondary/20"
-                  >
-                    <TableCell className="font-bold">
-                      {group.cardName}
-                    </TableCell>
-                    <TableCell>
-                      {formatPaymentDay(group.paymentDay, group.paymentMonthOffset)}
-                    </TableCell>
-                    <TableCell className="font-bold font-mono">
-                      {formatCurrency(group.totalAmount)}
-                      {group.count > 1 && (
-                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                          {group.count}件
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        paymentId={group.cardId}
-                        status={group.worstStatus}
-                        readonly
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <PaymentScheduleTable payments={payments} />
       </div>
 
       {/* グラフ */}
