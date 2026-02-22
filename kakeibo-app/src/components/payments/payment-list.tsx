@@ -510,7 +510,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             <DialogTitle>{editTarget ? "支払い編集" : "支払い登録"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="creditCardId"
@@ -585,15 +585,21 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                     <FormLabel>金額（円） *</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        type="number"
+                        step="1"
+                        min="1"
                         placeholder="50000"
-                        {...field}
-                        value={field.value != null ? String(field.value) : ""}
+                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ""}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits === "" ? undefined : Number(digits));
+                          const val = e.target.value;
+                          field.onChange(val === "" ? undefined : parseInt(val, 10));
+                        }}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
                         }}
                       />
                     </FormControl>

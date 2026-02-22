@@ -296,7 +296,7 @@ export function SalaryList({ salaries }: Props) {
             <DialogTitle>{editTarget ? "給料編集" : "給料登録"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="month"
@@ -316,15 +316,22 @@ export function SalaryList({ salaries }: Props) {
                     <FormLabel>支給日 *</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        type="number"
+                        step="1"
+                        min="1"
+                        max="31"
                         placeholder="1〜31"
-                        {...field}
-                        value={field.value != null ? String(field.value) : ""}
+                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ""}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits === "" ? undefined : Number(digits));
+                          const val = e.target.value;
+                          field.onChange(val === "" ? undefined : parseInt(val, 10));
+                        }}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
                         }}
                       />
                     </FormControl>
@@ -340,15 +347,21 @@ export function SalaryList({ salaries }: Props) {
                     <FormLabel>手取り額（円） *</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        type="number"
+                        step="1"
+                        min="1"
                         placeholder="250000"
-                        {...field}
-                        value={field.value != null ? String(field.value) : ""}
+                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ""}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits === "" ? undefined : Number(digits));
+                          const val = e.target.value;
+                          field.onChange(val === "" ? undefined : parseInt(val, 10));
+                        }}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
                         }}
                       />
                     </FormControl>

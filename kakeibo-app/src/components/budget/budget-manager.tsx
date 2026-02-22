@@ -331,6 +331,15 @@ export function BudgetManager({
     if (result.success) {
       toast(editCategoryTarget ? "カテゴリを更新しました" : "カテゴリを追加しました");
       setIsCategoryOpen(false);
+      // 新規追加時のみ楽観的更新（その他の直前に挿入）
+      if (!editCategoryTarget) {
+        const newCat = result.data;
+        setItems(prev => {
+          const sonotaIdx = prev.findIndex(c => c.name === "その他");
+          if (sonotaIdx === -1) return [...prev, newCat];
+          return [...prev.slice(0, sonotaIdx), newCat, prev[sonotaIdx]];
+        });
+      }
       router.refresh();
     } else {
       toast.error(result.error);
@@ -592,6 +601,7 @@ export function BudgetManager({
           </DialogHeader>
           <Form {...budgetForm}>
             <form
+              noValidate
               onSubmit={budgetForm.handleSubmit(onBudgetSubmit)}
               className="space-y-4"
             >
@@ -603,15 +613,21 @@ export function BudgetManager({
                     <FormLabel>予算額（円） *</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        type="number"
+                        step="1"
+                        min="1"
                         placeholder="30000"
-                        {...field}
-                        value={field.value != null ? String(field.value) : ""}
+                        className="[&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ""}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits === "" ? undefined : Number(digits));
+                          const val = e.target.value;
+                          field.onChange(val === "" ? undefined : parseInt(val, 10));
+                        }}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
                         }}
                       />
                     </FormControl>

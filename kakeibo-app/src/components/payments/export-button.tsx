@@ -52,7 +52,7 @@ export function ExportButton({ month }: Props) {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="sm"
       disabled={isExporting}
       onClick={() => handleExport()}
