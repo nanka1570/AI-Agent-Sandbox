@@ -332,7 +332,7 @@ export function CreditCardList({ cards }: Props) {
                           key={b.id}
                           type="button"
                           onClick={() => field.onChange(field.value === b.id ? "" : b.id)}
-                          className={`rounded border-2 px-3 py-1 text-sm font-black transition-all ${
+                          className={`cursor-pointer rounded border-2 px-3 py-1 text-sm font-black transition-all ${
                             field.value === b.id
                               ? `${b.bg} ${b.text} border-transparent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`
                               : "border-border bg-white hover:bg-secondary"
