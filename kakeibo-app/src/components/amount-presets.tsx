@@ -58,7 +58,7 @@ export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
               key={v}
               type="button"
               onClick={() => handleRemove(v)}
-              className="flex items-center gap-0.5 border border-destructive px-2 py-0.5 text-xs font-bold text-destructive hover:bg-destructive/10"
+              className="flex cursor-pointer items-center gap-0.5 border border-destructive px-2 py-0.5 text-xs font-bold text-destructive hover:bg-destructive/10"
             >
               <span>×</span>
               {formatCurrencyJP(v)}
@@ -68,7 +68,7 @@ export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
               key={v}
               type="button"
               onClick={() => onSelect(v)}
-              className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
+              className="cursor-pointer border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary active:translate-x-px active:translate-y-px"
             >
               {formatCurrencyJP(v)}
             </button>
@@ -77,7 +77,7 @@ export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
         <button
           type="button"
           onClick={() => setIsEditing(!isEditing)}
-          className="px-1.5 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+          className="cursor-pointer px-1.5 py-0.5 text-xs text-muted-foreground hover:text-foreground"
         >
           {isEditing ? "完了" : "✎ 編集"}
         </button>
@@ -100,7 +100,7 @@ export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
           <button
             type="button"
             onClick={() => handleAdd()}
-            className="border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary"
+            className="cursor-pointer border border-border px-2 py-0.5 text-xs font-bold hover:bg-secondary"
           >
             追加
           </button>

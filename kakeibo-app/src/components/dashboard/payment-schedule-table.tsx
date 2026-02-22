@@ -124,9 +124,8 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
               {/* グループ行 */}
               <TableRow
                 key={group.cardId}
-                className="border-b-2 border-border hover:bg-secondary/20"
+                className={`border-b-2 border-border hover:bg-secondary/20 ${group.count > 1 ? "cursor-pointer" : "cursor-default"}`}
                 onClick={() => group.count > 1 && toggleExpand(group.cardId)}
-                style={{ cursor: group.count > 1 ? "pointer" : "default" }}
               >
                 <TableCell className="font-bold">{group.cardName}</TableCell>
                 <TableCell>

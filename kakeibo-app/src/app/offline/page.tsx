@@ -46,7 +46,7 @@ export default function OfflinePage() {
       {/* リロードボタン */}
       <button
         onClick={() => window.location.reload()}
-        className="mt-2 border-4 border-border bg-indigo-500 px-8 py-3 text-lg font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
+        className="mt-2 cursor-pointer border-4 border-border bg-indigo-500 px-8 py-3 text-lg font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none"
       >
         リロードする
       </button>
