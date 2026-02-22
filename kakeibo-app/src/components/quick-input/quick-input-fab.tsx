@@ -19,7 +19,7 @@ export function QuickInputFab({ creditCards, categories }: Props) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:bottom-8"
+        className="fixed bottom-24 right-4 z-50 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-2 border-border bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:bottom-8"
         aria-label="クイック入力"
       >
         <Plus className="h-7 w-7" />

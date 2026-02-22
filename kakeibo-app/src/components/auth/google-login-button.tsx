@@ -23,7 +23,7 @@ export function GoogleLoginButton() {
       type="button"
       onClick={() => handleGoogleLogin()}
       disabled={isLoading}
-      className="flex w-full items-center justify-center gap-3 border-2 border-border bg-white py-2 text-sm font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none disabled:opacity-50"
+      className="flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-border bg-white py-2 text-sm font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none disabled:cursor-default disabled:opacity-50"
     >
       {/* Google ロゴ */}
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
