@@ -7,7 +7,7 @@ export default async function CreditCardsPage() {
 
   const cards = await prisma.creditCard.findMany({
     where: { userId },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
   return <CreditCardList cards={cards} />;

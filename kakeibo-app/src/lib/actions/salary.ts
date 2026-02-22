@@ -64,6 +64,20 @@ export async function updateSalary(
   return { success: true, data: salary };
 }
 
+export async function updateSalaryOrder(
+  ids: string[]
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+  await Promise.all(
+    ids.map((id, index) =>
+      prisma.salary.update({ where: { id, userId }, data: { sortOrder: index } })
+    )
+  );
+  revalidatePath("/salary");
+  revalidatePath("/");
+  return { success: true, data: undefined };
+}
+
 export async function deleteSalary(
   id: string
 ): Promise<ActionResult<void>> {

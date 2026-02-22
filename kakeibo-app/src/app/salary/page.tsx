@@ -7,7 +7,7 @@ export default async function SalaryPage() {
 
   const salaries = await prisma.salary.findMany({
     where: { userId },
-    orderBy: { month: "desc" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
   return <SalaryList salaries={salaries} />;

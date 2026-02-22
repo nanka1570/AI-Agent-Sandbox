@@ -4,10 +4,31 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, CreditCard } from "lucide-react";
+import { Pencil, Trash2, CreditCard, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { CreditCard as CreditCardType } from "@/generated/prisma/client";
 import { creditCardSchema, type CreditCardInput } from "@/types";
-import { createCreditCard, updateCreditCard, deleteCreditCard } from "@/lib/actions/credit-card";
+import {
+  createCreditCard,
+  updateCreditCard,
+  deleteCreditCard,
+  updateCreditCardOrder,
+} from "@/lib/actions/credit-card";
 import { formatDay, formatPaymentDay } from "@/lib/utils";
 import {
   Select,
@@ -50,11 +71,88 @@ type Props = {
   cards: CreditCardType[];
 };
 
+// ドラッグ可能なカードアイテム
+function SortableCardItem({
+  card,
+  onEdit,
+  onDelete,
+}: {
+  card: CreditCardType;
+  onEdit: (card: CreditCardType) => void;
+  onDelete: (card: CreditCardType) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: card.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start gap-2">
+            {/* ドラッグハンドル */}
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              className="mt-0.5 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+              aria-label="ドラッグして並べ替え"
+            >
+              <GripVertical className="h-5 w-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-black text-lg">{card.name}</p>
+              <p className="mt-1 text-sm font-bold">
+                締め日: {formatDay(card.closingDay)} / 支払い日:{" "}
+                {formatPaymentDay(card.paymentDay, card.paymentMonthOffset)}
+              </p>
+              {card.memo && (
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {card.memo}
+                </p>
+              )}
+            </div>
+            <div className="flex shrink-0 gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onEdit(card)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onDelete(card)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function CreditCardList({ cards }: Props) {
+  const [items, setItems] = useState(cards);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<CreditCardType | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CreditCardType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+  );
 
   const form = useForm<CreditCardInput>({
     resolver: zodResolver(creditCardSchema),
@@ -115,9 +213,20 @@ export function CreditCardList({ cards }: Props) {
     if (result.success) {
       toast("削除しました");
       setDeleteTarget(null);
+      setItems((prev) => prev.filter((c) => c.id !== deleteTarget.id));
     } else {
       toast.error(result.error);
     }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((c) => c.id === active.id);
+    const newIndex = items.findIndex((c) => c.id === over.id);
+    const newItems = arrayMove(items, oldIndex, newIndex);
+    setItems(newItems); // 楽観的更新
+    await updateCreditCardOrder(newItems.map((c) => c.id));
   }
 
   return (
@@ -128,40 +237,34 @@ export function CreditCardList({ cards }: Props) {
       </div>
 
       <div className="mt-6">
-        {cards.length === 0 ? (
+        {items.length === 0 ? (
           <EmptyState
             icon={CreditCard}
             title="クレジットカードが登録されていません"
             description="新規登録ボタンから追加してください。"
           />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card) => (
-              <Card key={card.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-black text-lg">{card.name}</p>
-                      <p className="mt-1 text-sm font-bold">
-                        締め日: {formatDay(card.closingDay)} / 支払い日: {formatPaymentDay(card.paymentDay, card.paymentMonthOffset)}
-                      </p>
-                      {card.memo && (
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{card.memo}</p>
-                      )}
-                    </div>
-                    <div className="ml-2 flex shrink-0 gap-1">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(card)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(card)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={items.map((c) => c.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((card) => (
+                  <SortableCardItem
+                    key={card.id}
+                    card={card}
+                    onEdit={handleOpenEdit}
+                    onDelete={(card) => setDeleteTarget(card)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 

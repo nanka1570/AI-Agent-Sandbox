@@ -4,11 +4,32 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Wallet } from "lucide-react";
+import { Pencil, Trash2, Wallet, GripVertical } from "lucide-react";
 import { format } from "date-fns";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Salary } from "@/generated/prisma/client";
 import { salarySchema, type SalaryInput } from "@/types";
-import { createSalary, updateSalary, deleteSalary } from "@/lib/actions/salary";
+import {
+  createSalary,
+  updateSalary,
+  deleteSalary,
+  updateSalaryOrder,
+} from "@/lib/actions/salary";
 import { formatCurrency, formatCurrencyJP, formatDay, formatMonth } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -52,7 +73,73 @@ type Props = {
   salaries: Salary[];
 };
 
+// ドラッグ可能なテーブル行
+function SortableSalaryRow({
+  salary,
+  onEdit,
+  onDelete,
+}: {
+  salary: Salary;
+  onEdit: (salary: Salary) => void;
+  onDelete: (salary: Salary) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: salary.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className="border-b-2 border-border hover:bg-secondary/20"
+    >
+      {/* ドラッグハンドル */}
+      <TableCell className="w-8 py-2 pl-2 pr-0">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+          aria-label="ドラッグして並べ替え"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+      <TableCell className="font-bold">{formatMonth(salary.month)}</TableCell>
+      <TableCell>{formatDay(salary.payDay)}</TableCell>
+      <TableCell className="font-bold font-mono">{formatCurrency(salary.amount)}</TableCell>
+      <TableCell className="text-muted-foreground">{salary.memo || "—"}</TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onEdit(salary)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onDelete(salary)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function SalaryList({ salaries }: Props) {
+  const [items, setItems] = useState(salaries);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Salary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Salary | null>(null);
@@ -60,6 +147,11 @@ export function SalaryList({ salaries }: Props) {
 
   // 現在月をデフォルト値に
   const currentMonth = format(new Date(), "yyyy-MM");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+  );
 
   const form = useForm<SalaryInput>({
     resolver: zodResolver(salarySchema),
@@ -118,9 +210,20 @@ export function SalaryList({ salaries }: Props) {
     if (result.success) {
       toast("削除しました");
       setDeleteTarget(null);
+      setItems((prev) => prev.filter((s) => s.id !== deleteTarget.id));
     } else {
       toast.error(result.error);
     }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((s) => s.id === active.id);
+    const newIndex = items.findIndex((s) => s.id === over.id);
+    const newItems = arrayMove(items, oldIndex, newIndex);
+    setItems(newItems); // 楽観的更新
+    await updateSalaryOrder(newItems.map((s) => s.id));
   }
 
   return (
@@ -131,7 +234,7 @@ export function SalaryList({ salaries }: Props) {
       </div>
 
       <div className="mt-6">
-        {salaries.length === 0 ? (
+        {items.length === 0 ? (
           <EmptyState
             icon={Wallet}
             title="給料データがありません"
@@ -139,37 +242,39 @@ export function SalaryList({ salaries }: Props) {
           />
         ) : (
           <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b-2 border-border bg-muted">
-                  <TableHead className="font-black">対象月</TableHead>
-                  <TableHead className="font-black">支給日</TableHead>
-                  <TableHead className="font-black">手取り額</TableHead>
-                  <TableHead className="font-black">メモ</TableHead>
-                  <TableHead className="font-black text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {salaries.map((salary) => (
-                  <TableRow key={salary.id} className="border-b-2 border-border hover:bg-secondary/20">
-                    <TableCell className="font-bold">{formatMonth(salary.month)}</TableCell>
-                    <TableCell>{formatDay(salary.payDay)}</TableCell>
-                    <TableCell className="font-bold font-mono">{formatCurrency(salary.amount)}</TableCell>
-                    <TableCell className="text-muted-foreground">{salary.memo || "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(salary)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(salary)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={items.map((s) => s.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b-2 border-border bg-muted">
+                      <TableHead className="w-8" />
+                      <TableHead className="font-black">対象月</TableHead>
+                      <TableHead className="font-black">支給日</TableHead>
+                      <TableHead className="font-black">手取り額</TableHead>
+                      <TableHead className="font-black">メモ</TableHead>
+                      <TableHead className="font-black text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((salary) => (
+                      <SortableSalaryRow
+                        key={salary.id}
+                        salary={salary}
+                        onEdit={handleOpenEdit}
+                        onDelete={(salary) => setDeleteTarget(salary)}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
       </div>

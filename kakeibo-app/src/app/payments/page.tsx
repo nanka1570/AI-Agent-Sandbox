@@ -20,7 +20,7 @@ export default async function PaymentsPage({ searchParams }: Props) {
   const payments = await prisma.payment.findMany({
     where: { month: currentMonth, userId },
     include: { creditCard: true, category: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
   // クレカ一覧（登録ダイアログのセレクト用、自分のカードのみ）

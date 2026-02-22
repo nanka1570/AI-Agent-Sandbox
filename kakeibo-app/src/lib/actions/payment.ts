@@ -166,6 +166,20 @@ export async function updatePaymentStatus(
   return { success: true, data: payment };
 }
 
+export async function updatePaymentOrder(
+  ids: string[]
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+  await Promise.all(
+    ids.map((id, index) =>
+      prisma.payment.update({ where: { id, userId }, data: { sortOrder: index } })
+    )
+  );
+  revalidatePath("/payments");
+  revalidatePath("/");
+  return { success: true, data: undefined };
+}
+
 /**
  * 繰り返しグループの支払いを一括削除する
  */

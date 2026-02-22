@@ -5,8 +5,24 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Receipt, Repeat, Search } from "lucide-react";
+import { Pencil, Trash2, Receipt, Repeat, Search, GripVertical } from "lucide-react";
 import { format, subMonths } from "date-fns";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput, type PaymentStatus } from "@/types";
 import {
@@ -14,6 +30,7 @@ import {
   updatePayment,
   deletePayment,
   deleteRecurringPayments,
+  updatePaymentOrder,
 } from "@/lib/actions/payment";
 import { formatCurrency, formatCurrencyJP, formatMonth } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
@@ -83,8 +100,96 @@ function generateMonthOptions(): { value: string; label: string }[] {
   });
 }
 
+// ドラッグ可能なテーブル行
+function SortablePaymentRow({
+  payment,
+  onEdit,
+  onDelete,
+}: {
+  payment: PaymentWithCard;
+  onEdit: (payment: PaymentWithCard) => void;
+  onDelete: (payment: PaymentWithCard) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: payment.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className="border-b-2 border-border hover:bg-secondary/20"
+    >
+      {/* ドラッグハンドル */}
+      <TableCell className="w-8 py-2 pl-2 pr-0">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+          aria-label="ドラッグして並べ替え"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+      <TableCell className="font-bold">{payment.creditCard.name}</TableCell>
+      <TableCell>
+        {payment.category ? (
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-3 w-3 rounded-full border border-border"
+              style={{ backgroundColor: payment.category.color }}
+            />
+            <span className="text-sm">{payment.category.name}</span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1.5">
+          {formatMonth(payment.month)}
+          {payment.isRecurring && (
+            <Repeat className="h-3.5 w-3.5 text-primary" aria-label="繰り返し" />
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="font-bold font-mono">{formatCurrency(payment.amount)}</TableCell>
+      <TableCell>
+        <StatusBadge paymentId={payment.id} status={payment.status as PaymentStatus} />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onEdit(payment)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onDelete(payment)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function PaymentList({ payments, creditCards, categories, currentMonth }: Props) {
   const router = useRouter();
+  const [items, setItems] = useState(payments);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<PaymentWithCard | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentWithCard | null>(null);
@@ -92,9 +197,14 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   // 繰り返し削除モード: "single" = この支払いだけ, "group" = グループ全体
   const [deleteMode, setDeleteMode] = useState<"single" | "group">("single");
 
-  // Phase 8b: フィルター状態
+  // フィルター状態
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterKeyword, setFilterKeyword] = useState<string>("");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+  );
 
   const monthOptions = generateMonthOptions();
 
@@ -112,9 +222,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
 
   const isSubmitting = form.formState.isSubmitting;
 
-  // Phase 8b: クライアントサイドフィルタリング
+  // クライアントサイドフィルタリング（items ステートを参照）
   const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
+    return items.filter((payment) => {
       // カテゴリフィルター
       if (filterCategory !== "all") {
         if (!payment.categoryId || payment.categoryId !== filterCategory) {
@@ -131,7 +241,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       }
       return true;
     });
-  }, [payments, filterCategory, filterKeyword]);
+  }, [items, filterCategory, filterKeyword]);
 
   // 月フィルター変更時にURLを更新（Server Componentを再レンダリング）
   function handleMonthChange(month: string) {
@@ -199,6 +309,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     if (result.success) {
       toast("削除しました");
       setDeleteTarget(null);
+      setItems((prev) => prev.filter((p) => p.id !== deleteTarget.id));
     } else {
       toast.error(result.error);
     }
@@ -212,7 +323,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     setIsDeleting(false);
     if (result.success) {
       toast("繰り返しグループを削除しました");
+      const groupId = deleteTarget.recurringGroupId;
       setDeleteTarget(null);
+      setItems((prev) => prev.filter((p) => p.recurringGroupId !== groupId));
     } else {
       toast.error(result.error);
     }
@@ -224,6 +337,30 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     } else {
       await handleDeleteSingle();
     }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = filteredPayments.findIndex((p) => p.id === active.id);
+    const newIndex = filteredPayments.findIndex((p) => p.id === over.id);
+    const newFiltered = arrayMove(filteredPayments, oldIndex, newIndex);
+
+    // items ステート全体を更新（フィルター対象アイテムの位置のみ差し替え）
+    const filteredIdSet = new Set(filteredPayments.map((p) => p.id));
+    const filteredPositions = items
+      .map((item, idx) => ({ idx, isFiltered: filteredIdSet.has(item.id) }))
+      .filter(({ isFiltered }) => isFiltered)
+      .map(({ idx }) => idx);
+
+    const newItems = [...items];
+    filteredPositions.forEach((pos, i) => {
+      newItems[pos] = newFiltered[i];
+    });
+    setItems(newItems); // 楽観的更新
+
+    await updatePaymentOrder(newFiltered.map((p) => p.id));
   }
 
   return (
@@ -247,7 +384,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
         </div>
       </div>
 
-      {/* Phase 8b: フィルターバー */}
+      {/* フィルターバー */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {/* カテゴリフィルター */}
         <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
@@ -285,7 +422,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
         {/* フィルター件数表示 */}
         {(filterCategory !== "all" || filterKeyword.trim() !== "") && (
           <span className="text-sm text-muted-foreground">
-            {filteredPayments.length} / {payments.length} 件
+            {filteredPayments.length} / {items.length} 件
           </span>
         )}
       </div>
@@ -296,73 +433,52 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
           <EmptyState
             icon={Receipt}
             title={
-              payments.length === 0
+              items.length === 0
                 ? "この月の支払いデータがありません"
                 : "条件に一致する支払いがありません"
             }
             description={
-              payments.length === 0
+              items.length === 0
                 ? "新規登録ボタンから追加してください。"
                 : "フィルター条件を変更してください。"
             }
           />
         ) : (
           <div className="overflow-x-auto border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b-2 border-border bg-muted">
-                  <TableHead className="font-black">カード</TableHead>
-                  <TableHead className="font-black">カテゴリ</TableHead>
-                  <TableHead className="font-black">対象月</TableHead>
-                  <TableHead className="font-black">金額</TableHead>
-                  <TableHead className="font-black">ステータス</TableHead>
-                  <TableHead className="font-black text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.map((payment) => (
-                  <TableRow key={payment.id} className="border-b-2 border-border hover:bg-secondary/20">
-                    <TableCell className="font-bold">{payment.creditCard.name}</TableCell>
-                    <TableCell>
-                      {payment.category ? (
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="inline-block h-3 w-3 rounded-full border border-border"
-                            style={{ backgroundColor: payment.category.color }}
-                          />
-                          <span className="text-sm">{payment.category.name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        {formatMonth(payment.month)}
-                        {/* 繰り返しアイコン */}
-                        {payment.isRecurring && (
-                          <Repeat className="h-3.5 w-3.5 text-primary" aria-label="繰り返し" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-bold font-mono">{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell>
-                      <StatusBadge paymentId={payment.id} status={payment.status as PaymentStatus} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(payment)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleOpenDelete(payment)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredPayments.map((p) => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b-2 border-border bg-muted">
+                      <TableHead className="w-8" />
+                      <TableHead className="font-black">カード</TableHead>
+                      <TableHead className="font-black">カテゴリ</TableHead>
+                      <TableHead className="font-black">対象月</TableHead>
+                      <TableHead className="font-black">金額</TableHead>
+                      <TableHead className="font-black">ステータス</TableHead>
+                      <TableHead className="font-black text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPayments.map((payment) => (
+                      <SortablePaymentRow
+                        key={payment.id}
+                        payment={payment}
+                        onEdit={handleOpenEdit}
+                        onDelete={handleOpenDelete}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
       </div>
@@ -470,7 +586,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                   </FormItem>
                 )}
               />
-              {/* Phase 8c: 毎月繰り返しチェックボックス（新規登録時のみ表示） */}
+              {/* 毎月繰り返しチェックボックス（新規登録時のみ表示） */}
               {!editTarget && (
                 <FormField
                   control={form.control}

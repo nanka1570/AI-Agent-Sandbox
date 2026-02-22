@@ -66,6 +66,20 @@ export async function updateCreditCard(
   return { success: true, data: card };
 }
 
+export async function updateCreditCardOrder(
+  ids: string[]
+): Promise<ActionResult<void>> {
+  const userId = await requireAuth();
+  await Promise.all(
+    ids.map((id, index) =>
+      prisma.creditCard.update({ where: { id, userId }, data: { sortOrder: index } })
+    )
+  );
+  revalidatePath("/credit-cards");
+  revalidatePath("/");
+  return { success: true, data: undefined };
+}
+
 export async function deleteCreditCard(
   id: string
 ): Promise<ActionResult<void>> {
