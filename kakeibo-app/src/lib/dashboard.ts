@@ -74,7 +74,7 @@ export type CashFlowItem = {
 
 /**
  * 給料支給日と各支払いの実際の支払日を比較して、資金繰りの安全性を返す
- * - paymentMonthOffset > 0: 支払いは翌月以降 → 給料入金後なので安全
+ * - paymentMonthOffset > 0: 支払いは翌月以降 → 給料入金後なので常に安全
  * - paymentMonthOffset = 0: 同月内 → 給料日 <= 支払日 なら安全
  */
 export function calcCashFlowStatus(
@@ -84,8 +84,7 @@ export function calcCashFlowStatus(
   return payments
     .map((p) => {
       const { paymentDay, paymentMonthOffset, name } = p.creditCard;
-      // 引き落とし月で登録する方式のため、給料日と支払日を直接比較する
-      const isSafe = salaryPayDay <= paymentDay;
+      const isSafe = paymentMonthOffset > 0 || salaryPayDay <= paymentDay;
       return {
         id: p.id,
         cardName: name,
@@ -95,7 +94,10 @@ export function calcCashFlowStatus(
         isSafe,
       };
     })
-    .sort((a, b) => a.paymentDay - b.paymentDay);
+    .sort((a, b) => {
+      if (a.paymentMonthOffset !== b.paymentMonthOffset) return a.paymentMonthOffset - b.paymentMonthOffset;
+      return a.paymentDay - b.paymentDay;
+    });
 }
 
 // クレカ別集計（円グラフ用 - 旧互換）

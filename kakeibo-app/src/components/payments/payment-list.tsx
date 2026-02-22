@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Pencil, Trash2, Receipt, Repeat, Search, GripVertical } from "lucide-react";
@@ -33,7 +33,7 @@ import {
   deleteRecurringPayments,
   updatePaymentOrder,
 } from "@/lib/actions/payment";
-import { formatCurrency, formatCurrencyJP, formatMonth } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatMonth, formatBillingPeriod } from "@/lib/utils";
 import { AmountPresets } from "@/components/amount-presets";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
@@ -156,7 +156,7 @@ function SortablePaymentRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          {formatMonth(payment.month)}
+          {formatBillingPeriod(payment.month, payment.creditCard.closingDay)}
           {payment.isRecurring && (
             <Repeat className="h-3.5 w-3.5 text-primary" aria-label="繰り返し" />
           )}
@@ -236,6 +236,10 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   });
 
   const isSubmitting = form.formState.isSubmitting;
+
+  // 選択中のカードを監視（利用期間表示に使用）
+  const watchedCardId = useWatch({ control: form.control, name: "creditCardId" });
+  const selectedCard = creditCards.find((c) => c.id === watchedCardId);
 
   // クライアントサイドフィルタリング（items ステートを参照）
   const filteredPayments = useMemo(() => {
@@ -482,7 +486,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                       <TableHead className="w-8" />
                       <TableHead className="font-black">カード</TableHead>
                       <TableHead className="font-black">カテゴリ</TableHead>
-                      <TableHead className="font-black">対象月</TableHead>
+                      <TableHead className="font-black">利用期間</TableHead>
                       <TableHead className="font-black">金額</TableHead>
                       <TableHead className="font-black">ステータス</TableHead>
                       <TableHead className="font-black text-right">操作</TableHead>
@@ -573,8 +577,13 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                 name="month"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>対象月 *</FormLabel>
+                    <FormLabel>締め月（利用期間） *</FormLabel>
                     <FormControl><Input type="month" {...field} /></FormControl>
+                    {selectedCard && field.value && (
+                      <FormDescription className="text-xs">
+                        利用期間: {formatBillingPeriod(field.value, selectedCard.closingDay)}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

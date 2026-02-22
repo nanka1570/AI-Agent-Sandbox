@@ -124,24 +124,18 @@ describe("calcCashFlowStatus", () => {
     expect(p3?.isSafe).toBe(false);
   });
 
-  it("翌月払い設定でも給料日(25) > 支払日(10) なら危険（isSafe=false）", () => {
+  it("翌月払いは常に安全（isSafe=true）", () => {
     const result = calcCashFlowStatus(25, payments);
     const p1 = result.find((r) => r.id === "p1");
-    expect(p1?.isSafe).toBe(false);
+    expect(p1?.isSafe).toBe(true); // paymentMonthOffset=1 → 常に安全
   });
 
-  it("翌月払い設定でも給料日(5) <= 支払日(10) なら安全（isSafe=true）", () => {
-    const result = calcCashFlowStatus(5, payments);
-    const p1 = result.find((r) => r.id === "p1");
-    expect(p1?.isSafe).toBe(true);
-  });
-
-  it("支払日昇順でソートされる", () => {
+  it("paymentMonthOffset昇順→paymentDay昇順でソートされる", () => {
     const result = calcCashFlowStatus(25, payments);
-    // p3(day=5), p1(day=10), p2(day=27) の順になるはず
+    // offset=0: p3(day=5), p2(day=27) → offset=1: p1(day=10)
     expect(result[0].id).toBe("p3");
-    expect(result[1].id).toBe("p1");
-    expect(result[2].id).toBe("p2");
+    expect(result[1].id).toBe("p2");
+    expect(result[2].id).toBe("p1");
   });
 
   it("支払いなしは空配列を返す", () => {

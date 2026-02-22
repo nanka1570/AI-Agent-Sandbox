@@ -60,3 +60,29 @@ export function getActualDay(day: number, year: number, month: number): number {
   if (day !== 32) return day;
   return new Date(year, month, 0).getDate();
 }
+
+/**
+ * カードの利用期間を "1/29〜2/28" 形式で返す
+ * 利用期間 = 前月締め日+1日 〜 今月締め日
+ * @param targetMonth 対象月 "yyyy-MM" 形式
+ * @param closingDay 締め日（1-31 または 32=末日）
+ */
+export function formatBillingPeriod(targetMonth: string, closingDay: number): string {
+  const [year, month] = targetMonth.split("-").map(Number);
+
+  // 終了日: 今月の締め日（32=末日）
+  const endDay = closingDay === 32
+    ? new Date(year, month, 0).getDate()
+    : closingDay;
+
+  // 開始日: 前月の締め日 + 1日
+  const prevYear = month === 1 ? year - 1 : year;
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevClosingDay = closingDay === 32
+    ? new Date(prevYear, prevMonth, 0).getDate()
+    : closingDay;
+
+  const startDate = new Date(prevYear, prevMonth - 1, prevClosingDay + 1);
+
+  return `${startDate.getMonth() + 1}/${startDate.getDate()}〜${month}/${endDay}`;
+}
