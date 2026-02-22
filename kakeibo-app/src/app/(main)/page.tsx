@@ -51,21 +51,65 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
   const totalSalary = calcTotalSalary(salaries);
 
-  // 引き落とし月 = currentMonth となる締め月の候補（最大2ヶ月前まで遡る）
+  // 給料日（フィルタリング・資金繰り計算に使用）
+  const salaryPayDay = salaries[0]?.payDay ?? null;
+
+  // 給料サイクル変数（JSX表示用に外部で定義）
   const [cy, cm] = currentMonth.split("-").map(Number);
-  const possibleClosingMonths = [0, 1, 2].map((offset) => {
-    const d = new Date(cy, cm - 1 - offset, 1);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-  });
-  const paymentCandidates = await prisma.payment.findMany({
-    where: { month: { in: possibleClosingMonths }, userId },
-    include: { creditCard: true, category: true },
-  });
-  const payments = paymentCandidates.filter((p) => {
-    const [y, m] = p.month.split("-").map(Number);
-    const d = new Date(y, m - 1 + p.creditCard.paymentMonthOffset, 1);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` === currentMonth;
-  });
+  const actualSalaryDay =
+    salaryPayDay !== null
+      ? Math.min(salaryPayDay, new Date(cy, cm, 0).getDate())
+      : null;
+  const cycleStart =
+    actualSalaryDay !== null ? new Date(cy, cm - 1, actualSalaryDay) : null;
+  const cycleEnd =
+    actualSalaryDay !== null ? new Date(cy, cm, actualSalaryDay - 1) : null;
+
+  // 支払いデータ取得（給料サイクルベース or 引き落とし月ベース）
+  const payments = await (async () => {
+    if (salaryPayDay !== null && cycleStart !== null && cycleEnd !== null) {
+      // === 給料サイクルフィルター ===
+      // offset最大2を考慮して currentMonth-2〜currentMonth+1 の締め月候補を取得
+      const possibleClosingMonths = [-2, -1, 0, 1].map((offset) => {
+        const d = new Date(cy, cm - 1 + offset, 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      });
+      const candidates = await prisma.payment.findMany({
+        where: { month: { in: possibleClosingMonths }, userId },
+        include: { creditCard: true, category: true },
+      });
+      const start = cycleStart;
+      const end = cycleEnd;
+      return candidates.filter((p) => {
+        const [py, pm] = p.month.split("-").map(Number);
+        const actualMonthIdx = pm - 1 + p.creditCard.paymentMonthOffset;
+        const rawDay = p.creditCard.paymentDay;
+        // 32日設定（末日）を実際の末日に変換
+        const actualDay =
+          rawDay === 32
+            ? new Date(py, actualMonthIdx + 1, 0).getDate()
+            : rawDay;
+        const actualDate = new Date(py, actualMonthIdx, actualDay);
+        return actualDate >= start && actualDate <= end;
+      });
+    } else {
+      // === 引き落とし月ベースにフォールバック（給料未登録時）===
+      const possibleClosingMonths = [0, 1, 2].map((offset) => {
+        const d = new Date(cy, cm - 1 - offset, 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      });
+      const candidates = await prisma.payment.findMany({
+        where: { month: { in: possibleClosingMonths }, userId },
+        include: { creditCard: true, category: true },
+      });
+      return candidates.filter((p) => {
+        const [y, m] = p.month.split("-").map(Number);
+        const d = new Date(y, m - 1 + p.creditCard.paymentMonthOffset, 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` === currentMonth;
+      });
+    }
+  })();
+
   const totalPayment = calcTotalPayment(payments);
 
   // ステータス別集計
@@ -79,10 +123,11 @@ export default async function DashboardPage({ searchParams }: Props) {
     statusBreakdown.paid
   );
 
-  // --- 資金繰り計算（給料日と支払日の比較） ---
-  const salaryPayDay = salaries[0]?.payDay ?? null;
+  // --- 資金繰り計算（給料サイクルベース） ---
   const cashFlowItems =
-    salaryPayDay !== null ? calcCashFlowStatus(salaryPayDay, payments) : [];
+    salaryPayDay !== null
+      ? calcCashFlowStatus(salaryPayDay, payments, currentMonth)
+      : [];
 
   // --- 月別支出推移（直近6ヶ月） ---
   const months: string[] = [];
@@ -202,8 +247,8 @@ export default async function DashboardPage({ searchParams }: Props) {
                   >
                     <TableCell className="font-bold">{item.cardName}</TableCell>
                     <TableCell>
-                      {/* currentMonth = 引き落とし月のためoffset=0で表示 */}
-                      {formatActualPaymentDate(item.paymentDay, 0, currentMonth)}
+                      {/* 締め月ベースで正しい月日を計算 */}
+                      {formatActualPaymentDate(item.paymentDay, item.paymentMonthOffset, item.closingMonth)}
                     </TableCell>
                     <TableCell className="font-mono font-bold">
                       {formatCurrency(item.amount)}
@@ -233,7 +278,9 @@ export default async function DashboardPage({ searchParams }: Props) {
           <span className="inline-block -skew-x-12 bg-black px-2 py-1 text-sm text-white">
             支払い予定
           </span>
-          {formatMonth(currentMonth)} の引き落とし予定
+          {salaryPayDay !== null && cycleStart !== null && cycleEnd !== null
+            ? `${cycleStart.getMonth() + 1}/${cycleStart.getDate()} 〜 ${cycleEnd.getMonth() + 1}/${cycleEnd.getDate()} の引き落とし予定`
+            : `${formatMonth(currentMonth)} の引き落とし予定`}
         </h2>
         <PaymentScheduleTable payments={payments} currentMonth={currentMonth} />
       </div>
