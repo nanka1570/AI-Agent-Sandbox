@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { format, addMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { getActualDay } from "@/lib/utils";
 import { paymentSchema, paymentStatusSchema, type PaymentInput, type ActionResult } from "@/types";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 
@@ -16,6 +17,36 @@ const STATUS_TRANSITIONS: Record<string, string> = {
   confirmed: "paid",
   paid: "unconfirmed",
 };
+
+/**
+ * 利用月と紐づくカードの設定から初期ステータスを計算する。
+ * 引き落とし日が過去 → "paid"、確定日が過去 → "confirmed"、それ以外 → "unconfirmed"
+ */
+function computeInitialStatus(
+  card: CreditCard,
+  month: string // 利用月 (例: "2026-01")
+): "unconfirmed" | "confirmed" | "paid" {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [year, mo] = month.split("-").map(Number);
+
+  // 引き落とし日チェック
+  const pdBase = new Date(year, mo - 1 + card.paymentMonthOffset, 1);
+  const payDay = getActualDay(card.paymentDay, pdBase.getFullYear(), pdBase.getMonth() + 1);
+  const payDate = new Date(pdBase.getFullYear(), pdBase.getMonth(), payDay);
+  if (payDate < today) return "paid";
+
+  // 確定日チェック
+  if (card.confirmationDay) {
+    const offset = card.confirmationMonthOffset ?? 0;
+    const cdBase = new Date(year, mo - 1 + offset, 1);
+    const confDay = getActualDay(card.confirmationDay, cdBase.getFullYear(), cdBase.getMonth() + 1);
+    const confDate = new Date(cdBase.getFullYear(), cdBase.getMonth(), confDay);
+    if (confDate < today) return "confirmed";
+  }
+
+  return "unconfirmed";
+}
 
 export async function createPayment(
   input: PaymentInput
@@ -40,7 +71,8 @@ export async function createPayment(
   // 繰り返し支払いの場合、グループIDを生成
   const recurringGroupId = isRecurring ? crypto.randomUUID() : null;
 
-  // メインの支払いを作成
+  // メインの支払いを作成（確定日・引き落とし日が過去なら自動でステータスを設定）
+  const initialStatus = computeInitialStatus(card, parsed.data.month);
   const payment = await prisma.payment.create({
     data: {
       userId,
@@ -51,6 +83,7 @@ export async function createPayment(
       memo: parsed.data.memo ?? null,
       isRecurring,
       recurringGroupId,
+      status: initialStatus,
     },
     include: { creditCard: true, category: true },
   });
@@ -60,6 +93,7 @@ export async function createPayment(
     const baseDate = new Date(parsed.data.month + "-01");
     for (let i = 1; i <= 3; i++) {
       const futureMonth = format(addMonths(baseDate, i), "yyyy-MM");
+      const futureStatus = computeInitialStatus(card, futureMonth);
       await prisma.payment.create({
         data: {
           userId,
@@ -70,6 +104,7 @@ export async function createPayment(
           memo: parsed.data.memo ?? null,
           isRecurring: true,
           recurringGroupId,
+          status: futureStatus,
         },
       });
     }
@@ -223,6 +258,7 @@ export async function createBulkPayments(
     if (!card) {
       return { success: false, error: "指定されたクレジットカードが見つかりません" };
     }
+    const initialStatus = computeInitialStatus(card, parsed.data.month);
     await prisma.payment.create({
       data: {
         userId,
@@ -233,6 +269,7 @@ export async function createBulkPayments(
         memo: parsed.data.memo ?? null,
         isRecurring: false,
         recurringGroupId: null,
+        status: initialStatus,
       },
     });
   }

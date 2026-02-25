@@ -122,10 +122,12 @@ function SortablePaymentRow({
   payment,
   onEdit,
   onDelete,
+  onCategoryClick,
 }: {
   payment: PaymentWithCard;
   onEdit: (payment: PaymentWithCard) => void;
   onDelete: (payment: PaymentWithCard) => void;
+  onCategoryClick: (payment: PaymentWithCard) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: payment.id });
@@ -156,17 +158,23 @@ function SortablePaymentRow({
       </TableCell>
       <TableCell className="font-bold">{payment.creditCard.name}</TableCell>
       <TableCell>
-        {payment.category ? (
-          <div className="flex items-center gap-1.5">
-            <span
-              className="inline-block h-3 w-3 rounded-full border border-border"
-              style={{ backgroundColor: payment.category.color }}
-            />
-            <span className="text-sm">{payment.category.name}</span>
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground">-</span>
-        )}
+        <button
+          type="button"
+          className="cursor-pointer hover:opacity-70 transition-opacity text-left"
+          onClick={() => onCategoryClick(payment)}
+        >
+          {payment.category ? (
+            <div className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-3 w-3 rounded-full border border-border"
+                style={{ backgroundColor: payment.category.color }}
+              />
+              <span className="text-sm">{payment.category.name}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground underline decoration-dotted">未設定</span>
+          )}
+        </button>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5">
@@ -406,9 +414,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
   return (
     <>
       {/* ヘッダー: タイトル + 月フィルター + 新規登録 */}
-      <div className="flex items-center justify-between border-b-4 border-border pb-4">
+      <div className="flex flex-col gap-2 border-b-4 border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-black">支払い管理</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={currentMonth} onValueChange={(v) => handleMonthChange(v)}>
             <SelectTrigger className="w-[220px] border-2 border-border bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
               <SelectValue />
@@ -517,6 +525,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                         payment={payment}
                         onEdit={handleOpenEdit}
                         onDelete={handleOpenDelete}
+                        onCategoryClick={handleOpenEdit}
                       />
                     ))}
                   </TableBody>
@@ -595,7 +604,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
                 name="month"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>締め月（利用期間） *</FormLabel>
+                    <FormLabel>利用月 *</FormLabel>
                     <FormControl><Input type="month" {...field} /></FormControl>
                     {selectedCard && field.value && (
                       <FormDescription className="text-xs">

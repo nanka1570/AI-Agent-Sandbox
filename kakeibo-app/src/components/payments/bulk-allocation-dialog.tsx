@@ -88,27 +88,31 @@ export function BulkAllocationDialog({
       toast.error("クレジットカードを選択してください");
       return;
     }
-    const validRows = rows.filter((r) => r.amount && r.amount > 0);
-    if (validRows.length === 0) {
-      toast.error("1件以上の振り分けを入力してください");
+    if (!totalAmount || totalAmount <= 0) {
+      toast.error("明細合計金額を入力してください");
       return;
     }
+    const validRows = rows.filter((r) => r.amount && r.amount > 0);
+
+    // 振り分け行が空の場合は合計金額を1件（カテゴリ未分類）として登録
+    const payloads =
+      validRows.length > 0
+        ? validRows.map((r) => ({
+            creditCardId,
+            categoryId: r.categoryId || undefined,
+            month,
+            amount: r.amount!,
+            memo: r.memo || undefined,
+            isRecurring: false,
+          }))
+        : [{ creditCardId, categoryId: undefined, month, amount: totalAmount, memo: undefined, isRecurring: false }];
 
     setIsSubmitting(true);
-    const result = await createBulkPayments(
-      validRows.map((r) => ({
-        creditCardId,
-        categoryId: r.categoryId || undefined,
-        month,
-        amount: r.amount!,
-        memo: r.memo || undefined,
-        isRecurring: false,
-      }))
-    );
+    const result = await createBulkPayments(payloads);
     setIsSubmitting(false);
 
     if (result.success) {
-      toast(`${validRows.length}件を一括登録しました`);
+      toast(`${payloads.length}件を一括登録しました`);
       handleReset();
       onOpenChange(false);
       router.refresh();
@@ -268,16 +272,18 @@ export function BulkAllocationDialog({
           {totalAmount != null && (
             <div
               className={`rounded border-2 px-3 py-2 text-sm font-bold ${
-                remaining === 0
+                rows.every((r) => !r.amount)
+                  ? "border-border bg-muted text-muted-foreground"
+                  : remaining === 0
                   ? "border-emerald-400 bg-emerald-50 text-emerald-700"
                   : remaining < 0
                   ? "border-red-400 bg-red-50 text-red-700"
                   : "border-border bg-muted"
               }`}
             >
-              残額: {formatCurrencyJP(remaining)}
-              {remaining === 0 && " （全額振り分け済み）"}
-              {remaining < 0 && " （合計を超過しています）"}
+              {rows.every((r) => !r.amount)
+                ? "カテゴリ未分類で登録します"
+                : `残額: ${formatCurrencyJP(remaining)}${remaining === 0 ? " （全額振り分け済み）" : ""}${remaining < 0 ? " （合計を超過しています）" : ""}`}
             </div>
           )}
 

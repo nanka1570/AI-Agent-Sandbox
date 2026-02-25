@@ -389,9 +389,9 @@ export function BudgetManager({
   return (
     <>
       {/* ヘッダー: タイトル + MonthSelector + カテゴリ追加ボタン */}
-      <div className="flex items-center justify-between border-b-4 border-border pb-4">
+      <div className="flex flex-col gap-2 border-b-4 border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-black">カテゴリ / 予算</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <MonthSelector currentMonth={currentMonth} basePath="/budget" />
           <Button onClick={() => handleOpenCreateCategory()}>
             <Plus className="mr-1 h-4 w-4" />
