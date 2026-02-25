@@ -34,7 +34,7 @@ function computeInitialStatus(
   const pdBase = new Date(year, mo - 1 + card.paymentMonthOffset, 1);
   const payDay = getActualDay(card.paymentDay, pdBase.getFullYear(), pdBase.getMonth() + 1);
   const payDate = new Date(pdBase.getFullYear(), pdBase.getMonth(), payDay);
-  if (payDate < today) return "paid";
+  if (payDate <= today) return "paid";
 
   // 確定日チェック
   if (card.confirmationDay) {
@@ -42,7 +42,7 @@ function computeInitialStatus(
     const cdBase = new Date(year, mo - 1 + offset, 1);
     const confDay = getActualDay(card.confirmationDay, cdBase.getFullYear(), cdBase.getMonth() + 1);
     const confDate = new Date(cdBase.getFullYear(), cdBase.getMonth(), confDay);
-    if (confDate < today) return "confirmed";
+    if (confDate <= today) return "confirmed";
   }
 
   return "unconfirmed";
