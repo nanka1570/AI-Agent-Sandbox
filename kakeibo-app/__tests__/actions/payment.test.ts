@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   createPayment,
   updatePayment,
@@ -133,6 +133,76 @@ describe("deletePayment", () => {
     const result = await deletePayment("nonexistent");
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("見つかりません");
+  });
+});
+
+describe("computeInitialStatus（createPayment 経由）", () => {
+  // afterEach でフェイクタイマーを必ず復元する
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // UT-PM-013: 引き落とし日が当日の場合 paid になる
+  it("引き落とし日が当日の場合、ステータスが paid で登録される", async () => {
+    // 2026-02-27 に固定（paymentDay: 27, paymentMonthOffset: 0 → 2026-02-27 が引き落とし日）
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-02-27T10:00:00"));
+
+    const cardWithPaymentToday = {
+      ...mockCard,
+      confirmationDay: null,
+      confirmationMonthOffset: null,
+    };
+    const paymentResult = {
+      ...mockPayment,
+      status: "paid",
+      creditCard: cardWithPaymentToday,
+    };
+    mockCardFindUnique.mockResolvedValue(cardWithPaymentToday as never);
+    mockCreate.mockResolvedValue(paymentResult as never);
+
+    const result = await createPayment({ creditCardId: "card-1", month: "2026-02", amount: 10000 });
+
+    // prisma.payment.create に status: "paid" が渡されたことを確認
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "paid" }),
+      })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  // UT-PM-014: 確定日が当日の場合 confirmed になる
+  it("確定日が当日の場合、ステータスが confirmed で登録される", async () => {
+    // 2026-02-10 に固定（confirmationDay: 10, confirmationMonthOffset: 0 → 2026-02-10 が確定日）
+    // paymentDay: 27 なので引き落とし日（2026-02-27）より前
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-02-10T10:00:00"));
+
+    const cardWithConfToday = {
+      ...mockCard,
+      paymentDay: 27,
+      paymentMonthOffset: 0,
+      confirmationDay: 10,
+      confirmationMonthOffset: 0,
+    };
+    const paymentResult = {
+      ...mockPayment,
+      status: "confirmed",
+      creditCard: cardWithConfToday,
+    };
+    mockCardFindUnique.mockResolvedValue(cardWithConfToday as never);
+    mockCreate.mockResolvedValue(paymentResult as never);
+
+    const result = await createPayment({ creditCardId: "card-1", month: "2026-02", amount: 10000 });
+
+    // prisma.payment.create に status: "confirmed" が渡されたことを確認
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "confirmed" }),
+      })
+    );
+    expect(result.success).toBe(true);
   });
 });
 

@@ -87,6 +87,19 @@ const mockPayments = [
 
 const creditCards = [mockCard1, mockCard2];
 
+// カテゴリ付き支払いテスト用のモックカード（paymentMonthOffset を含む）
+const mockCardWithOffset = {
+  id: "c1",
+  userId: "user-1",
+  name: "楽天カード",
+  closingDay: 31,
+  paymentDay: 27,
+  paymentMonthOffset: 0,
+  memo: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 describe("PaymentList", () => {
   // CT-PM-001: テーブル一覧表示
   it("支払い2件がテーブルに表示される", () => {
@@ -147,5 +160,86 @@ describe("PaymentList", () => {
     // 月フィルターに現在月が表示されていること（「今月」サフィックス付き）
     const monthTexts = screen.getAllByText(/2026年02月/);
     expect(monthTexts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  // CT-PM-009: カテゴリセルがボタンではなくテキスト表示になっている
+  it("カテゴリセルがボタンではなくテキスト表示になっている", () => {
+    const paymentsWithCategory = [
+      {
+        id: "p3",
+        userId: "user-1",
+        creditCardId: "c1",
+        categoryId: "cat-1",
+        month: "2026-02",
+        amount: 15000,
+        status: "unconfirmed",
+        memo: null,
+        isRecurring: false,
+        recurringGroupId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        creditCard: mockCardWithOffset,
+        category: mockCategories[0],
+      },
+    ];
+    render(
+      <PaymentList
+        payments={paymentsWithCategory}
+        creditCards={[mockCardWithOffset]}
+        categories={mockCategories}
+        currentMonth="2026-02"
+      />
+    );
+    // カテゴリ名「食費」がテキストとして表示される
+    expect(screen.getByText("食費")).toBeInTheDocument();
+    // カテゴリ名でボタンは存在しない（クリック不可）
+    expect(screen.queryByRole("button", { name: /食費/ })).toBeNull();
+  });
+
+  // CT-PM-010: カテゴリ未設定時に「-」が表示される
+  it("カテゴリ未設定の支払いでテーブル内に「-」が表示される", () => {
+    const paymentsNoCategory = [
+      {
+        id: "p4",
+        userId: "user-1",
+        creditCardId: "c1",
+        categoryId: null,
+        month: "2026-02",
+        amount: 20000,
+        status: "unconfirmed",
+        memo: null,
+        isRecurring: false,
+        recurringGroupId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        creditCard: mockCardWithOffset,
+        category: null,
+      },
+    ];
+    render(
+      <PaymentList
+        payments={paymentsNoCategory}
+        creditCards={[mockCardWithOffset]}
+        categories={mockCategories}
+        currentMonth="2026-02"
+      />
+    );
+    // カテゴリ未設定時のプレースホルダー「-」が表示される
+    expect(screen.getByText("-")).toBeInTheDocument();
+  });
+
+  // CT-PM-011: 月フィルターに「支払い分」が含まれる
+  it("月フィルターの選択肢に「支払い分」が含まれる", () => {
+    render(
+      <PaymentList
+        payments={mockPayments}
+        creditCards={creditCards}
+        categories={mockCategories}
+        currentMonth="2026-02"
+      />
+    );
+    // SelectContent は DOM に存在するため、「支払い分」を含むテキストが存在することを確認
+    const elements = screen.getAllByText(/支払い分/);
+    expect(elements.length).toBeGreaterThanOrEqual(1);
   });
 });
