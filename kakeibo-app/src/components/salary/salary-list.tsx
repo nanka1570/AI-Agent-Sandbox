@@ -239,7 +239,7 @@ export function SalaryList({ salaries }: Props) {
   return (
     <>
       <div className="flex items-center justify-between border-b-4 border-border pb-4">
-        <h1 className="text-2xl font-black">給料管理</h1>
+        <h1 className="text-2xl font-black">手取り管理</h1>
         <Button onClick={() => handleOpenCreate()}>+ 新規登録</Button>
       </div>
 
@@ -247,7 +247,7 @@ export function SalaryList({ salaries }: Props) {
         {items.length === 0 ? (
           <EmptyState
             icon={Wallet}
-            title="給料データがありません"
+            title="手取りデータがありません"
             description="新規登録ボタンから追加してください。"
           />
         ) : (
@@ -295,7 +295,7 @@ export function SalaryList({ salaries }: Props) {
       <Dialog open={isFormOpen} onOpenChange={(open) => { if (!isSubmitting) setIsFormOpen(open); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editTarget ? "給料編集" : "給料登録"}</DialogTitle>
+            <DialogTitle>{editTarget ? "手取り編集" : "手取り登録"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -396,7 +396,7 @@ export function SalaryList({ salaries }: Props) {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>この給料データを削除しますか？</AlertDialogTitle>
+            <AlertDialogTitle>この手取りデータを削除しますか？</AlertDialogTitle>
             <AlertDialogDescription>この操作は取り消せません。</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

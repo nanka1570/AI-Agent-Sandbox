@@ -21,9 +21,17 @@ export default async function PaymentsPage({ searchParams }: Props) {
   await autoMarkConfirmedOverdue(userId);
   await autoMarkPaidOverdue(userId);
 
-  // 給料データ取得（サイクルベースフィルタリングに使用）
+  // 手取りデータ取得（サイクルベースフィルタリングに使用）
   const salaries = await prisma.salary.findMany({ where: { month: currentMonth, userId } });
-  const salaryPayDay = salaries[0]?.payDay ?? null;
+  // その月に手取りデータがなければ、最新の手取りレコードの payDay を使用
+  let salaryPayDay = salaries[0]?.payDay ?? null;
+  if (salaryPayDay === null) {
+    const latestSalary = await prisma.salary.findFirst({
+      where: { userId },
+      orderBy: { month: "desc" },
+    });
+    salaryPayDay = latestSalary?.payDay ?? null;
+  }
 
   // 給料サイクル計算（ダッシュボードと同じロジック）
   const [cy, cm] = currentMonth.split("-").map(Number);

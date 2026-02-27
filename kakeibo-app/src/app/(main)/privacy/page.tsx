@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <p>当アプリでは、以下の情報を収集します。</p>
           <ul className="mt-2 list-disc space-y-1 pl-6">
             <li>メールアドレス（アカウント登録・認証のため）</li>
-            <li>支出データ（クレジットカード情報、給料情報、支払い情報など、家計管理のため）</li>
+            <li>支出データ（クレジットカード情報、手取り情報、支払い情報など、家計管理のため）</li>
             <li>カテゴリ・予算設定（家計分析のため）</li>
           </ul>
         </section>

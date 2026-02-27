@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: '家計簿アプリ',
-  description: '給料日とクレジットカード支払日を管理する家計簿アプリ',
+  description: '手取りでクレカ代が払えるかチェックする家計簿アプリ',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

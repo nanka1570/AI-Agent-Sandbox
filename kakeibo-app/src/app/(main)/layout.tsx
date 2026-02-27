@@ -6,7 +6,7 @@ import { LogoutButton } from "@/components/layout/logout-button";
 const navLinks = [
   { href: "/", label: "ダッシュボード" },
   { href: "/credit-cards", label: "カード" },
-  { href: "/salary", label: "給料" },
+  { href: "/salary", label: "手取り" },
   { href: "/payments", label: "支払い" },
   { href: "/budget", label: "カテゴリ / 予算" },
   { href: "/reports", label: "レポート" },

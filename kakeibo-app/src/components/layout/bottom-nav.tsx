@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "ホーム", icon: LayoutDashboard },
   { href: "/credit-cards", label: "カード", icon: CreditCard },
-  { href: "/salary", label: "給料", icon: Banknote },
+  { href: "/salary", label: "手取り", icon: Banknote },
   { href: "/payments", label: "支払い", icon: Receipt },
   { href: "/budget", label: "カテゴリ\n/予算", icon: Tag },
   { href: "/reports", label: "レポート", icon: BarChart3 },

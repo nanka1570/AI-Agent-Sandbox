@@ -47,7 +47,7 @@ describe("SalaryList", () => {
   // CT-SL-002: 空状態表示
   it("給料0件で空状態メッセージ表示", () => {
     render(<SalaryList salaries={[]} />);
-    expect(screen.getByText("給料データがありません")).toBeInTheDocument();
+    expect(screen.getByText("手取りデータがありません")).toBeInTheDocument();
   });
 
   // CT-SL-003: 金額フォーマット
@@ -67,7 +67,7 @@ describe("SalaryList", () => {
     const user = userEvent.setup();
     render(<SalaryList salaries={mockSalaries} />);
     await user.click(screen.getByText("+ 新規登録"));
-    expect(screen.getByText("給料登録")).toBeInTheDocument();
+    expect(screen.getByText("手取り登録")).toBeInTheDocument();
   });
 
   // CT-SL-006: バリデーションエラー表示

@@ -51,8 +51,16 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
   const totalSalary = calcTotalSalary(salaries);
 
-  // 給料日（フィルタリング・資金繰り計算に使用）
-  const salaryPayDay = salaries[0]?.payDay ?? null;
+  // 手取り入金日（フィルタリング・資金繰り計算に使用）
+  // その月に手取りデータがなければ、最新の手取りレコードの payDay を使用
+  let salaryPayDay = salaries[0]?.payDay ?? null;
+  if (salaryPayDay === null) {
+    const latestSalary = await prisma.salary.findFirst({
+      where: { userId },
+      orderBy: { month: "desc" },
+    });
+    salaryPayDay = latestSalary?.payDay ?? null;
+  }
 
   // 給料サイクル変数（JSX表示用に外部で定義）
   const [cy, cm] = currentMonth.split("-").map(Number);
@@ -177,9 +185,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* サマリーカード */}
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* 給料合計 */}
+        {/* 手取り合計 */}
         <div className="border-2 border-border bg-emerald-100 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <p className="text-sm font-bold text-emerald-800">給料合計</p>
+          <p className="text-sm font-bold text-emerald-800">手取り合計</p>
           <p className="mt-2 font-mono text-2xl font-black text-emerald-900">
             {formatCurrency(totalSalary)}
           </p>
@@ -220,10 +228,10 @@ export default async function DashboardPage({ searchParams }: Props) {
             今月の資金繰り
           </h2>
           <div className="border-2 border-border bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            {/* 給料入金日サマリー */}
+            {/* 手取り入金日サマリー */}
             <div className="flex items-center gap-4 border-b-2 border-border bg-emerald-50 px-4 py-3">
               <span className="text-sm font-bold text-emerald-800">
-                給料入金日：{salaryPayDay}日
+                手取り入金日：{salaryPayDay}日
               </span>
               <span className="font-mono text-sm font-bold text-emerald-900">
                 合計 {formatCurrency(totalSalary)}
@@ -236,7 +244,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   <TableHead className="font-black">カード</TableHead>
                   <TableHead className="font-black">支払い日</TableHead>
                   <TableHead className="font-black">金額</TableHead>
-                  <TableHead className="font-black">給料入金前後</TableHead>
+                  <TableHead className="font-black">手取り入金前後</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

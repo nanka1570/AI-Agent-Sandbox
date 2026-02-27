@@ -45,7 +45,7 @@ export async function updateSalary(
 
   const existing = await prisma.salary.findUnique({ where: { id, userId } });
   if (!existing) {
-    return { success: false, error: "給料データが見つかりません" };
+    return { success: false, error: "手取りデータが見つかりません" };
   }
 
   const salary = await prisma.salary.update({
@@ -85,7 +85,7 @@ export async function deleteSalary(
 
   const existing = await prisma.salary.findUnique({ where: { id, userId } });
   if (!existing) {
-    return { success: false, error: "給料データが見つかりません" };
+    return { success: false, error: "手取りデータが見つかりません" };
   }
 
   await prisma.salary.delete({ where: { id, userId } });
