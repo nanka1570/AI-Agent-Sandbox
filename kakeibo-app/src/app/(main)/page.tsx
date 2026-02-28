@@ -53,7 +53,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   // 手取り入金日（フィルタリング・資金繰り計算に使用）
   // その月に手取りデータがなければ、最新の手取りレコードの payDay を使用
-  let salaryPayDay = salaries[0]?.payDay ?? null;
+  let salaryPayDay: number | null = salaries[0]?.payDay ?? null;
   if (salaryPayDay === null) {
     const latestSalary = await prisma.salary.findFirst({
       where: { userId },

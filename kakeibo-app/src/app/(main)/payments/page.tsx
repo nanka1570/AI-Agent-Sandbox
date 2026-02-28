@@ -24,7 +24,7 @@ export default async function PaymentsPage({ searchParams }: Props) {
   // 手取りデータ取得（サイクルベースフィルタリングに使用）
   const salaries = await prisma.salary.findMany({ where: { month: currentMonth, userId } });
   // その月に手取りデータがなければ、最新の手取りレコードの payDay を使用
-  let salaryPayDay = salaries[0]?.payDay ?? null;
+  let salaryPayDay: number | null = salaries[0]?.payDay ?? null;
   if (salaryPayDay === null) {
     const latestSalary = await prisma.salary.findFirst({
       where: { userId },
