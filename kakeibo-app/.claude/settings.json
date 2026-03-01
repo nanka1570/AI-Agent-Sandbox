@@ -12,17 +12,6 @@
         ]
       }
     ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "このセッションでPhaseの作業が完了した場合、git commit と git push origin main が実行されたか確認してください。未実行なら {\"ok\": false, \"reason\": \"Phase作業が完了しましたが、git commit/push がまだです。変更をコミットしてプッシュしてください。\"} を返してください。Phase作業が完了していない場合やすでにpush済みなら {\"ok\": true} を返してください。",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [

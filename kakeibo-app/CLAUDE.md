@@ -58,10 +58,19 @@
 - 完了基準を満たしてからコミットすること
 - 厳密ウォーターフォール: 全設計 → 全実装 → 全テスト の順序を厳守
 
-## カスタムスキル
-- `.claude/skills/learning-tracker/SKILL.md` — 学習記録・振り返り用スキル
-- `.claude/skills/code-review/SKILL.md` — 汎用コードレビュースキル
-- `.claude/skills/react-code-review/SKILL.md` — kakeibo-app 専用 React コードレビュースキル
+## カスタムスキル・エージェント
+- `~/.claude/skills/learning-tracker/` — 学習記録・振り返り用スキル（グローバル）
+- `~/.claude/skills/code-review/` — 汎用コードレビュースキル（グローバル）
+- `~/.claude/commands/fix-all.md` — 全エラー一括修正コマンド（グローバル）
+- `.claude/skills/react-code-review/SKILL.md` — React/TypeScript/Prisma コードレビュー（プロジェクト固有）
+
+## エージェント別ドキュメント参照ガイド
+
+グローバルエージェント（`~/.claude/agents/`）を使用する。各エージェントは以下のドキュメントを参照すること。
+
+- **developer**: 実装前に docs/01（要件・仕様）、docs/02（API一覧）、docs/04（画面設計）、docs/05（詳細仕様）を確認
+- **reviewer**: docs/02（API仕様・共通仕様）、docs/04（画面仕様・UI部品）、docs/05（詳細仕様・バリデーション）と照合
+- **tester**: docs/07（テストケース一覧）、docs/05（期待動作・バリデーション仕様）を確認。テスト種別にはZodバリデーションテストを含む
 
 ## コミュニケーション
 - 作業中は何をしているか説明しながら進める（「これからXXをします」「XXが完了しました」等）
