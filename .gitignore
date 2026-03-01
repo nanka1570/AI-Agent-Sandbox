@@ -24,4 +24,3 @@ kakeibo-app/test-results/
 claude-code-primer/**/node_modules/
 claude-code-primer/**/dist/
 claude-code-primer/**/coverage/
-claude-code-primer/**/backup/
