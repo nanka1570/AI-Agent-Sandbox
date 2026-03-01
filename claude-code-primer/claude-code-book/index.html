@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブロック崩し</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      letter-spacing: 4px;
+      color: #e94560;
+      text-shadow: 0 0 10px #e94560;
+    }
+
+    #gameCanvas {
+      border: 2px solid #e94560;
+      box-shadow: 0 0 20px #e9456066;
+      background: #0f3460;
+      display: block;
+    }
+
+    #ui {
+      display: flex;
+      gap: 48px;
+      margin-top: 16px;
+      font-size: 1.1rem;
+    }
+
+    .stat-label {
+      color: #888;
+      margin-right: 6px;
+    }
+
+    .stat-value {
+      color: #e94560;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 16px;
+      font-size: 1rem;
+      color: #aaa;
+      min-height: 24px;
+    }
+
+    #startBtn {
+      margin-top: 16px;
+      padding: 10px 32px;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: background 0.2s;
+    }
+
+    #startBtn:hover {
+      background: #c73652;
+    }
+  </style>
+</head>
+<body>
+  <h1>ブロック崩し</h1>
+  <canvas id="gameCanvas" width="600" height="480"></canvas>
+  <div id="ui">
+    <span><span class="stat-label">スコア</span><span class="stat-value" id="score">0</span></span>
+    <span><span class="stat-label">残機</span><span class="stat-value" id="lives">3</span></span>
+    <span><span class="stat-label">レベル</span><span class="stat-value" id="level">1</span></span>
+  </div>
+  <div id="message">← → キーまたはマウスでパドルを動かす</div>
+  <button id="startBtn">スタート</button>
+
+  <script src="main.js"></script>
+</body>
+</html>

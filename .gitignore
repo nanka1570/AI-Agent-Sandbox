@@ -19,3 +19,9 @@ kakeibo-app/prisma/dev.db-journal
 kakeibo-app/coverage/
 kakeibo-app/playwright-report/
 kakeibo-app/test-results/
+
+# claude-code-primer
+claude-code-primer/**/node_modules/
+claude-code-primer/**/dist/
+claude-code-primer/**/coverage/
+claude-code-primer/**/backup/
