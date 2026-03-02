@@ -91,6 +91,8 @@ type Props = {
   creditCards: CreditCard[];
   categories: Category[];
   currentMonth: string;
+  initialCategoryFilter?: string;
+  initialKeyword?: string;
 };
 
 // 未来3ヶ月 + 今月 + 過去12ヶ月の選択肢を生成（新しい月が上）
@@ -207,7 +209,7 @@ function SortablePaymentRow({
   );
 }
 
-export function PaymentList({ payments, creditCards, categories, currentMonth }: Props) {
+export function PaymentList({ payments, creditCards, categories, currentMonth, initialCategoryFilter, initialKeyword }: Props) {
   const router = useRouter();
   const [items, setItems] = useState(payments);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -228,9 +230,9 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     () => categories.find((c) => c.name === "雑費")?.id ?? ""
   );
 
-  // フィルター状態
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [filterKeyword, setFilterKeyword] = useState<string>("");
+  // フィルター状態（URL クエリパラメータから初期化）
+  const [filterCategory, setFilterCategory] = useState<string>(initialCategoryFilter || "all");
+  const [filterKeyword, setFilterKeyword] = useState<string>(initialKeyword ?? "");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -279,9 +281,22 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
     });
   }, [items, filterCategory, filterKeyword]);
 
-  // 月フィルター変更時にURLを更新（Server Componentを再レンダリング）
+  // フィルター変更時に URL を更新（履歴を汚さないよう replace）
+  function updateFilter(newCategory: string, newKeyword: string) {
+    const params = new URLSearchParams();
+    params.set("month", currentMonth);
+    if (newCategory && newCategory !== "all") params.set("category", newCategory);
+    if (newKeyword.trim()) params.set("q", newKeyword.trim());
+    router.replace(`/payments?${params.toString()}`);
+  }
+
+  // 月フィルター変更時にURLを更新（現在のフィルターを引き継ぐ）
   function handleMonthChange(month: string) {
-    router.push(`/payments?month=${month}`);
+    const params = new URLSearchParams();
+    params.set("month", month);
+    if (filterCategory && filterCategory !== "all") params.set("category", filterCategory);
+    if (filterKeyword.trim()) params.set("q", filterKeyword.trim());
+    router.push(`/payments?${params.toString()}`);
   }
 
   function handleOpenCreate() {
@@ -428,7 +443,13 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
       {/* フィルターバー */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {/* カテゴリフィルター */}
-        <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
+        <Select
+          value={filterCategory}
+          onValueChange={(v) => {
+            setFilterCategory(v);
+            updateFilter(v, filterKeyword);
+          }}
+        >
           <SelectTrigger className="w-[160px] border-2 border-border bg-white text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             <SelectValue placeholder="カテゴリ" />
           </SelectTrigger>
@@ -455,7 +476,10 @@ export function PaymentList({ payments, creditCards, categories, currentMonth }:
             type="text"
             placeholder="メモで検索"
             value={filterKeyword}
-            onChange={(e) => setFilterKeyword(e.target.value)}
+            onChange={(e) => {
+              setFilterKeyword(e.target.value);
+              updateFilter(filterCategory, e.target.value);
+            }}
             className="w-[200px] border-2 border-border bg-white pl-8 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           />
         </div>

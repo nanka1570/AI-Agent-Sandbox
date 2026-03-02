@@ -6,13 +6,15 @@ import { autoMarkConfirmedOverdue, autoMarkPaidOverdue } from "@/lib/payment-aut
 import { PaymentList } from "@/components/payments/payment-list";
 
 type Props = {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; category?: string; q?: string }>;
 };
 
 export default async function PaymentsPage({ searchParams }: Props) {
   const userId = await requireAuth();
   const params = await searchParams;
   const currentMonth = params.month ?? format(new Date(), "yyyy-MM");
+  const initialCategoryFilter = params.category ?? "";
+  const initialKeyword = params.q ?? "";
 
   // デフォルトカテゴリを初回のみ作成
   await ensureDefaultCategories(userId);
@@ -99,6 +101,8 @@ export default async function PaymentsPage({ searchParams }: Props) {
       creditCards={creditCards}
       categories={categories}
       currentMonth={currentMonth}
+      initialCategoryFilter={initialCategoryFilter}
+      initialKeyword={initialKeyword}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { ensureDefaultCategories, getCategories } from "@/lib/actions/category";
@@ -23,6 +23,10 @@ export default async function BudgetPage({ searchParams }: Props) {
   // 月別予算一覧
   const budgets = await getBudgets(userId, currentMonth);
 
+  // 前月の予算一覧（デフォルト値として使用）
+  const prevMonth = format(subMonths(new Date(`${currentMonth}-01`), 1), "yyyy-MM");
+  const prevMonthBudgets = await getBudgets(userId, prevMonth);
+
   // 当月の支払い一覧（実績計算用）
   const payments = await prisma.payment.findMany({
     where: { userId, month: currentMonth },
@@ -32,6 +36,7 @@ export default async function BudgetPage({ searchParams }: Props) {
     <BudgetManager
       categories={categories}
       budgets={budgets}
+      prevMonthBudgets={prevMonthBudgets}
       payments={payments}
       currentMonth={currentMonth}
     />

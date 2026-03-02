@@ -92,7 +92,7 @@ export function QuickInputDialog({
         if (!isSubmitting) onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm top-4 translate-y-0 max-h-[85dvh] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%]">
         <DialogHeader>
           <DialogTitle>クイック入力</DialogTitle>
         </DialogHeader>

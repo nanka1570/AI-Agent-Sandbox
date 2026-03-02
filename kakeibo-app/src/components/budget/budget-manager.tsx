@@ -47,6 +47,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -91,6 +92,7 @@ type BudgetWithCategory = Budget & { category: Category };
 type Props = {
   categories: Category[];
   budgets: BudgetWithCategory[];
+  prevMonthBudgets: BudgetWithCategory[];
   payments: Payment[];
   currentMonth: string;
 };
@@ -243,6 +245,7 @@ function SortableCategoryRow({
 export function BudgetManager({
   categories,
   budgets,
+  prevMonthBudgets,
   payments,
   currentMonth,
 }: Props) {
@@ -366,10 +369,12 @@ export function BudgetManager({
   function handleOpenBudget(category: Category) {
     setBudgetCategoryTarget(category);
     const existingBudget = budgets.find((b) => b.categoryId === category.id);
+    // 当月未設定なら前月の予算額をデフォルトとして表示
+    const prevBudget = prevMonthBudgets.find((b) => b.categoryId === category.id);
     budgetForm.reset({
       categoryId: category.id,
       month: currentMonth,
-      amount: existingBudget?.amount ?? undefined,
+      amount: existingBudget?.amount ?? prevBudget?.amount ?? undefined,
     });
     setIsBudgetOpen(true);
   }
@@ -445,6 +450,28 @@ export function BudgetManager({
                       />
                     ))}
                   </TableBody>
+                  <TableFooter>
+                    {(() => {
+                      const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
+                      const totalActual = items.reduce((s, c) => s + calcActualByCategory(payments, c.id), 0);
+                      const totalProgress = totalBudget > 0 ? Math.round((totalActual / totalBudget) * 100) : 0;
+                      return (
+                        <TableRow className="border-t-2 border-border bg-muted">
+                          <TableCell colSpan={2} className="font-black">合計</TableCell>
+                          <TableCell className="font-mono font-black">{formatCurrency(totalBudget)}</TableCell>
+                          <TableCell className="font-mono font-black">{formatCurrency(totalActual)}</TableCell>
+                          <TableCell>
+                            {totalBudget > 0 && (
+                              <span className={`text-sm font-black ${totalProgress > 100 ? "text-red-600" : ""}`}>
+                                {totalProgress}%
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell />
+                        </TableRow>
+                      );
+                    })()}
+                  </TableFooter>
                 </Table>
               </SortableContext>
             </DndContext>
