@@ -1,0 +1,83 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Salary {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  payDay    Int      @map("pay_day")
+  amount    Int
+  month     String
+  memo      String?
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, month])
+  @@map("salaries")
+}
+
+model CreditCard {
+  id                      String    @id @default(cuid())
+  userId                  String    @map("user_id")
+  name                    String
+  closingDay              Int       @map("closing_day")
+  paymentDay              Int       @map("payment_day")
+  paymentMonthOffset      Int       @map("payment_month_offset")
+  confirmationDay         Int?      @map("confirmation_day")
+  confirmationMonthOffset Int?      @map("confirmation_month_offset")
+  brand                   String?
+  memo                    String?
+  sortOrder               Int       @default(0) @map("sort_order")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  payments Payment[]
+
+  @@index([userId, sortOrder])
+  @@map("credit_cards")
+}
+
+model Payment {
+  id               String      @id @default(cuid())
+  userId           String      @map("user_id")
+  creditCardId     String      @map("credit_card_id")
+  categoryId       String?     @map("category_id")
+  month            String
+  amount           Int
+  status           String      @default("unconfirmed")
+  memo             String?
+  isRecurring      Boolean     @default(false) @map("is_recurring")
+  recurringGroupId String?     @map("recurring_group_id")
+  sortOrder        Int         @default(0) @map("sort_order")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, month])
+  @@index([userId, creditCardId])
+  @@index([recurringGroupId])
+  @@map("payments")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  color     String
+  sortOrder Int      @default(0) @map("sort_order")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payments Payment[]
+
+  @@index([userId, sortOrder])
+  @@map("categories")
+}
