@@ -1,3 +1,9 @@
+# IDE / Dev Container
+.devcontainer/
+
+# Claude Code
+.claude/
+
 # Build artifacts
 2d-platformer/build/
 
