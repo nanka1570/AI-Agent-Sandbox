@@ -2,10 +2,10 @@
 
 | 項目 | 内容 |
 |------|------|
-| バージョン | v1.3 |
+| バージョン | v1.4 |
 | 作成日 | 2026-03-04 |
 | 更新日 | 2026-03-04 |
-| ステータス | 承認待ち |
+| ステータス | 承認済み |
 | 対応PRD | product-requirements.md v1.8 |
 
 ## 改版履歴
@@ -16,6 +16,7 @@
 | v1.1 | 2026-03-04 | レビュー指摘対応: Supabase Auth モック実装パターン追加（6.3）、ESLint/Prettier 設定方針追記（1.2）、React Hook Form + Zod 統合パターン追加（4.2）、D&D sortOrder パターン追加（3.6）、.env.local 環境変数詳細追記（7.2）、Server Action エラーハンドリング方針・Prisma トランザクション方針・revalidatePath 対応表追記（2.2）、vitest.config.ts 推奨設定追記（6） |
 | v1.2 | 2026-03-04 | レビュー指摘対応: Server Action エラーハンドリングを safeParse + ActionResult<T> 型に統一（1.4, 2.2, 4.2）、revalidatePath 対応表にカード削除時の /payments 追加（2.2）、SUPABASE_SERVICE_ROLE_KEY を環境変数テーブルに追加（7.2）、ESLint Flat Config 設定例追加（1.2）、playwright.config.ts 推奨設定追加（6） |
 | v1.3 | 2026-03-04 | Playwright testDir を `__tests__/e2e/` に修正（6）、セクション2.2の残存 `.parse()` コード例を削除しセクション1.4への参照に置換 |
+| v1.4 | 2026-03-04 | MVP 実装完了後の実態反映: Zod インポートパスを `"zod"` → `"zod/v4"` に更新（セクション1.4, 4.1） |
 
 ---
 
@@ -177,7 +178,7 @@ const amount = 1000;
 ```typescript
 "use server";
 
-import { z } from "zod";
+import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/lib/types";
 
@@ -481,7 +482,7 @@ export async function reorderCreditCards(orderedIds: string[]) {
 ```typescript
 // lib/validations/payment.ts
 // クライアント（React Hook Form）とサーバー（Server Actions）で共用
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const paymentSchema = z.object({
   creditCardId: z.string().cuid(),

@@ -2,10 +2,10 @@
 
 | 項目 | 内容 |
 |------|------|
-| バージョン | v1.3 |
+| バージョン | v1.4 |
 | 作成日 | 2026-03-04 |
 | 更新日 | 2026-03-04 |
-| ステータス | 承認待ち |
+| ステータス | 承認済み |
 | 対応PRD | product-requirements.md v1.8 |
 
 ## 改版履歴
@@ -16,6 +16,7 @@
 | v1.1 | 2026-03-04 | レビュー指摘反映: middleware.ts追加、auth/コンポーネント追加、(auth)/にpage.tsx明記、auth-actions.ts追加、utils/ファイル整理、型定義方針追記、constants.ts追加、budget/方針追記 |
 | v1.2 | 2026-03-04 | (main)/配下サブディレクトリにファイル展開表示、components/auth/をツリーに追加、budget/コメント改善、__tests__/setup.ts追加、機能設計書との正規化注記追加 |
 | v1.3 | 2026-03-04 | lib/types.ts を追加（ActionResult<T> 等の共用型定義）、型定義方針にフレームワーク横断的な共用型の例外を追記 |
+| v1.4 | 2026-03-04 | MVP 実装完了後の実態反映: `tailwind.config.ts` を削除（Tailwind CSS v4 は CSS ベース設定）、`prisma.config.ts` を追加（Prisma 7 の接続設定）、`lib/prisma.ts` の説明を Proxy パターンに更新、`lib/utils/dashboard.ts` を追加 |
 
 ---
 
@@ -74,7 +75,7 @@ kakeibo-app-v2/
 │   ├── utils/                    # ユーティリティ関数
 │   ├── constants.ts              # アプリ固有定数（DEFAULT_CATEGORIES 等）
 │   ├── types.ts                  # 共用型定義（ActionResult<T> 等）
-│   └── prisma.ts                 # Prisma Client シングルトン
+│   └── prisma.ts                 # Prisma Client（Proxy 遅延初期化 + @prisma/adapter-pg）
 ├── prisma/                       # Prisma スキーマ・マイグレーション
 │   ├── schema.prisma
 │   └── migrations/
@@ -92,7 +93,7 @@ kakeibo-app-v2/
 ├── .devcontainer/                # Dev Container 設定
 ├── middleware.ts                  # 認証チェック・セッション更新（Edge Runtime）
 ├── next.config.ts                # Next.js 設定
-├── tailwind.config.ts            # Tailwind CSS 設定
+├── prisma.config.ts              # Prisma 7 接続設定（datasource URL 管理）
 ├── tsconfig.json                 # TypeScript 設定
 ├── vitest.config.ts              # Vitest 設定
 ├── playwright.config.ts          # Playwright 設定
@@ -221,10 +222,11 @@ lib/
 │   ├── date.ts               # 日付ユーティリティ
 │   ├── payment-date.ts       # 引き落とし日・確定日算出
 │   ├── status.ts             # 自動ステータス判定
+│   ├── dashboard.ts          # ダッシュボード集計ロジック
 │   └── auth-errors.ts        # Supabase Auth エラー日本語化
 ├── constants.ts              # アプリ固有定数（DEFAULT_CATEGORIES 等）
 ├── types.ts                  # 共用型定義（ActionResult<T> 等）
-└── prisma.ts                 # Prisma Client シングルトン
+└── prisma.ts                 # Prisma Client（Proxy 遅延初期化 + @prisma/adapter-pg）
 ```
 
 ### prisma/ (Prisma スキーマ・マイグレーション)
@@ -313,11 +315,11 @@ __tests__/
 | ファイル | 配置先 | 説明 |
 |---------|--------|------|
 | `next.config.ts` | ルート | Next.js 設定 |
-| `tailwind.config.ts` | ルート | Tailwind CSS 設定 |
 | `tsconfig.json` | ルート | TypeScript 設定（strict mode） |
 | `vitest.config.ts` | ルート | Vitest テスト設定 |
 | `playwright.config.ts` | ルート | Playwright E2E 設定 |
 | `eslint.config.mjs` | ルート | ESLint Flat Config |
+| `prisma.config.ts` | ルート | Prisma 7 接続設定（datasource URL 管理） |
 | `.prettierrc` | ルート | Prettier フォーマット設定 |
 | `.env.local` | ルート | 環境変数（Git 管理外） |
 | `.env.example` | ルート | 環境変数テンプレート |

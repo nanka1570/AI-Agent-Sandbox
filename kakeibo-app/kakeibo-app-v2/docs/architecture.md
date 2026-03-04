@@ -2,10 +2,10 @@
 
 | 項目 | 内容 |
 |------|------|
-| バージョン | v1.3 |
+| バージョン | v1.4 |
 | 作成日 | 2026-03-04 |
 | 更新日 | 2026-03-04 |
-| ステータス | 承認待ち |
+| ステータス | 承認済み |
 | 対応PRD | product-requirements.md v1.8 |
 | 対応機能設計書 | functional-design.md v1.2 |
 
@@ -17,6 +17,7 @@
 | v1.1 | 2026-03-04 | レビュー指摘対応: Prisma スキーマ定義追加（セクション3.4）、.env.local テンプレート追記（セクション4.3）、Lighthouse メトリクス FCP/LCP に修正（セクション5.1）、タイムゾーン方針追加（セクション2.4）、エラーハンドリング戦略追加（セクション12）、CI/CD 追加（セクション13）、PgBouncer 説明追記（セクション3.2）、middleware.ts コード例追加（セクション7.2）、Route Groups 注記追加（セクション6.1）、DB インデックスをスキーマに統合 |
 | v1.2 | 2026-03-04 | 対応機能設計書バージョンを v1.1 に更新、CI 型チェックコマンド名を `typecheck` に統一（セクション13.1, 13.3）、date-fns-tz を依存関係に追加（セクション1.2, 11.2）、Prisma スキーマに @map / @@map 追加で DB カラム名をスネークケースに統一（セクション3.4） |
 | v1.3 | 2026-03-04 | 対応機能設計書バージョンを v1.2 に更新、date-fns-tz バージョン表記を `3.x` に統一（セクション1.2） |
+| v1.4 | 2026-03-04 | MVP 実装完了後の実態反映: Prisma `6.x` → `7.x (@prisma/adapter-pg)` + Proxy 遅延初期化パターンに更新（セクション1.2, 3.2）、Zod `3.x` → `4.x (zod/v4)` に更新（セクション1.2）、datasource から `directUrl` 削除し `prisma.config.ts` で管理（セクション3.4）、Budget モデルを Post-MVP 注記に変更（セクション3.4）、依存関係一覧のバージョン更新（セクション11.2） |
 
 ---
 
@@ -38,13 +39,13 @@
 | React | 19.x | UI ライブラリ | Next.js 15 の標準。Server Components / Suspense のフル活用 |
 | Tailwind CSS | v4 | スタイリング | ユーティリティファーストでモバイルファースト設計に最適。ビルド時最適化 |
 | shadcn/ui | latest | UI コンポーネント | Radix UI ベースのアクセシブルなコンポーネント。コピー方式で自由にカスタマイズ可能 |
-| Prisma | 6.x | ORM | 型安全な DB アクセス。マイグレーション管理。スキーマファーストでデータモデルを定義 |
+| Prisma | 7.x | ORM | 型安全な DB アクセス。`@prisma/adapter-pg` でドライバーアダプターを使用。スキーマファーストでデータモデルを定義 |
 | @supabase/ssr | latest | 認証 | Supabase Auth の SSR 対応。middleware でのセッション管理。Edge Runtime 互換 |
 | Recharts | 2.x | チャート | React ネイティブ。SVG ベースでレスポンシブ対応 |
 | date-fns | 4.x | 日付操作 | Tree-shaking 対応で軽量。給料サイクル計算に必要な日付演算 |
 | date-fns-tz | 3.x | タイムゾーン変換 | JST 基準の日付判定に必要 |
 | React Hook Form | 7.x | フォーム管理 | 非制御コンポーネントベースで高パフォーマンス。再レンダリング最小化 |
-| Zod | 3.x | バリデーション | TypeScript ファーストのスキーマバリデーション。Server Actions でも共用可能 |
+| Zod | 4.x | バリデーション | TypeScript ファーストのスキーマバリデーション。`zod/v4` サブパスでインポート。Server Actions でも共用可能 |
 
 ### 1.3 開発ツール
 
@@ -186,22 +187,45 @@ const nowJST = toZonedTime(new Date(), TIMEZONE);
 ### 3.2 Prisma 接続管理
 
 ```typescript
-// lib/prisma.ts - シングルトンパターン
+// lib/prisma.ts - Proxy 遅延初期化パターン（Prisma 7 + @prisma/adapter-pg）
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function createPrismaClient(): PrismaClient {
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  return new PrismaClient({ adapter });
 }
+
+let prismaInstance: PrismaClient | undefined;
+
+// Proxy による遅延初期化（ビルド時の PrismaClient 生成を回避）
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop: string | symbol) {
+    if (process.env.NODE_ENV === "development") {
+      if (!globalForPrisma.prisma) {
+        globalForPrisma.prisma = createPrismaClient();
+      }
+      const value = Reflect.get(globalForPrisma.prisma, prop);
+      return typeof value === "function" ? value.bind(globalForPrisma.prisma) : value;
+    } else {
+      if (!prismaInstance) {
+        prismaInstance = createPrismaClient();
+      }
+      const value = Reflect.get(prismaInstance, prop);
+      return typeof value === "function" ? value.bind(prismaInstance) : value;
+    }
+  },
+});
 ```
 
+- **Proxy 遅延初期化**: `next build` 時に `DATABASE_URL` が不要。実際のクエリ時に初めて PrismaClient が生成される
+- **@prisma/adapter-pg**: Prisma 7 のドライバーアダプター。`PrismaPg` が PostgreSQL 接続を管理する
 - **開発環境**: `globalThis` にキャッシュして HMR 時のコネクション枯渇を防止
-- **本番環境**: インスタンスごとに 1 つの PrismaClient
+- **本番環境**: モジュールスコープのシングルトンを使用
 
 #### 接続プール（PgBouncer）
 
@@ -212,7 +236,7 @@ Supabase は PgBouncer による接続プールを提供している。Vercel �
 | Transaction mode（PgBouncer） | 6543 | アプリケーション接続（`DATABASE_URL`） | `?pgbouncer=true` パラメータ必須 |
 | Direct | 5432 | マイグレーション（`DIRECT_URL`） | PgBouncer を経由しない直接接続 |
 
-- Prisma の `datasource` に `directUrl` を指定することで、マイグレーション時のみ直接接続を使用する
+- Prisma 7 では `prisma.config.ts` の `datasource.shadowDatabaseUrl` で直接接続 URL を指定し、マイグレーション時のみ直接接続を使用する（従来の `datasource.directUrl` は不要）
 - PgBouncer の Transaction mode ではプリペアドステートメントが使えないため、`?pgbouncer=true` パラメータで Prisma にこれを通知する
 
 ### 3.3 バックアップ戦略
@@ -228,10 +252,9 @@ Supabase は PgBouncer による接続プールを提供している。Vercel �
 PRD のデータモデルに基づく完全な Prisma スキーマ。インデックス定義（旧セクション 8.2）を各モデルに統合している。
 
 ```prisma
+// Prisma 7: datasource の url は prisma.config.ts で管理
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 generator client {
@@ -314,24 +337,11 @@ model Category {
   @@map("categories")
 }
 
-/// Post-MVP: F-07 予算管理
-model Budget {
-  id         String   @id @default(cuid())
-  userId     String   @map("user_id")
-  categoryId String   @map("category_id")
-  month      String   // 対象月 "YYYY-MM"
-  amount     Int      // 予算額（円）
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, categoryId, month]) // 同一ユーザー・カテゴリ・月で一意
-  @@map("budgets")
-}
+// Post-MVP: F-07 予算管理で Budget モデルを追加予定
+// Budget モデルの設計は PRD で定義済み。実装時に Category への budgets リレーションも追加する。
 ```
 
-> **注意**: Budget モデルのリレーション追加に伴い、Category モデルには `budgets Budget[]` フィールドも必要となる（Post-MVP 実装時に追加）。
+> **注意**: Budget モデルは Post-MVP（F-07 予算管理）で追加予定。MVP スキーマには含まれていない。
 
 ---
 
@@ -716,7 +726,7 @@ __tests__/
 | カテゴリ | 方針 | 例 |
 |---------|------|-----|
 | フレームワーク (Next.js, React) | メジャーバージョン固定、マイナー自動 | `^15.0.0` |
-| ORM (Prisma) | メジャーバージョン固定、マイナー自動 | `^6.0.0` |
+| ORM (Prisma) | メジャーバージョン固定、マイナー自動 | `^7.0.0` |
 | UI (shadcn/ui) | コピー方式のため依存なし | — |
 | ユーティリティ (date-fns, Zod) | マイナーバージョンまで許可 | `^4.0.0` |
 | 開発ツール (Vitest, ESLint, Prettier) | パッチバージョンのみ自動 | `~2.0.0` |
@@ -727,7 +737,8 @@ __tests__/
 |-----------|------|--------------|
 | next | フレームワーク | `^15.0.0` |
 | react / react-dom | UI | `^19.0.0` |
-| @prisma/client | ORM クライアント | `^6.0.0` |
+| @prisma/client | ORM クライアント | `^7.0.0` |
+| @prisma/adapter-pg | Prisma PostgreSQL ドライバーアダプター | `^7.0.0` |
 | @supabase/ssr | 認証（SSR） | `^0.5.0` |
 | @supabase/supabase-js | Supabase クライアント | `^2.0.0` |
 | tailwindcss | スタイリング | `^4.0.0` |
@@ -735,7 +746,7 @@ __tests__/
 | date-fns | 日付操作 | `^4.0.0` |
 | date-fns-tz | タイムゾーン変換 | `^3.0.0` |
 | react-hook-form | フォーム | `^7.0.0` |
-| zod | バリデーション | `^3.0.0` |
+| zod | バリデーション | `^4.0.0` |
 | @hookform/resolvers | RHF + Zod 統合 | `^3.0.0` |
 | sonner | トースト通知 | `^2.0.0` |
 | @dnd-kit/core | ドラッグ&ドロップ | `^6.0.0` |
