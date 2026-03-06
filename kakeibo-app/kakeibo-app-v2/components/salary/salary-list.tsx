@@ -87,7 +87,7 @@ export function SalaryList({ salaries, recentAmounts }: SalaryListProps) {
 
       {/* データがない場合 */}
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-foreground/40 p-8 text-center">
           <Wallet className="size-10 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             手取りがまだ登録されていません
@@ -151,6 +151,17 @@ export function SalaryList({ salaries, recentAmounts }: SalaryListProps) {
         recentAmounts={recentAmounts}
         open={formOpen}
         onOpenChange={setFormOpen}
+        onSuccess={(data, isEditing) => {
+          if (isEditing) {
+            setItems((prev) =>
+              prev.map((i) => (i.id === data.id ? data : i))
+            );
+          } else {
+            setItems((prev) =>
+              [...prev, data].sort((a, b) => b.sortOrder - a.sortOrder)
+            );
+          }
+        }}
       />
 
       {/* 削除確認ダイアログ */}

@@ -63,7 +63,7 @@ export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
           open={openCards[group.card.id]}
           onOpenChange={() => toggleCard(group.card.id)}
         >
-          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border-2 border-foreground bg-secondary/50 px-4 py-3 shadow-[2px_2px_0px_oklch(0.50_0.01_280)]">
             <div className="flex items-center gap-3">
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="p-0 h-auto">

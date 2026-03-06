@@ -5,20 +5,20 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_oklch(0.75_0.18_180_/_25%)] hover:shadow-[0_0_20px_oklch(0.75_0.18_180_/_35%)]",
+        default: "bg-primary text-primary-foreground border-2 border-foreground hover:bg-primary/90 shadow-[3px_3px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[2px] hover:translate-y-[2px]",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 shadow-[0_0_15px_oklch(0.65_0.25_25_/_25%)] focus-visible:ring-destructive/20",
+          "bg-destructive text-white border-2 border-foreground hover:bg-destructive/90 shadow-[3px_3px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[2px] hover:translate-y-[2px] focus-visible:ring-destructive/20",
         outline:
-          "border border-white/15 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:text-foreground",
+          "border-2 border-foreground bg-white hover:bg-secondary hover:text-foreground shadow-[2px_2px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[1px] hover:translate-y-[1px]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground border-2 border-foreground hover:bg-secondary/80 shadow-[2px_2px_0px_oklch(0.50_0.01_280)]",
         ghost:
-          "hover:bg-white/10 hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "hover:bg-secondary hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline font-bold",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

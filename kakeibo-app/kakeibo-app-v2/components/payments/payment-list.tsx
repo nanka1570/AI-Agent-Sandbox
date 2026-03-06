@@ -299,7 +299,7 @@ export function PaymentList({
 
       {/* データがない場合 */}
       {filteredPayments.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-foreground/40 p-8 text-center">
           <p className="text-sm text-muted-foreground">
             {payments.length === 0
               ? "支払いがまだ登録されていません"

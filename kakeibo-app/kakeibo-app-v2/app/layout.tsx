@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Orbitron } from "next/font/google";
+import { Zen_Maru_Gothic } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -14,14 +14,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const orbitron = Orbitron({
-  variable: "--font-orbitron",
+const zenMaruGothic = Zen_Maru_Gothic({
+  variable: "--font-zen-maru",
   subsets: ["latin"],
-  weight: ["700"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Aurora Finance",
+  title: "kakeibo",
   description: "手取りでクレカ代が払えるか一目でわかる家計簿アプリ",
 };
 
@@ -31,11 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}>
-        <div className="aurora-bg" aria-hidden="true">
-          <div className="aurora-blob-1" />
-          <div className="aurora-blob-2" />
+    <html lang="ja">
+      <body className={`${geistSans.variable} ${geistMono.variable} ${zenMaruGothic.variable} antialiased`}>
+        <div className="comic-bg" aria-hidden="true">
+          <div className="comic-burst" />
         </div>
         <div className="relative z-10">
           {children}

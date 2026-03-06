@@ -31,11 +31,10 @@ export function MonthSelector({ selectedMonth }: MonthSelectorProps) {
         size="icon"
         onClick={() => handleMonthChange(-1)}
         aria-label="前月"
-        className="hover:shadow-[0_0_10px_oklch(0.75_0.18_180_/_20%)]"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="text-lg font-semibold min-w-[140px] text-center text-primary drop-shadow-[0_0_8px_oklch(0.75_0.18_180_/_30%)]">
+      <span className="text-lg font-bold min-w-[140px] text-center text-foreground border-2 border-foreground rounded-lg px-4 py-1 bg-secondary shadow-[2px_2px_0px_oklch(0.50_0.01_280)]">
         {formatMonth(selectedMonth)}
       </span>
       <Button
@@ -43,7 +42,6 @@ export function MonthSelector({ selectedMonth }: MonthSelectorProps) {
         size="icon"
         onClick={() => handleMonthChange(1)}
         aria-label="次月"
-        className="hover:shadow-[0_0_10px_oklch(0.75_0.18_180_/_20%)]"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

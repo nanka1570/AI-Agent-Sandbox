@@ -15,7 +15,7 @@ interface FundFlowProps {
 export function FundFlow({ fundFlow }: FundFlowProps) {
   if (fundFlow.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground font-bold">
         データがありません
       </p>
     );
@@ -29,33 +29,39 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
         return (
           <div
             key={`${entry.type}-${entry.label}-${index}`}
-            className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
+            className={`flex items-center gap-3 rounded-lg border-2 border-foreground px-4 py-3 ${
               isSalary
-                ? "bg-emerald-950/20 border-emerald-500/30 shadow-[inset_0_1px_12px_oklch(0.70_0.17_160_/_8%)]"
-                : "border-white/10"
+                ? "bg-[oklch(0.92_0.08_150)] shadow-[3px_3px_0px_oklch(0.40_0.15_150)]"
+                : "bg-white shadow-[2px_2px_0px_oklch(0.50_0.01_280)]"
             }`}
           >
             {/* アイコン */}
             <div className="flex-shrink-0">
               {entry.isBeforePayDay && !isSalary ? (
-                <AlertTriangle className="h-5 w-5 text-amber-500 drop-shadow-[0_0_6px_oklch(0.80_0.15_80_/_50%)]" />
+                <span className="bg-secondary rounded-lg p-1.5 border-2 border-foreground inline-flex">
+                  <AlertTriangle className="h-5 w-5 text-foreground" />
+                </span>
               ) : isSalary ? (
-                <Wallet className="h-5 w-5 text-emerald-400 drop-shadow-[0_0_6px_oklch(0.70_0.17_160_/_50%)]" />
+                <span className="bg-[oklch(0.55_0.20_150)] rounded-lg p-1.5 border-2 border-foreground inline-flex">
+                  <Wallet className="h-5 w-5 text-white" />
+                </span>
               ) : (
-                <CreditCard className="h-5 w-5 text-cyan-400 drop-shadow-[0_0_6px_oklch(0.75_0.18_180_/_50%)]" />
+                <span className="bg-accent rounded-lg p-1.5 border-2 border-foreground inline-flex">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </span>
               )}
             </div>
 
             {/* 日付 */}
-            <div className="flex-shrink-0 w-20 text-sm text-muted-foreground">
+            <div className="flex-shrink-0 w-20 text-sm font-bold text-muted-foreground">
               {format(entry.date, "M/d")}
             </div>
 
             {/* ラベル */}
-            <div className="flex-1 font-medium text-sm">
+            <div className="flex-1 font-bold text-sm">
               {entry.label}
               {entry.isBeforePayDay && !isSalary && (
-                <span className="text-xs text-amber-400 ml-2">
+                <span className="text-xs text-primary font-bold ml-2">
                   給料日前
                 </span>
               )}
@@ -63,8 +69,8 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
 
             {/* 金額 */}
             <div
-              className={`font-semibold text-sm ${
-                isSalary ? "text-emerald-400" : "text-foreground"
+              className={`font-bold text-sm ${
+                isSalary ? "text-[oklch(0.40_0.18_150)]" : "text-foreground"
               }`}
             >
               {isSalary ? "+" : "-"}
