@@ -27,3 +27,4 @@ playwright-report/
 # misc
 .DS_Store
 *.tgz
+.vercel
