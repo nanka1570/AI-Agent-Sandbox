@@ -99,21 +99,20 @@ export function SalaryForm({
     }
   }, [open, salary, reset]);
 
-  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  /** フォーム送信処理 */
   const onSubmit = (formData: SalaryInput) => {
-    reset();
-    onOpenChange(false);
-    toast.success(isEditing ? "手取りを更新しました" : "手取りを登録しました");
-
     startTransition(async () => {
       const result = isEditing
         ? await updateSalary(salary.id, formData)
         : await createSalary(formData);
 
       if (result.success) {
+        toast.success(isEditing ? "手取りを更新しました" : "手取りを登録しました");
         if (result.data) {
           onSuccess?.(result.data as SalaryItem, isEditing);
         }
+        reset();
+        onOpenChange(false);
       } else {
         toast.error(result.error);
       }

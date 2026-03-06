@@ -186,21 +186,22 @@ export function CreditCardForm({
     }
   }, [open, card, reset]);
 
-  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  /** フォーム送信処理 */
   const onSubmit = (formData: CreditCardInput) => {
-    reset();
-    onOpenChange(false);
-    toast.success(isEditing ? "カードを更新しました" : "カードを追加しました");
-
     startTransition(async () => {
       const result = isEditing
         ? await updateCreditCard(card.id, formData)
         : await createCreditCard(formData);
 
       if (result.success) {
+        toast.success(
+          isEditing ? "カードを更新しました" : "カードを追加しました"
+        );
         if (result.data) {
           onSuccess?.(result.data as CreditCardItem, isEditing);
         }
+        reset();
+        onOpenChange(false);
       } else {
         toast.error(result.error);
       }

@@ -97,17 +97,8 @@ export function PaymentForm({
     }
   }, [open, payment, reset]);
 
-  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  /** フォーム送信処理 */
   const onSubmit = (formData: PaymentFormInput) => {
-    const message = isEditing
-      ? "支払いを更新しました"
-      : formData.isRecurring
-        ? "繰り返し支払い（4件）を登録しました"
-        : "支払いを登録しました";
-    reset();
-    onOpenChange(false);
-    toast.success(message);
-
     startTransition(async () => {
       let result;
 
@@ -122,7 +113,16 @@ export function PaymentForm({
         result = await createPayment(formData);
       }
 
-      if (!result.success) {
+      if (result.success) {
+        const message = isEditing
+          ? "支払いを更新しました"
+          : formData.isRecurring
+            ? "繰り返し支払い（4件）を登録しました"
+            : "支払いを登録しました";
+        toast.success(message);
+        reset();
+        onOpenChange(false);
+      } else {
         toast.error(result.error);
       }
     });

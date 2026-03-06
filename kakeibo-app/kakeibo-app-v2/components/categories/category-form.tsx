@@ -72,21 +72,22 @@ export function CategoryForm({
     }
   }, [open, category, reset]);
 
-  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  /** フォーム送信処理 */
   const onSubmit = (formData: CategoryInput) => {
-    reset();
-    onOpenChange(false);
-    toast.success(isEditing ? "カテゴリを更新しました" : "カテゴリを追加しました");
-
     startTransition(async () => {
       const result = isEditing
         ? await updateCategory(category.id, formData)
         : await createCategory(formData);
 
       if (result.success) {
+        toast.success(
+          isEditing ? "カテゴリを更新しました" : "カテゴリを追加しました"
+        );
         if (result.data) {
           onSuccess?.(result.data as CategoryItem, isEditing);
         }
+        reset();
+        onOpenChange(false);
       } else {
         toast.error(result.error);
       }
