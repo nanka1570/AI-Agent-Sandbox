@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { creditCardSchema } from "@/lib/validations/credit-card";
 import type { ActionResult } from "@/lib/types";
+import type { CreditCard } from "@prisma/client";
 
 /**
  * クレジットカードを新規作成する
  */
-export async function createCreditCard(data: unknown): Promise<ActionResult> {
+export async function createCreditCard(data: unknown): Promise<ActionResult<CreditCard>> {
   const parsed = creditCardSchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -29,7 +30,7 @@ export async function createCreditCard(data: unknown): Promise<ActionResult> {
     });
     const nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
 
-    await prisma.creditCard.create({
+    const newCard = await prisma.creditCard.create({
       data: {
         userId,
         name: parsed.data.name,
@@ -46,7 +47,7 @@ export async function createCreditCard(data: unknown): Promise<ActionResult> {
 
     revalidatePath("/credit-cards");
     revalidatePath("/");
-    return { success: true };
+    return { success: true, data: newCard };
   } catch {
     return { success: false, error: "クレジットカードの作成に失敗しました" };
   }
@@ -58,7 +59,7 @@ export async function createCreditCard(data: unknown): Promise<ActionResult> {
 export async function updateCreditCard(
   id: string,
   data: unknown
-): Promise<ActionResult> {
+): Promise<ActionResult<CreditCard>> {
   const parsed = creditCardSchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -78,7 +79,7 @@ export async function updateCreditCard(
       return { success: false, error: "クレジットカードが見つかりません" };
     }
 
-    await prisma.creditCard.update({
+    const updatedCard = await prisma.creditCard.update({
       where: { id, userId },
       data: {
         name: parsed.data.name,
@@ -95,7 +96,7 @@ export async function updateCreditCard(
     revalidatePath("/credit-cards");
     revalidatePath("/payments");
     revalidatePath("/");
-    return { success: true };
+    return { success: true, data: updatedCard };
   } catch {
     return { success: false, error: "クレジットカードの更新に失敗しました" };
   }

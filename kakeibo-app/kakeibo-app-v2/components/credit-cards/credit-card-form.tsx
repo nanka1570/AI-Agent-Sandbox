@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -33,6 +33,19 @@ import {
 } from "@/lib/actions/credit-card-actions";
 import { CARD_BRANDS } from "@/lib/constants";
 
+interface CreditCardItem {
+  id: string;
+  name: string;
+  closingDay: number;
+  paymentDay: number;
+  paymentMonthOffset: number;
+  confirmationDay: number | null;
+  confirmationMonthOffset: number | null;
+  brand: string | null;
+  memo: string | null;
+  sortOrder: number;
+}
+
 interface CreditCardFormProps {
   /** 編集対象のカード（新規作成時は undefined） */
   card?: {
@@ -48,6 +61,8 @@ interface CreditCardFormProps {
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 作成・更新成功時のコールバック */
+  onSuccess?: (data: CreditCardItem, isEditing: boolean) => void;
 }
 
 /** 1〜31の数値配列を生成する */
@@ -118,8 +133,10 @@ export function CreditCardForm({
   card,
   open,
   onOpenChange,
+  onSuccess,
 }: CreditCardFormProps) {
   const isEditing = !!card;
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
@@ -169,21 +186,25 @@ export function CreditCardForm({
     }
   }, [open, card, reset]);
 
-  /** フォーム送信処理 */
-  const onSubmit = async (formData: CreditCardInput) => {
-    const result = isEditing
-      ? await updateCreditCard(card.id, formData)
-      : await createCreditCard(formData);
+  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  const onSubmit = (formData: CreditCardInput) => {
+    reset();
+    onOpenChange(false);
+    toast.success(isEditing ? "カードを更新しました" : "カードを追加しました");
 
-    if (result.success) {
-      toast.success(
-        isEditing ? "カードを更新しました" : "カードを追加しました"
-      );
-      reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.error);
-    }
+    startTransition(async () => {
+      const result = isEditing
+        ? await updateCreditCard(card.id, formData)
+        : await createCreditCard(formData);
+
+      if (result.success) {
+        if (result.data) {
+          onSuccess?.(result.data as CreditCardItem, isEditing);
+        }
+      } else {
+        toast.error(result.error);
+      }
+    });
   };
 
   return (
@@ -326,16 +347,13 @@ export function CreditCardForm({
               control={control}
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(val) =>
-                    field.onChange(val === "" ? null : val)
-                  }
+                  value={field.value ?? undefined}
+                  onValueChange={field.onChange}
                 >
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="選択してください" />
+                    <SelectValue placeholder="未選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">未選択</SelectItem>
                     {CARD_BRANDS.map((brand) => (
                       <SelectItem key={brand.value} value={brand.value}>
                         {brand.label}
@@ -370,8 +388,8 @@ export function CreditCardForm({
             >
               キャンセル
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
+            <Button type="submit" disabled={isSubmitting || isPending}>
+              {isSubmitting || isPending
                 ? "保存中..."
                 : isEditing
                   ? "更新"

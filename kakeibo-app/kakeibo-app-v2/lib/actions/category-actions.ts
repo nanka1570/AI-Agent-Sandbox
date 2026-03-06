@@ -6,11 +6,12 @@ import { getAuthUserId } from "@/lib/supabase/server";
 import { categorySchema } from "@/lib/validations/category";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
 import type { ActionResult } from "@/lib/types";
+import type { Category } from "@prisma/client";
 
 /**
  * カテゴリを新規作成する
  */
-export async function createCategory(data: unknown): Promise<ActionResult> {
+export async function createCategory(data: unknown): Promise<ActionResult<Category>> {
   const parsed = categorySchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -41,7 +42,7 @@ export async function createCategory(data: unknown): Promise<ActionResult> {
     });
     const nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
 
-    await prisma.category.create({
+    const newCategory = await prisma.category.create({
       data: {
         userId,
         name: parsed.data.name,
@@ -52,7 +53,7 @@ export async function createCategory(data: unknown): Promise<ActionResult> {
     });
 
     revalidatePath("/budget");
-    return { success: true };
+    return { success: true, data: newCategory };
   } catch {
     return { success: false, error: "カテゴリの作成に失敗しました" };
   }
@@ -64,7 +65,7 @@ export async function createCategory(data: unknown): Promise<ActionResult> {
 export async function updateCategory(
   id: string,
   data: unknown
-): Promise<ActionResult> {
+): Promise<ActionResult<Category>> {
   const parsed = categorySchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -97,7 +98,7 @@ export async function updateCategory(
       return { success: false, error: "同じ名前のカテゴリが既に存在します" };
     }
 
-    await prisma.category.update({
+    const updatedCategory = await prisma.category.update({
       where: { id, userId },
       data: {
         name: parsed.data.name,
@@ -106,7 +107,7 @@ export async function updateCategory(
     });
 
     revalidatePath("/budget");
-    return { success: true };
+    return { success: true, data: updatedCategory };
   } catch {
     return { success: false, error: "カテゴリの更新に失敗しました" };
   }
@@ -126,10 +127,6 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
 
     if (!category) {
       return { success: false, error: "カテゴリが見つかりません" };
-    }
-
-    if (category.isDefault) {
-      return { success: false, error: "デフォルトカテゴリは削除できません" };
     }
 
     await prisma.category.delete({

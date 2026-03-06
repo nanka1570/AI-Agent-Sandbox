@@ -102,8 +102,8 @@ function SortableCreditCardItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded-lg border border-white/10 bg-card/60 backdrop-blur-sm p-4 ${
-        isDragging ? "opacity-50 shadow-lg" : ""
+      className={`flex items-center gap-3 rounded-lg border-2 border-foreground bg-card p-4 shadow-[3px_3px_0px_oklch(0.50_0.01_280)] ${
+        isDragging ? "opacity-50 shadow-[1px_1px_0px_oklch(0.50_0.01_280)]" : ""
       }`}
     >
       {/* ドラッグハンドル */}
@@ -226,7 +226,7 @@ export function CreditCardList({ cards: initialCards }: CreditCardListProps) {
 
       {/* カードがない場合 */}
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-foreground/40 p-8 text-center">
           <CreditCard className="size-10 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             クレジットカードがまだ登録されていません
@@ -263,6 +263,15 @@ export function CreditCardList({ cards: initialCards }: CreditCardListProps) {
         card={editingCard}
         open={formOpen}
         onOpenChange={setFormOpen}
+        onSuccess={(data, isEditing) => {
+          if (isEditing) {
+            setItems((prev) =>
+              prev.map((i) => (i.id === data.id ? data : i))
+            );
+          } else {
+            setItems((prev) => [...prev, data]);
+          }
+        }}
       />
 
       {/* 削除確認ダイアログ */}

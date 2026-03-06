@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ export function PaymentForm({
   onOpenChange,
 }: PaymentFormProps) {
   const isEditing = !!payment;
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
@@ -96,36 +97,35 @@ export function PaymentForm({
     }
   }, [open, payment, reset]);
 
-  /** フォーム送信処理 */
-  const onSubmit = async (formData: PaymentFormInput) => {
-    let result;
+  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  const onSubmit = (formData: PaymentFormInput) => {
+    const message = isEditing
+      ? "支払いを更新しました"
+      : formData.isRecurring
+        ? "繰り返し支払い（4件）を登録しました"
+        : "支払いを登録しました";
+    reset();
+    onOpenChange(false);
+    toast.success(message);
 
-    if (isEditing) {
-      // 編集時は対象1件のみ更新
-      result = await updatePayment(payment.id, formData);
-    } else if (formData.isRecurring) {
-      // 繰り返し登録（4件作成）
-      result = await createRecurringPayments({
-        ...formData,
-        isRecurring: true,
-      });
-    } else {
-      // 単体登録
-      result = await createPayment(formData);
-    }
+    startTransition(async () => {
+      let result;
 
-    if (result.success) {
-      const message = isEditing
-        ? "支払いを更新しました"
-        : formData.isRecurring
-          ? "繰り返し支払い（4件）を登録しました"
-          : "支払いを登録しました";
-      toast.success(message);
-      reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.error);
-    }
+      if (isEditing) {
+        result = await updatePayment(payment.id, formData);
+      } else if (formData.isRecurring) {
+        result = await createRecurringPayments({
+          ...formData,
+          isRecurring: true,
+        });
+      } else {
+        result = await createPayment(formData);
+      }
+
+      if (!result.success) {
+        toast.error(result.error);
+      }
+    });
   };
 
   return (
@@ -208,16 +208,13 @@ export function PaymentForm({
               control={control}
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(val) =>
-                    field.onChange(val === "" ? null : val)
-                  }
+                  value={field.value ?? undefined}
+                  onValueChange={field.onChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="カテゴリを選択" />
+                    <SelectValue placeholder="未選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">未選択</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <span className="flex items-center gap-2">
@@ -285,8 +282,8 @@ export function PaymentForm({
             >
               キャンセル
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
+            <Button type="submit" disabled={isSubmitting || isPending}>
+              {isSubmitting || isPending
                 ? "保存中..."
                 : isEditing
                   ? "更新"

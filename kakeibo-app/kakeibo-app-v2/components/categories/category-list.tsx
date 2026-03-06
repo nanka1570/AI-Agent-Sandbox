@@ -107,17 +107,15 @@ function SortableCategoryItem({
         <Pencil className="size-4" />
       </Button>
 
-      {/* 削除ボタン（isDefault なら非表示） */}
-      {!category.isDefault && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onDelete(category)}
-          aria-label={`${category.name}を削除`}
-        >
-          <Trash2 className="size-4 text-destructive" />
-        </Button>
-      )}
+      {/* 削除ボタン */}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => onDelete(category)}
+        aria-label={`${category.name}を削除`}
+      >
+        <Trash2 className="size-4 text-destructive" />
+      </Button>
     </div>
   );
 }
@@ -126,9 +124,11 @@ function SortableCategoryItem({
 function FixedCategoryItem({
   category,
   onEdit,
+  onDelete,
 }: {
   category: CategoryItem;
   onEdit: (category: CategoryItem) => void;
+  onDelete: (category: CategoryItem) => void;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-card p-3 opacity-75">
@@ -154,6 +154,16 @@ function FixedCategoryItem({
         aria-label={`${category.name}を編集`}
       >
         <Pencil className="size-4" />
+      </Button>
+
+      {/* 削除ボタン */}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => onDelete(category)}
+        aria-label={`${category.name}を削除`}
+      >
+        <Trash2 className="size-4 text-destructive" />
       </Button>
     </div>
   );
@@ -308,6 +318,7 @@ export function CategoryList({ categories: initialCategories }: CategoryListProp
           <FixedCategoryItem
             category={otherCategory}
             onEdit={handleEdit}
+            onDelete={handleDeleteConfirm}
           />
         </div>
       )}
@@ -318,6 +329,15 @@ export function CategoryList({ categories: initialCategories }: CategoryListProp
         category={editingCategory}
         open={formOpen}
         onOpenChange={setFormOpen}
+        onSuccess={(data, isEditing) => {
+          if (isEditing) {
+            setItems((prev) =>
+              prev.map((i) => (i.id === data.id ? data : i))
+            );
+          } else {
+            setItems((prev) => [...prev, data]);
+          }
+        }}
       />
 
       {/* 削除確認ダイアログ */}

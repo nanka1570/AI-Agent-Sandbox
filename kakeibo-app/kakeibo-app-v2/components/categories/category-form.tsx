@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -17,6 +17,14 @@ import { Label } from "@/components/ui/label";
 import { categorySchema, type CategoryInput } from "@/lib/validations/category";
 import { createCategory, updateCategory } from "@/lib/actions/category-actions";
 
+interface CategoryItem {
+  id: string;
+  name: string;
+  color: string;
+  sortOrder: number;
+  isDefault: boolean;
+}
+
 interface CategoryFormProps {
   /** 編集対象のカテゴリ（新規作成時は undefined） */
   category?: {
@@ -27,14 +35,18 @@ interface CategoryFormProps {
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 作成・更新成功時のコールバック */
+  onSuccess?: (data: CategoryItem, isEditing: boolean) => void;
 }
 
 export function CategoryForm({
   category,
   open,
   onOpenChange,
+  onSuccess,
 }: CategoryFormProps) {
   const isEditing = !!category;
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
@@ -60,19 +72,25 @@ export function CategoryForm({
     }
   }, [open, category, reset]);
 
-  /** フォーム送信処理 */
-  const onSubmit = async (formData: CategoryInput) => {
-    const result = isEditing
-      ? await updateCategory(category.id, formData)
-      : await createCategory(formData);
+  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  const onSubmit = (formData: CategoryInput) => {
+    reset();
+    onOpenChange(false);
+    toast.success(isEditing ? "カテゴリを更新しました" : "カテゴリを追加しました");
 
-    if (result.success) {
-      toast.success(isEditing ? "カテゴリを更新しました" : "カテゴリを追加しました");
-      reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.error);
-    }
+    startTransition(async () => {
+      const result = isEditing
+        ? await updateCategory(category.id, formData)
+        : await createCategory(formData);
+
+      if (result.success) {
+        if (result.data) {
+          onSuccess?.(result.data as CategoryItem, isEditing);
+        }
+      } else {
+        toast.error(result.error);
+      }
+    });
   };
 
   return (
@@ -136,8 +154,8 @@ export function CategoryForm({
             >
               キャンセル
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
+            <Button type="submit" disabled={isSubmitting || isPending}>
+              {isSubmitting || isPending
                 ? "保存中..."
                 : isEditing
                   ? "更新"

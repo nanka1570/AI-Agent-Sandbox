@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -27,6 +27,15 @@ import { salarySchema, type SalaryInput } from "@/lib/validations/salary";
 import { createSalary, updateSalary } from "@/lib/actions/salary-actions";
 import { formatCurrency } from "@/lib/utils/format";
 
+interface SalaryItem {
+  id: string;
+  month: string;
+  payDay: number;
+  amount: number;
+  memo: string | null;
+  sortOrder: number;
+}
+
 interface SalaryFormProps {
   /** 編集対象の手取り（新規作成時は undefined） */
   salary?: {
@@ -40,6 +49,8 @@ interface SalaryFormProps {
   recentAmounts: number[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 作成・更新成功時のコールバック */
+  onSuccess?: (data: SalaryItem, isEditing: boolean) => void;
 }
 
 /** 1〜31の数値配列を生成する */
@@ -50,8 +61,10 @@ export function SalaryForm({
   recentAmounts,
   open,
   onOpenChange,
+  onSuccess,
 }: SalaryFormProps) {
   const isEditing = !!salary;
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
@@ -86,19 +99,25 @@ export function SalaryForm({
     }
   }, [open, salary, reset]);
 
-  /** フォーム送信処理 */
-  const onSubmit = async (formData: SalaryInput) => {
-    const result = isEditing
-      ? await updateSalary(salary.id, formData)
-      : await createSalary(formData);
+  /** フォーム送信処理（Optimistic UI: ダイアログ即閉じ） */
+  const onSubmit = (formData: SalaryInput) => {
+    reset();
+    onOpenChange(false);
+    toast.success(isEditing ? "手取りを更新しました" : "手取りを登録しました");
 
-    if (result.success) {
-      toast.success(isEditing ? "手取りを更新しました" : "手取りを登録しました");
-      reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.error);
-    }
+    startTransition(async () => {
+      const result = isEditing
+        ? await updateSalary(salary.id, formData)
+        : await createSalary(formData);
+
+      if (result.success) {
+        if (result.data) {
+          onSuccess?.(result.data as SalaryItem, isEditing);
+        }
+      } else {
+        toast.error(result.error);
+      }
+    });
   };
 
   /** プリセット金額をクリックして入力欄にセットする */
@@ -216,8 +235,8 @@ export function SalaryForm({
             >
               キャンセル
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "保存中..." : isEditing ? "更新" : "登録"}
+            <Button type="submit" disabled={isSubmitting || isPending}>
+              {isSubmitting || isPending ? "保存中..." : isEditing ? "更新" : "登録"}
             </Button>
           </DialogFooter>
         </form>
