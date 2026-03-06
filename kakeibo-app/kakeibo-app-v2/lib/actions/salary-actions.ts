@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { salarySchema } from "@/lib/validations/salary";
 import type { ActionResult } from "@/lib/types";
+import type { Salary } from "@prisma/client";
 
 /**
  * 手取りを新規作成する
  */
-export async function createSalary(data: unknown): Promise<ActionResult> {
+export async function createSalary(data: unknown): Promise<ActionResult<Salary>> {
   const parsed = salarySchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -35,7 +36,7 @@ export async function createSalary(data: unknown): Promise<ActionResult> {
     const [year, month] = parsed.data.month.split("-").map(Number);
     const sortOrder = year * 100 + month;
 
-    await prisma.salary.create({
+    const newSalary = await prisma.salary.create({
       data: {
         userId,
         month: parsed.data.month,
@@ -48,7 +49,7 @@ export async function createSalary(data: unknown): Promise<ActionResult> {
 
     revalidatePath("/salary");
     revalidatePath("/");
-    return { success: true };
+    return { success: true, data: newSalary };
   } catch {
     return { success: false, error: "手取りの作成に失敗しました" };
   }
@@ -57,7 +58,7 @@ export async function createSalary(data: unknown): Promise<ActionResult> {
 /**
  * 手取りを更新する
  */
-export async function updateSalary(id: string, data: unknown): Promise<ActionResult> {
+export async function updateSalary(id: string, data: unknown): Promise<ActionResult<Salary>> {
   const parsed = salarySchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -94,7 +95,7 @@ export async function updateSalary(id: string, data: unknown): Promise<ActionRes
     const [year, month] = parsed.data.month.split("-").map(Number);
     const sortOrder = year * 100 + month;
 
-    await prisma.salary.update({
+    const updatedSalary = await prisma.salary.update({
       where: { id, userId },
       data: {
         month: parsed.data.month,
@@ -107,7 +108,7 @@ export async function updateSalary(id: string, data: unknown): Promise<ActionRes
 
     revalidatePath("/salary");
     revalidatePath("/");
-    return { success: true };
+    return { success: true, data: updatedSalary };
   } catch {
     return { success: false, error: "手取りの更新に失敗しました" };
   }

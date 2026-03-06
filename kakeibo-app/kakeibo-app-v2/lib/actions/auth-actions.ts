@@ -10,6 +10,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from "@/lib/validations/auth";
+import { createDefaultCategories } from "@/lib/actions/category-actions";
 
 // ログイン
 export async function login(data: unknown): Promise<ActionResult> {
@@ -70,6 +71,11 @@ export async function register(data: unknown): Promise<ActionResult> {
     if (error) {
       return { success: false, error: translateAuthError(error.message) };
     }
+
+    // サインアップ成功時にデフォルトカテゴリを自動作成
+    await createDefaultCategories().catch(() => {
+      // カテゴリ作成失敗はサインアップ自体の成功を妨げない
+    });
 
     return { success: true };
   } catch {
