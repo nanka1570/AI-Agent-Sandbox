@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -12,8 +13,8 @@ import { register as registerAction } from "@/lib/actions/auth-actions";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const {
     register,
@@ -28,29 +29,13 @@ export function RegisterForm() {
     const result = await registerAction(data);
 
     if (result.success) {
-      setIsSuccess(true);
-      toast.success("確認メールを送信しました");
+      toast.success("登録が完了しました");
+      router.push("/");
     } else {
       setServerError(result.error);
       toast.error(result.error);
     }
   };
-
-  // 登録成功時のメッセージ表示
-  if (isSuccess) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-md bg-primary/10 p-4 text-center text-sm text-primary">
-          確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。
-        </div>
-        <div className="text-center text-sm">
-          <Link href="/login" className="text-primary hover:underline">
-            ログインページへ戻る
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

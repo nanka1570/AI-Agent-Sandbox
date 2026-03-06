@@ -30,17 +30,19 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
           <div
             key={`${entry.type}-${entry.label}-${index}`}
             className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
-              isSalary ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800" : ""
+              isSalary
+                ? "bg-emerald-950/20 border-emerald-500/30 shadow-[inset_0_1px_12px_oklch(0.70_0.17_160_/_8%)]"
+                : "border-white/10"
             }`}
           >
             {/* アイコン */}
             <div className="flex-shrink-0">
               {entry.isBeforePayDay && !isSalary ? (
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <AlertTriangle className="h-5 w-5 text-amber-500 drop-shadow-[0_0_6px_oklch(0.80_0.15_80_/_50%)]" />
               ) : isSalary ? (
-                <Wallet className="h-5 w-5 text-emerald-500" />
+                <Wallet className="h-5 w-5 text-emerald-400 drop-shadow-[0_0_6px_oklch(0.70_0.17_160_/_50%)]" />
               ) : (
-                <CreditCard className="h-5 w-5 text-blue-500" />
+                <CreditCard className="h-5 w-5 text-cyan-400 drop-shadow-[0_0_6px_oklch(0.75_0.18_180_/_50%)]" />
               )}
             </div>
 
@@ -53,7 +55,7 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
             <div className="flex-1 font-medium text-sm">
               {entry.label}
               {entry.isBeforePayDay && !isSalary && (
-                <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">
+                <span className="text-xs text-amber-400 ml-2">
                   給料日前
                 </span>
               )}
@@ -62,7 +64,7 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
             {/* 金額 */}
             <div
               className={`font-semibold text-sm ${
-                isSalary ? "text-emerald-600" : "text-foreground"
+                isSalary ? "text-emerald-400" : "text-foreground"
               }`}
             >
               {isSalary ? "+" : "-"}

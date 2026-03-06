@@ -22,15 +22,15 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-background/60 backdrop-blur-xl md:hidden">
       <div className="flex items-center justify-around py-2">
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
+            className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-all ${
               isActive(href)
-                ? "text-primary"
+                ? "text-primary drop-shadow-[0_0_8px_oklch(0.75_0.18_180_/_40%)]"
                 : "text-muted-foreground"
             }`}
           >

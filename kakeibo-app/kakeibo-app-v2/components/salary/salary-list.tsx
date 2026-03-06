@@ -87,7 +87,7 @@ export function SalaryList({ salaries, recentAmounts }: SalaryListProps) {
 
       {/* データがない場合 */}
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-8 text-center">
           <Wallet className="size-10 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             手取りがまだ登録されていません

@@ -102,7 +102,7 @@ function SortableCreditCardItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded-lg border bg-card p-4 ${
+      className={`flex items-center gap-3 rounded-lg border border-white/10 bg-card/60 backdrop-blur-sm p-4 ${
         isDragging ? "opacity-50 shadow-lg" : ""
       }`}
     >
@@ -226,7 +226,7 @@ export function CreditCardList({ cards: initialCards }: CreditCardListProps) {
 
       {/* カードがない場合 */}
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-8 text-center">
           <CreditCard className="size-10 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             クレジットカードがまだ登録されていません

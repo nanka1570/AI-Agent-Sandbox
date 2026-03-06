@@ -32,10 +32,10 @@ export function HeaderNav() {
   };
 
   return (
-    <header className="hidden md:flex items-center justify-between border-b bg-background px-6 py-3">
+    <header className="hidden md:flex items-center justify-between border-b border-white/10 bg-background/60 backdrop-blur-xl sticky top-0 z-40 px-6 py-3">
       {/* ロゴ */}
-      <Link href="/" className="text-xl font-bold tracking-tight">
-        kakeibo
+      <Link href="/" className="font-[family-name:var(--font-orbitron)] text-xl font-bold tracking-widest uppercase text-primary drop-shadow-[0_0_10px_oklch(0.75_0.18_180_/_30%)]">
+        Aurora
       </Link>
 
       {/* ナビゲーションリンク */}
@@ -44,10 +44,10 @@ export function HeaderNav() {
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
               isActive(href)
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-primary/15 text-primary shadow-[0_0_10px_oklch(0.75_0.18_180_/_20%)]"
+                : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
             }`}
           >
             <Icon className="size-4" />
