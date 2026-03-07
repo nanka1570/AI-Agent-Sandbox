@@ -7,6 +7,7 @@ import type {
 import { AuthenticationError, RateLimitError } from '../types/index.js';
 import { ToolDispatcher } from './tool-dispatcher.js';
 import { AGENT_DEFAULTS, TOOL_DEFAULTS } from '../constants.js';
+import type { DebugLogger } from '../debug-logger.js';
 
 export class AgentLoop {
   private provider: Provider;
@@ -14,6 +15,8 @@ export class AgentLoop {
   private maxTokens: number;
   private onToken?: (token: string) => void;
   private onToolCall?: (name: string, inputPreview: string) => void;
+  private onThinking?: () => void;
+  private debugLogger?: DebugLogger;
 
   constructor(options: {
     provider: Provider;
@@ -21,12 +24,16 @@ export class AgentLoop {
     maxTokens?: number;
     onToken?: (token: string) => void;
     onToolCall?: (name: string, inputPreview: string) => void;
+    onThinking?: () => void;
+    debugLogger?: DebugLogger;
   }) {
     this.provider = options.provider;
     this.dispatcher = options.dispatcher;
     this.maxTokens = options.maxTokens ?? AGENT_DEFAULTS.MAX_TOKENS;
     this.onToken = options.onToken;
     this.onToolCall = options.onToolCall;
+    this.onThinking = options.onThinking;
+    this.debugLogger = options.debugLogger;
   }
 
   async run(
@@ -66,14 +73,18 @@ export class AgentLoop {
       }
 
       turnCount++;
+      this.onThinking?.();
+      const requestParams = {
+        messages: context.messages,
+        system: context.systemPrompt,
+        tools: this.dispatcher.getToolSchemas(),
+        maxTokens: this.maxTokens,
+      };
+      this.debugLogger?.logRequest(requestParams);
+
       let response;
       try {
-        response = await this.provider.createMessage({
-          messages: context.messages,
-          system: context.systemPrompt,
-          tools: this.dispatcher.getToolSchemas(),
-          maxTokens: this.maxTokens,
-        });
+        response = await this.provider.createMessage(requestParams);
       } catch (error) {
         if (error && typeof error === 'object') {
           const status = ('status' in error ? (error as { status: number }).status : null)
@@ -92,6 +103,8 @@ export class AgentLoop {
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(`API に接続できません: ${detail}`);
       }
+
+      this.debugLogger?.logResponse(response);
 
       const contentBlocks = response.content;
       const stopReason = response.stop_reason;

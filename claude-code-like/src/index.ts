@@ -2,7 +2,9 @@
 
 import { ProviderFactory } from './providers/provider-factory.js';
 import { Repl } from './cli/repl.js';
-import { DEFAULT_CONFIG } from './types/index.js';
+import { loadConfig } from './config-loader.js';
+import { DebugLogger } from './debug-logger.js';
+import { ConversationStore } from './agent/conversation-store.js';
 import { displayWelcome, displayError } from './cli/display.js';
 
 async function main(): Promise<void> {
@@ -30,9 +32,28 @@ async function main(): Promise<void> {
     }
   }
 
+  // --list は Provider 不要なので先に処理
+  if (options.listConversations) {
+    const store = new ConversationStore();
+    const items = await store.list();
+    if (items.length === 0) {
+      console.log('保存された会話はありません');
+    } else {
+      console.log('保存された会話一覧:\n');
+      for (const item of items) {
+        const date = new Date(item.updatedAt).toLocaleString('ja-JP');
+        console.log(`${item.id}`);
+        console.log(`  ${date} - ${item.summary || '(サマリーなし)'}`);
+      }
+    }
+    return;
+  }
+
+  const config = loadConfig();
+
   let providerInfo;
   try {
-    providerInfo = ProviderFactory.create(DEFAULT_CONFIG);
+    providerInfo = ProviderFactory.create(config);
   } catch (error) {
     displayError((error as Error).message);
     process.exit(1);
@@ -40,7 +61,8 @@ async function main(): Promise<void> {
 
   displayWelcome(providerInfo.name, providerInfo.provider.modelId);
 
-  const repl = new Repl(providerInfo.provider, options);
+  const debugLogger = new DebugLogger(options.debug);
+  const repl = new Repl(providerInfo.provider, { ...options, debugLogger });
   await repl.start();
 }
 

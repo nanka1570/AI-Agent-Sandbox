@@ -6,20 +6,24 @@ import { AgentLoop } from '../agent/agent-loop.js';
 import { SystemPromptManager } from '../agent/system-prompt.js';
 import { createToolDispatcher } from '../agent/setup.js';
 import { CommandLoader } from '../loaders/command-loader.js';
+import { ConversationStore } from '../agent/conversation-store.js';
 import {
   displayError,
   displayToken,
   displayToolCall,
   displayNewline,
   displayHelp,
+  startSpinner,
 } from './display.js';
-import type { Provider, ConversationContext } from '../types/index.js';
+import type { Provider, ConversationContext, ConversationRecord } from '../types/index.js';
 import { AuthenticationError } from '../types/index.js';
+import type { DebugLogger } from '../debug-logger.js';
 
 export interface ReplOptions {
   resumeId?: string;
   listConversations?: boolean;
   debug?: boolean;
+  debugLogger?: DebugLogger;
 }
 
 export class Repl {
@@ -31,6 +35,8 @@ export class Repl {
   private commandLoader: CommandLoader | null = null;
   private commandsLoaded = false;
   private abortController: AbortController | null = null;
+  private conversationStore = new ConversationStore();
+  private conversationRecord!: ConversationRecord;
 
   constructor(provider: Provider, options: ReplOptions = {}) {
     this.provider = provider;
@@ -60,8 +66,22 @@ export class Repl {
     this.promptManager = new SystemPromptManager();
     const systemPrompt = this.promptManager.build();
 
+    // 会話の復元 or 新規作成
+    if (this.options.resumeId) {
+      const record = await this.conversationStore.loadById(this.options.resumeId);
+      if (record) {
+        this.conversationRecord = record;
+        console.log(chalk.gray(`会話を復元しました: ${record.summary}`));
+      } else {
+        displayError(`会話ID '${this.options.resumeId}' が見つかりません`);
+        this.conversationRecord = this.createNewRecord();
+      }
+    } else {
+      this.conversationRecord = this.createNewRecord();
+    }
+
     this.context = {
-      messages: [],
+      messages: this.conversationRecord.messages,
       systemPrompt,
       tools: [],
     };
@@ -71,19 +91,31 @@ export class Repl {
       dispatcher,
       onToken: displayToken,
       onToolCall: displayToolCall,
+      onThinking: startSpinner,
+      debugLogger: this.options.debugLogger,
     });
 
     rl.on('close', () => {
       console.log('\nさようなら!');
     });
 
-    // Ctrl+C で実行中のエージェントを中断する
-    rl.on('SIGINT', () => {
+    // SIGINT/SIGTERM 時に会話を即時保存
+    const saveAndExit = (): void => {
+      this.saveConversationSync();
       if (this.abortController) {
         this.abortController.abort();
         this.abortController = null;
         displayNewline();
       }
+    };
+
+    rl.on('SIGINT', () => {
+      saveAndExit();
+    });
+
+    process.on('SIGTERM', () => {
+      this.saveConversationSync();
+      process.exit(0);
     });
 
     while (true) {
@@ -97,12 +129,14 @@ export class Repl {
       const trimmed = input.trim();
       if (!trimmed) continue;
       if (trimmed === '/exit' || trimmed === '/quit' || trimmed === 'exit' || trimmed === 'quit') {
+        await this.saveConversation();
         console.log('さようなら!');
         rl.close();
         break;
       }
 
       await this.handleInput(trimmed);
+      await this.saveConversation();
       displayNewline();
     }
   }
@@ -170,6 +204,48 @@ export class Repl {
       ? this.commandLoader.listCommands().map((c) => ({ name: c.name, description: c.description }))
       : [];
     displayHelp(commands);
+  }
+
+  private createNewRecord(): ConversationRecord {
+    const now = new Date().toISOString();
+    return {
+      id: ConversationStore.generateId(),
+      summary: '',
+      messages: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  /** 会話レコードの状態を最新に同期する */
+  private syncConversationState(): void {
+    this.conversationRecord.messages = this.context.messages;
+    this.conversationRecord.updatedAt = new Date().toISOString();
+    if (!this.conversationRecord.summary && this.context.messages.length > 0) {
+      const first = this.context.messages[0];
+      if (first && typeof first.content === 'string') {
+        this.conversationRecord.summary = first.content.slice(0, 100);
+      }
+    }
+  }
+
+  private async saveConversation(): Promise<void> {
+    this.syncConversationState();
+    try {
+      await this.conversationStore.save(this.conversationRecord);
+    } catch {
+      // 保存失敗は会話を継続
+    }
+  }
+
+  /** SIGINT/SIGTERM ハンドラ用: 同期的に保存（process.exit 前に完了させるため） */
+  private saveConversationSync(): void {
+    this.syncConversationState();
+    try {
+      this.conversationStore.saveSync(this.conversationRecord);
+    } catch {
+      // 保存失敗は無視
+    }
   }
 
   private async runAgent(input: string): Promise<void> {
