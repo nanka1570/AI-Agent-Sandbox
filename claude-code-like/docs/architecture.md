@@ -135,14 +135,14 @@ Agent → Tools → SubAgentTool → Agent（独立コンテキスト）→ Tool
 
 ### 通信セキュリティ
 
-- **通信先**: Anthropic API エンドポイント (`api.anthropic.com`) のみ
+- **通信先**: 選択されたプロバイダーの API エンドポイントのみ（Anthropic / Gemini / Groq / OpenRouter）
 - **プロトコル**: HTTPS（TLS 1.2+）
 - **仲介サービス**: 一切経由しない（SDK がエンドポイントに直接通信）
 
 ### データ保護
 
-- **API キー管理**: 環境変数 `ANTHROPIC_API_KEY` からのみ取得。コード・設定ファイル・ログに記録しない
-- **ログマスキング**: `--debug` 時の通信ログでは API キーを `ANTH****` 形式にマスキング
+- **API キー管理**: 環境変数（`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`）から取得。コード・設定ファイル・ログに記録しない
+- **ログマスキング**: `--debug` 時の通信ログでは API キーをマスキング
 - **ファイルパーミッション**: `~/.claude-code-like/` 配下は `700`（所有者のみアクセス）
 - **テレメトリ**: 一切の利用状況データを外部に送信しない
 
@@ -179,7 +179,7 @@ Agent → Tools → SubAgentTool → Agent（独立コンテキスト）→ Tool
 
 ### 機能拡張性
 
-- **Provider 抽象化（E-04）**: `Provider` インターフェースにより Bedrock / Vertex AI 対応が可能
+- **Provider 抽象化**: `Provider` インターフェースにより Anthropic / Gemini / Groq / OpenRouter に対応済み。新規プロバイダー追加も容易
 - **ツール追加**: `ToolDefinition` インターフェースに準拠すれば新規ツールを追加可能
 - **コマンド/スキル/エージェント**: ファイルベースの定義で、コード変更なしに拡張可能
 
@@ -251,16 +251,16 @@ class MyProvider implements Provider {
 
 - **OS**: Linux, macOS, Windows（WSL 推奨）
 - **Node.js**: 22.0.0 以上
-- **必要な外部依存**: Anthropic API キー（`ANTHROPIC_API_KEY` 環境変数）
+- **必要な外部依存**: いずれかの API キー（`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`）
 
 ### パフォーマンス制約
 
-- ストリーミング速度は Anthropic API のレスポンス速度に依存
+- レスポンス速度は選択された LLM プロバイダーに依存
 - Bash ツールの実行時間はユーザーのコマンド内容に依存
 
 ### セキュリティ制約
 
-- API 通信は Anthropic API のみ対応（Bedrock は E-04 で対応予定）
+- API 通信は登録済みプロバイダー（Anthropic / Gemini / Groq / OpenRouter）のみ対応
 - ファイル操作の範囲制限は行わない（ユーザーの判断に委ねる）
 
 ## 依存関係管理

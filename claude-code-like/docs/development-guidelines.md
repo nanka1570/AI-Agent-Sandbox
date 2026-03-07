@@ -34,6 +34,8 @@ const requiresConfirmation = tool.requiresConfirmation ?? false;
 class AgentLoop { }
 class ToolDispatcher { }
 class AnthropicProvider { }
+class GeminiProvider { }
+class OpenAICompatibleProvider { }
 
 // インターフェース: PascalCase
 interface Provider { }
@@ -324,7 +326,11 @@ VS Code + Dev Containers 拡張機能を使用:
 3. コンテナ起動後、Node.js 22 と npm が自動でセットアップされる
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
+# いずれかの API キーを設定
+export ANTHROPIC_API_KEY="sk-ant-..."   # Anthropic
+# export GEMINI_API_KEY="..."           # Gemini
+# export GROQ_API_KEY="..."             # Groq
+# export OPENROUTER_API_KEY="..."       # OpenRouter
 npm install
 npm run dev
 ```
@@ -339,8 +345,11 @@ cd claude-code-like
 # 2. 依存関係のインストール
 npm install
 
-# 3. 環境変数の設定
-export ANTHROPIC_API_KEY="sk-ant-..."
+# 3. 環境変数の設定（いずれか1つ以上）
+export ANTHROPIC_API_KEY="sk-ant-..."   # Anthropic
+# export GEMINI_API_KEY="..."           # Gemini
+# export GROQ_API_KEY="..."             # Groq
+# export OPENROUTER_API_KEY="..."       # OpenRouter
 
 # 4. 開発モードで起動
 npm run dev

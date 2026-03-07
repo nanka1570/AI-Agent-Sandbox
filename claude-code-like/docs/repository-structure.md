@@ -120,7 +120,9 @@ tools/
 **配置ファイル**:
 - `provider.ts`: Provider インターフェース定義
 - `anthropic.ts`: Anthropic API 実装
-- `provider-factory.ts`: AppConfig に応じた Provider インスタンス生成
+- `gemini.ts`: Gemini API 実装
+- `openai-compatible.ts`: OpenAI 互換 API 実装（Groq / OpenRouter）
+- `provider-factory.ts`: AppConfig に応じた Provider インスタンス生成（自動検出対応）
 
 **命名規則**: kebab-case、プロバイダー名
 
@@ -243,7 +245,7 @@ tests/integration/
 
 #### e2e/
 
-**役割**: CLI 全体の動作確認（モック Provider を使用し、実際の Anthropic API は呼び出さない）
+**役割**: CLI 全体の動作確認（モック Provider を使用し、実際の LLM API は呼び出さない）
 
 ```
 tests/e2e/
@@ -313,7 +315,7 @@ tests/e2e/
 - **インターフェース/型**: PascalCase
   - 例: `ToolDefinition`, `Provider`, `AppConfig`
 - **クラス**: PascalCase
-  - 例: `AgentLoop`, `ToolDispatcher`, `AnthropicProvider`
+  - 例: `AgentLoop`, `ToolDispatcher`, `AnthropicProvider`, `GeminiProvider`
 - **関数**: camelCase
   - 例: `createReadTool`, `parseFrontmatter`
 - **定数**: UPPER_SNAKE_CASE

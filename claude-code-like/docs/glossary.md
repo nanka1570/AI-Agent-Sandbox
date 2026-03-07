@@ -217,11 +217,11 @@ tools: Read, Glob, Grep
 
 ### Provider
 
-**定義**: API 通信を抽象化するインターフェース。Anthropic API への直接通信をデフォルト実装とし、将来の Bedrock 対応に備える
+**定義**: API 通信を抽象化するインターフェース。Anthropic / Gemini / Groq / OpenRouter の4プロバイダーに対応
 
-**説明**: `createMessage(params: CreateMessageParams)` でストリーミングレスポンスを返却。メッセージ形式の変換は Provider 側に持たせる。配置先: `src/providers/provider.ts`（インターフェース定義）。
+**説明**: `createMessage(params: CreateMessageParams)` で汎用型 `LLMResponse` を返却。各プロバイダーが SDK 固有のメッセージ形式変換を内部で行う。配置先: `src/types/provider.ts`（インターフェース定義）。
 
-**関連用語**: AnthropicProvider, ストリーミング, CreateMessageParams
+**関連用語**: AnthropicProvider, GeminiProvider, OpenAICompatibleProvider, LLMResponse, CreateMessageParams
 
 ### ConversationContext
 
@@ -241,17 +241,33 @@ tools: Read, Glob, Grep
 
 ### AnthropicProvider
 
-**定義**: Provider インターフェースの標準実装。Anthropic API へ直接通信し、ストリーミングレスポンスを返却する
+**定義**: Provider インターフェースの Anthropic 実装。`@anthropic-ai/sdk` を使用して Claude API に接続する
 
-**説明**: `@anthropic-ai/sdk` を使用して Anthropic API に接続する。API キーは `ANTHROPIC_API_KEY` 環境変数から取得。`ProviderFactory.create()` によってインスタンス化され、エージェントレイヤーに注入される。配置先: `src/providers/anthropic.ts`。
+**説明**: API キーは `ANTHROPIC_API_KEY` 環境変数から取得。`ProviderFactory.create()` によってインスタンス化され、エージェントレイヤーに注入される。配置先: `src/providers/anthropic.ts`。
 
-**関連用語**: Provider, ストリーミング, ProviderFactory
+**関連用語**: Provider, ProviderFactory, LLMResponse
+
+### GeminiProvider
+
+**定義**: Provider インターフェースの Gemini 実装。`@google/genai` SDK を使用して Google Gemini API に接続する
+
+**説明**: API キーは `GEMINI_API_KEY` 環境変数から取得。Gemini の `functionCall`/`functionResponse` 形式を汎用型に変換する。配置先: `src/providers/gemini.ts`。
+
+**関連用語**: Provider, ProviderFactory, LLMResponse
+
+### OpenAICompatibleProvider
+
+**定義**: Provider インターフェースの OpenAI 互換 API 実装。`openai` パッケージを使用して Groq・OpenRouter 等に接続する
+
+**説明**: API キーは `GROQ_API_KEY` または `OPENROUTER_API_KEY` 環境変数から取得。`baseURL` の切り替えで複数のエンドポイントに対応。配置先: `src/providers/openai-compatible.ts`。
+
+**関連用語**: Provider, ProviderFactory, LLMResponse
 
 ### AppConfig
 
 **定義**: アプリケーション設定を保持する型。`model`, `maxTokens`（デフォルト: 8192）, `timeout`（デフォルト: 120）, `theme`（`'default' | 'dark' | 'light'`、デフォルト: `'default'`）等を含む
 
-**説明**: `model` のデフォルト値は `claude-sonnet-4-20250514`（2026-03-06 時点のデフォルト。Anthropic API 向けモデルID形式）。Bedrock 利用時は BedrockProvider 内で Bedrock 形式に変換するため、AppConfig 側では常に Anthropic 形式で保持する。`~/.claude-code-like/config.json` から読み込み。未設定時はデフォルト値を使用。`provider` フィールドで Provider の切り替えが可能（現在は `'anthropic'` のみ対応、将来 Bedrock 等を追加予定）。
+**説明**: `model` のデフォルト値は空文字（未指定時はプロバイダーのデフォルトモデルを使用）。`~/.claude-code-like/config.json` から読み込み。未設定時はデフォルト値を使用。`provider` フィールドで Provider を明示指定可能（`'anthropic' | 'gemini' | 'groq' | 'openrouter'`）。未指定時は環境変数から自動検出する。
 
 **関連用語**: Provider, ProviderFactory
 
@@ -259,9 +275,9 @@ tools: Read, Glob, Grep
 
 **定義**: AppConfig の `provider` フィールドに応じて適切な Provider インスタンスを生成するファクトリークラス
 
-**説明**: `ProviderFactory.create(config)` を呼び出すと、設定に応じて AnthropicProvider 等のインスタンスを返す。将来 Bedrock 対応する際に新規 Provider を追加する拡張ポイント。配置先: `src/providers/provider-factory.ts`。
+**説明**: `ProviderFactory.create(config)` を呼び出すと、`ProviderInfo`（Provider インスタンス + ProviderName）を返す。`config.provider` 指定時はそのプロバイダーを使用し、未指定時は環境変数の優先順位（ANTHROPIC > GEMINI > GROQ > OPENROUTER）で自動選択する。配置先: `src/providers/provider-factory.ts`。
 
-**関連用語**: Provider, AnthropicProvider, AppConfig
+**関連用語**: Provider, AnthropicProvider, GeminiProvider, OpenAICompatibleProvider, AppConfig
 
 ### CreateMessageParams
 
@@ -289,7 +305,7 @@ tools: Read, Glob, Grep
 
 ### StopReason
 
-**定義**: Anthropic API がメッセージ生成を終了した理由を示す値
+**定義**: LLM がメッセージ生成を終了した理由を示す値
 
 | 値 | 意味 |
 |----|------|
@@ -337,7 +353,7 @@ tools: Read, Glob, Grep
 
 **定義**: AI モデルが応答の中でツール（関数）の呼び出しを要求する仕組み
 
-**説明**: Anthropic API の機能。`stop_reason: "tool_use"` で AI がツール呼び出しを要求し、実行結果を `tool_result` として返すと AI が処理を継続する。
+**説明**: LLM API の機能。`stop_reason: "tool_use"` で AI がツール呼び出しを要求し、実行結果を `tool_result` として返すと AI が処理を継続する。各プロバイダー固有の形式（Anthropic の `tool_use`、Gemini の `functionCall`、OpenAI の `tool_calls`）は Provider 内部で汎用型に変換される。
 
 **本プロジェクトでの用途**: エージェントループの中核メカニズム
 
@@ -351,7 +367,7 @@ tools: Read, Glob, Grep
 
 **本プロジェクトでの用途**: AI 応答のリアルタイム表示
 
-**関連用語**: Provider, AnthropicProvider, エージェントループ
+**関連用語**: Provider, エージェントループ
 
 ### node:readline/promises
 

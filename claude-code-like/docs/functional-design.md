@@ -216,7 +216,7 @@ interface SubAgentToolInput {
 
 ```typescript
 interface AppConfig {
-  model: string;            // デフォルト: "claude-sonnet-4-20250514"（Anthropic API 用。Bedrock 等のプロバイダー固有 ID への変換は Provider 側が行う）
+  model: string;            // デフォルト: 空文字（未指定時はプロバイダーのデフォルトモデルを使用）
   maxTokens: number;        // デフォルト: 8192
   timeout: number;          // Bash タイムアウト秒数、デフォルト: 120
   theme: 'default' | 'dark' | 'light';  // 配色テーマ（将来拡張可能）
@@ -440,19 +440,13 @@ class SystemPromptManager {
 ### API Provider
 
 **責務**:
-- Anthropic API への通信
-- ストリーミングレスポンスの返却
-- 将来の Bedrock 対応のためのインターフェース定義
+- LLM API への通信（Anthropic / Gemini / Groq / OpenRouter）
+- レスポンスを汎用型 `LLMResponse` に変換して返却
 
 ```typescript
 interface Provider {
-  createMessage(params: CreateMessageParams): Promise<Stream>;
+  createMessage(params: CreateMessageParams): Promise<LLMResponse>;
   readonly modelId: string;
-}
-
-class AnthropicProvider implements Provider {
-  constructor(apiKey: string, model: string);
-  createMessage(params: CreateMessageParams): Promise<Stream>;
 }
 
 interface CreateMessageParams {
@@ -463,12 +457,13 @@ interface CreateMessageParams {
 }
 ```
 
-**配置先**: `src/providers/anthropic.ts`
-**依存関係**: @anthropic-ai/sdk
+**プロバイダー実装**:
 
-**追加プロバイダー**:
-- `GeminiProvider` — `@google/genai` SDK を使用（配置先: `src/providers/gemini.ts`）
-- `OpenAICompatibleProvider` — `openai` パッケージで Groq / OpenRouter に対応（配置先: `src/providers/openai-compatible.ts`）
+| クラス | SDK | 配置先 |
+|--------|-----|--------|
+| `AnthropicProvider` | `@anthropic-ai/sdk` | `src/providers/anthropic.ts` |
+| `GeminiProvider` | `@google/genai` | `src/providers/gemini.ts` |
+| `OpenAICompatibleProvider` | `openai` | `src/providers/openai-compatible.ts` |
 
 ### Provider ファクトリー
 
@@ -480,8 +475,8 @@ interface CreateMessageParams {
 ```typescript
 class ProviderFactory {
   static create(config: AppConfig): ProviderInfo;
-  // config.provider が未設定の場合は環境変数から自動検出
-  // API キーは process.env.ANTHROPIC_API_KEY から取得して AnthropicProvider に渡す
+  // config.provider が未設定の場合は環境変数から自動検出（ANTHROPIC > GEMINI > GROQ > OPENROUTER）
+  // 該当プロバイダーの環境変数から API キーを取得
   // 環境変数未設定時は Error をスロー。呼び出し元（src/index.ts）でキャッチして終了メッセージ表示後 process.exit(1)
 }
 ```
@@ -791,10 +786,10 @@ model: sonnet
 
 | 観点 | 対策 |
 |------|------|
-| API キー管理 | 環境変数 `ANTHROPIC_API_KEY` からのみ取得。ファイル保存・ログ出力時はマスキング |
+| API キー管理 | 環境変数（`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`）から取得。ファイル保存・ログ出力時はマスキング |
 | Bash ツール | 実行前に必ずユーザー確認プロンプトを表示 |
 | Write ツール | 既存ファイル上書き時にユーザー確認プロンプトを表示 |
-| 通信先制限 | Anthropic API エンドポイントのみに接続 |
+| 通信先制限 | 選択されたプロバイダーの API エンドポイントのみに接続 |
 | テレメトリ | 一切の外部送信を行わない |
 | 通信ログ | `--debug` でローカルに記録。API キーはマスキング |
 | サブエージェント | `tools` フィールドで使用可能ツールを制限（最小権限の原則） |
@@ -805,9 +800,9 @@ model: sonnet
 
 | エラー種別 | 処理 | ユーザーへの表示 |
 |-----------|------|-----------------|
-| API キー未設定 | 起動時に検出、即座に終了 | "ANTHROPIC_API_KEY 環境変数を設定してください" |
+| API キー未設定 | 起動時に検出、即座に終了 | "API キーが設定されていません。以下のいずれかの環境変数を設定してください: ..." |
 | API レート制限 (429) | リトライなし。エラーメッセージを表示して REPL に戻る | "API レート制限に達しました。しばらく待ってから再試行してください" |
-| API 認証エラー (401) | 即座に終了 | "API キーが無効です。ANTHROPIC_API_KEY を確認してください" |
+| API 認証エラー (401) | 即座に終了 | "API キーが無効です。API キーを確認してください" |
 | ファイル不在 | ツール結果としてエラーを返却 | is_error: true で AI に通知 |
 | Bash タイムアウト | プロセスを kill | is_error: true, "コマンドがタイムアウトしました (120秒)" |
 | コマンド未発見 | エラーメッセージを表示 | "コマンド '[name]' が見つかりません。/help で一覧を確認してください" |
