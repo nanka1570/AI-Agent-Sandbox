@@ -1,16 +1,17 @@
-export type { AppConfig } from './config.js';
+export type { AppConfig, ProviderName } from './config.js';
 export { DEFAULT_CONFIG } from './config.js';
 export type { ToolResult, ToolDefinition, ToolSchema, InputSchema } from './tool.js';
 export type {
   MessageParam,
   ContentBlock,
+  TextBlock,
   ToolUseBlock,
   ToolResultBlockParam,
-  MessageStream,
-  RawMessageStreamEvent,
+  LLMResponse,
   CreateMessageParams,
   Provider,
 } from './provider.js';
+export { isToolResultArray } from './provider.js';
 export type { ConversationContext, ConversationRecord } from './conversation.js';
 export type { CommandDefinition } from './command.js';
 export type { SkillDefinition } from './skill.js';

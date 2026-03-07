@@ -24,9 +24,13 @@ export function displayPrompt(): void {
   process.stdout.write(chalk.green('\n> '));
 }
 
-export function displayWelcome(): void {
-  console.log(chalk.bold('claude-code-like') + ' - AI ペアプログラマー');
-  console.log(chalk.gray('終了: exit | ヘルプ: /help'));
+export function displayWelcome(providerName?: string, modelId?: string): void {
+  console.log(chalk.bold('ClaudeCode-Like AI Agent'));
+  if (providerName) {
+    const modelPart = modelId ? ` (${modelId})` : '';
+    console.log(chalk.gray(`Provider: ${providerName}${modelPart}`));
+  }
+  console.log(chalk.gray('終了: /exit | ヘルプ: /help'));
   console.log();
 }
 

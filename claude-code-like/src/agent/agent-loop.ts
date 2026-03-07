@@ -66,33 +66,33 @@ export class AgentLoop {
       }
 
       turnCount++;
-      let stream;
+      let response;
       try {
-        stream = await this.provider.createMessage({
+        response = await this.provider.createMessage({
           messages: context.messages,
           system: context.systemPrompt,
           tools: this.dispatcher.getToolSchemas(),
           maxTokens: this.maxTokens,
         });
       } catch (error) {
-        // Anthropic SDK の APIError を判定
-        if (error && typeof error === 'object' && 'status' in error) {
-          const apiError = error as { status: number; message: string };
-          if (apiError.status === 401) {
+        if (error && typeof error === 'object') {
+          const status = ('status' in error ? (error as { status: number }).status : null)
+                      ?? ('statusCode' in error ? (error as { statusCode: number }).statusCode : null);
+          if (status === 401) {
             throw new AuthenticationError(
-              'API キーが無効です。ANTHROPIC_API_KEY を確認してください',
+              'API キーが無効です。API キーを確認してください',
             );
           }
-          if (apiError.status === 429) {
+          if (status === 429) {
             throw new RateLimitError(
               'API レート制限に達しました。しばらく待ってから再試行してください',
             );
           }
         }
-        throw new Error('API に接続できません。ネットワーク接続を確認してください');
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`API に接続できません: ${detail}`);
       }
 
-      const response = await stream.finalMessage();
       const contentBlocks = response.content;
       const stopReason = response.stop_reason;
 

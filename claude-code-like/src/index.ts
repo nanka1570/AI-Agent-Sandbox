@@ -3,7 +3,7 @@
 import { ProviderFactory } from './providers/provider-factory.js';
 import { Repl } from './cli/repl.js';
 import { DEFAULT_CONFIG } from './types/index.js';
-import { displayError } from './cli/display.js';
+import { displayWelcome, displayError } from './cli/display.js';
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -30,15 +30,17 @@ async function main(): Promise<void> {
     }
   }
 
-  let provider;
+  let providerInfo;
   try {
-    provider = ProviderFactory.create(DEFAULT_CONFIG);
+    providerInfo = ProviderFactory.create(DEFAULT_CONFIG);
   } catch (error) {
     displayError((error as Error).message);
     process.exit(1);
   }
 
-  const repl = new Repl(provider, options);
+  displayWelcome(providerInfo.name, providerInfo.provider.modelId);
+
+  const repl = new Repl(providerInfo.provider, options);
   await repl.start();
 }
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -6,26 +6,8 @@ import { AgentLoop } from '../../src/agent/agent-loop.js';
 import { ToolDispatcher } from '../../src/agent/tool-dispatcher.js';
 import { SystemPromptManager } from '../../src/agent/system-prompt.js';
 import { registerAllTools } from '../../src/tools/index.js';
-import type { Provider, ConversationContext, MessageStream } from '../../src/types/index.js';
-
-function createMockProvider(responses: Array<{
-  content: Array<{ type: 'text'; text: string } | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }>;
-  stop_reason: string;
-}>): Provider {
-  let callIndex = 0;
-  return {
-    modelId: 'mock-model',
-    createMessage: vi.fn().mockImplementation(async () => {
-      const response = responses[callIndex++];
-      return {
-        finalMessage: async () => ({
-          content: response?.content ?? [{ type: 'text', text: '' }],
-          stop_reason: response?.stop_reason ?? 'end_turn',
-        }),
-      } as unknown as MessageStream;
-    }),
-  };
-}
+import type { ConversationContext } from '../../src/types/index.js';
+import { createMockProvider } from '../helpers/mock-provider.js';
 
 describe('E2E: ファイル操作フロー', () => {
   let tempDir: string;

@@ -1,39 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { AgentLoop } from '../../src/agent/agent-loop.js';
 import { ToolDispatcher } from '../../src/agent/tool-dispatcher.js';
 import { registerAllTools } from '../../src/tools/index.js';
-import type { Provider, ConversationContext, MessageStream } from '../../src/types/index.js';
-
-// モック Provider: finalMessage() を返す簡易実装
-function createMockProvider(
-  responses: Array<{
-    content: Array<
-      | { type: 'text'; text: string }
-      | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
-    >;
-    stop_reason: string;
-  }>,
-): Provider {
-  let callIndex = 0;
-  return {
-    modelId: 'mock-model',
-    createMessage: vi.fn().mockImplementation(async () => {
-      const response = responses[callIndex++];
-      if (!response) {
-        throw new Error('No more mock responses');
-      }
-      return {
-        finalMessage: async () => ({
-          content: response.content,
-          stop_reason: response.stop_reason,
-        }),
-      } as unknown as MessageStream;
-    }),
-  };
-}
+import type { ConversationContext } from '../../src/types/index.js';
+import { createMockProvider } from '../helpers/mock-provider.js';
 
 describe('AgentLoop 統合テスト', () => {
   let tempDir: string;

@@ -11,8 +11,15 @@ graph TB
     AgentLoop[エージェントループ]
     ToolDispatcher[ツールディスパッチャー]
     SystemPrompt[システムプロンプト管理]
+    ProviderFactory[ProviderFactory]
     Provider[API Provider]
-    AnthropicAPI[Anthropic API]
+
+    subgraph LLM_APIs[LLM APIs]
+        AnthropicAPI[Anthropic]
+        GeminiAPI[Gemini]
+        GroqAPI[Groq]
+        OpenRouterAPI[OpenRouter]
+    end
 
     subgraph Tools
         ReadTool[Read]
@@ -42,7 +49,8 @@ graph TB
     AgentLoop --> SystemPrompt
     SystemPrompt --> CLAUDE_MD
     AgentLoop --> Provider
-    Provider --> AnthropicAPI
+    Provider --> ProviderFactory
+    ProviderFactory --> LLM_APIs
     AgentLoop --> ToolDispatcher
     ToolDispatcher --> Tools
     SkillTool --> SkillLoader
@@ -212,7 +220,15 @@ interface AppConfig {
   maxTokens: number;        // デフォルト: 8192
   timeout: number;          // Bash タイムアウト秒数、デフォルト: 120
   theme: 'default' | 'dark' | 'light';  // 配色テーマ（将来拡張可能）
-  provider?: 'anthropic';   // 現在は 'anthropic' のみ。E-04 で 'bedrock' 等を追加予定。型を union に拡張する際はここと ProviderFactory を同時に修正すること
+  provider?: ProviderName;  // 未指定時は環境変数から自動検出（優先順: ANTHROPIC > GEMINI > GROQ > OPENROUTER）
+}
+
+type ProviderName = 'anthropic' | 'gemini' | 'groq' | 'openrouter';
+
+// ProviderFactory の戻り値
+interface ProviderInfo {
+  provider: Provider;
+  name: ProviderName;
 }
 ```
 
@@ -450,15 +466,21 @@ interface CreateMessageParams {
 **配置先**: `src/providers/anthropic.ts`
 **依存関係**: @anthropic-ai/sdk
 
+**追加プロバイダー**:
+- `GeminiProvider` — `@google/genai` SDK を使用（配置先: `src/providers/gemini.ts`）
+- `OpenAICompatibleProvider` — `openai` パッケージで Groq / OpenRouter に対応（配置先: `src/providers/openai-compatible.ts`）
+
 ### Provider ファクトリー
 
 **責務**:
-- AppConfig の `provider` フィールドに応じて Provider インスタンスを生成
+- `config.provider` 指定時はそのプロバイダーを使用
+- 未指定時は環境変数の優先順位（ANTHROPIC > GEMINI > GROQ > OPENROUTER）で自動選択
+- `ProviderInfo`（`Provider` + `ProviderName`）を返す
 
 ```typescript
 class ProviderFactory {
-  static create(config: AppConfig): Provider;
-  // config.provider が未設定または 'anthropic' の場合は AnthropicProvider を返す
+  static create(config: AppConfig): ProviderInfo;
+  // config.provider が未設定の場合は環境変数から自動検出
   // API キーは process.env.ANTHROPIC_API_KEY から取得して AnthropicProvider に渡す
   // 環境変数未設定時は Error をスロー。呼び出し元（src/index.ts）でキャッチして終了メッセージ表示後 process.exit(1)
 }

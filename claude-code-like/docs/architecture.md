@@ -15,6 +15,8 @@
 | 技術 | バージョン | 用途 | 選定理由 |
 |------|-----------|------|----------|
 | @anthropic-ai/sdk | ^0.39.x | Claude API 通信 | 公式 SDK。ストリーミング・Tool Use の型定義が充実 |
+| @google/genai | ^1.x | Gemini API 通信 | Google 公式 SDK。Function Calling 対応 |
+| openai | ^4.x | OpenAI 互換 API 通信 | Groq・OpenRouter 等の OpenAI 互換エンドポイントに対応 |
 | chalk | ^5.x | カラー出力 | ESM ネイティブ対応。軽量でシンプルな API |
 | marked | ^15.x | Markdown パース | 標準的な Markdown パーサー |
 | marked-terminal | ^7.x | ターミナル向け Markdown レンダリング | marked と組み合わせてターミナルに適した出力 |
@@ -43,7 +45,7 @@
 ├──────────────────────────────────────┤
 │   ツールレイヤー                      │ ← 個別ツール実装（Read/Write/Edit/Bash/Glob/Grep/Skill/SubAgent）
 ├──────────────────────────────────────┤
-│   プロバイダーレイヤー                 │ ← API 通信の抽象化（Anthropic / 将来 Bedrock）
+│   プロバイダーレイヤー                 │ ← API 通信の抽象化（Anthropic / Gemini / Groq / OpenRouter）
 └──────────────────────────────────────┘
 ```
 
@@ -72,7 +74,7 @@
 ```
 CLI → Agent → Tools
                ↓
-           Provider → Anthropic API
+           Provider → LLM API (Anthropic / Gemini / Groq / OpenRouter)
 ```
 
 サブエージェントツールのみ例外的に Agent レイヤーを再帰呼び出しする:
@@ -195,14 +197,15 @@ dispatcher.register(myTool);
 
 // 2. 新規 Provider の追加（型定義の詳細は functional-design.md 参照）
 // Provider インターフェース:
-//   createMessage(params: CreateMessageParams): Promise<Stream>
+//   createMessage(params: CreateMessageParams): Promise<LLMResponse>
 //   readonly modelId: string
-class BedrockProvider implements Provider {
-  // 1. Anthropic 形式のメッセージを Bedrock Converse API 形式に変換
-  // 2. @aws-sdk/client-bedrock-runtime で通信
-  // 3. レスポンスを Stream 形式に変換して返却
-  async createMessage(params: CreateMessageParams): Promise<Stream> { /* ... */ }
-  get modelId(): string { return 'anthropic.claude-sonnet-4-20250514-v1:0'; }
+// 対応済みプロバイダー: Anthropic, Gemini, Groq(OpenAI互換), OpenRouter(OpenAI互換)
+class MyProvider implements Provider {
+  // 1. 独自型のメッセージを対象 API 形式に変換
+  // 2. API クライアントで通信
+  // 3. レスポンスを LLMResponse 形式に変換して返却
+  async createMessage(params: CreateMessageParams): Promise<LLMResponse> { /* ... */ }
+  get modelId(): string { return 'my-model-id'; }
 }
 
 // 3. コマンド追加: .commands/my-command.md を配置するだけ

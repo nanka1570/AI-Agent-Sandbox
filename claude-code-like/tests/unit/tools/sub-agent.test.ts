@@ -1,28 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createSubAgentTool } from '../../../src/tools/sub-agent.js';
-import type { Provider, MessageStream } from '../../../src/types/index.js';
-
-function createMockProvider(responses: Array<{
-  content: Array<{ type: 'text'; text: string }>;
-  stop_reason: string;
-}>): Provider {
-  let callIndex = 0;
-  return {
-    modelId: 'mock-model',
-    createMessage: vi.fn().mockImplementation(async () => {
-      const response = responses[callIndex++];
-      return {
-        finalMessage: async () => ({
-          content: response?.content ?? [{ type: 'text', text: '' }],
-          stop_reason: response?.stop_reason ?? 'end_turn',
-        }),
-      } as unknown as MessageStream;
-    }),
-  };
-}
+import { createMockProvider } from '../../helpers/mock-provider.js';
 
 describe('SubAgent ツール', () => {
   let tempDir: string;

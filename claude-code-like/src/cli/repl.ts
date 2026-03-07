@@ -1,13 +1,12 @@
 import { createInterface } from 'node:readline/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import chalk from 'chalk';
 import { AgentLoop } from '../agent/agent-loop.js';
 import { SystemPromptManager } from '../agent/system-prompt.js';
 import { createToolDispatcher } from '../agent/setup.js';
 import { CommandLoader } from '../loaders/command-loader.js';
-import { confirm } from './confirm.js';
 import {
-  displayWelcome,
   displayError,
   displayToken,
   displayToolCall,
@@ -39,8 +38,20 @@ export class Repl {
   }
 
   async start(): Promise<void> {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    // REPL の readline インスタンスを再利用して確認プロンプトを表示する。
+    // 別の readline を作ると process.stdin の競合でクラッシュするため。
+    const onConfirm = async (message: string): Promise<boolean> => {
+      const answer = await rl.question(chalk.yellow(`${message}\n実行しますか? (y/n): `));
+      return answer.trim().toLowerCase() === 'y';
+    };
+
     const dispatcher = createToolDispatcher({
-      onConfirm: confirm,
+      onConfirm,
       provider: this.provider,
     });
 
@@ -60,13 +71,6 @@ export class Repl {
       dispatcher,
       onToken: displayToken,
       onToolCall: displayToolCall,
-    });
-
-    displayWelcome();
-
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
     });
 
     rl.on('close', () => {
@@ -92,7 +96,7 @@ export class Repl {
 
       const trimmed = input.trim();
       if (!trimmed) continue;
-      if (trimmed === 'exit' || trimmed === 'quit') {
+      if (trimmed === '/exit' || trimmed === '/quit' || trimmed === 'exit' || trimmed === 'quit') {
         console.log('さようなら!');
         rl.close();
         break;

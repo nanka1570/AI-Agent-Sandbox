@@ -1,28 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { AgentLoop } from '../../src/agent/agent-loop.js';
 import { ToolDispatcher } from '../../src/agent/tool-dispatcher.js';
 import { SystemPromptManager } from '../../src/agent/system-prompt.js';
 import { registerAllTools } from '../../src/tools/index.js';
-import type { Provider, ConversationContext, MessageStream } from '../../src/types/index.js';
-
-function createMockProvider(responses: Array<{
-  content: Array<{ type: 'text'; text: string }>;
-  stop_reason: string;
-}>): Provider {
-  let callIndex = 0;
-  return {
-    modelId: 'mock-model',
-    createMessage: vi.fn().mockImplementation(async () => {
-      const response = responses[callIndex++];
-      return {
-        finalMessage: async () => ({
-          content: response?.content ?? [{ type: 'text', text: '' }],
-          stop_reason: response?.stop_reason ?? 'end_turn',
-        }),
-      } as unknown as MessageStream;
-    }),
-  };
-}
+import type { ConversationContext } from '../../src/types/index.js';
+import { createMockProvider } from '../helpers/mock-provider.js';
 
 describe('E2E: 基本会話フロー', () => {
   it('ユーザー入力に対してテキスト応答を返す', async () => {
