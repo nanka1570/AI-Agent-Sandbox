@@ -30,7 +30,11 @@ export function createBashTool(options?: { timeout?: number }): ToolDefinition {
           maxBuffer: TOOL_DEFAULTS.BASH_MAX_BUFFER_BYTES,
           killSignal: 'SIGTERM',
         });
-        return { content: stdout || '(コマンドは正常に完了しました)' };
+        const parts: string[] = [];
+        if (stdout) parts.push(stdout);
+        if (stderr) parts.push(`[stderr]\n${stderr}`);
+        parts.push('[exit code: 0]');
+        return { content: parts.join('\n') || '(コマンドは正常に完了しました)' };
       } catch (error: unknown) {
         const execError = error as {
           killed?: boolean;
@@ -47,7 +51,8 @@ export function createBashTool(options?: { timeout?: number }): ToolDefinition {
           };
         }
         const output = execError.stderr || execError.stdout || execError.message || '不明なエラー';
-        return { content: output, is_error: true };
+        const exitCode = execError.code != null ? `\n[exit code: ${execError.code}]` : '';
+        return { content: `${output}${exitCode}`, is_error: true };
       }
     },
   };

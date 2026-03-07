@@ -21,7 +21,7 @@ export function createGrepTool(): ToolDefinition {
       const pattern = input.pattern as string;
       const cwd = (input.path as string | undefined) ?? process.cwd();
       const fileGlob = (input.glob as string | undefined) ?? '**/*';
-      const contextLines = (input.context_lines as number | undefined) ?? 2;
+      const contextLines = (input.context_lines as number | undefined) ?? TOOL_DEFAULTS.GREP_CONTEXT_LINES;
 
       let regex: RegExp;
       try {
