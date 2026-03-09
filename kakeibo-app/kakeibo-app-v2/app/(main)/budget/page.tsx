@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { getCurrentMonthJST } from "@/lib/utils/date";
+import { FIXED_LAST_CATEGORY_NAME, MONTH_PARAM_REGEX } from "@/lib/constants";
 import { CategoryList } from "@/components/categories/category-list";
 import { BudgetSettings } from "@/components/budget/budget-settings";
 
@@ -17,27 +18,27 @@ export default async function BudgetPage({
 }) {
   const params = await searchParams;
   const rawMonth = params.month;
-  const isValidMonth = rawMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(rawMonth);
+  const isValidMonth = rawMonth && MONTH_PARAM_REGEX.test(rawMonth);
   const selectedMonth = isValidMonth ? rawMonth : getCurrentMonthJST();
 
   const userId = await getAuthUserId();
 
-  // カテゴリを取得
-  const categories = await prisma.category.findMany({
-    where: { userId },
-    orderBy: { sortOrder: "asc" },
-  });
+  // カテゴリと予算データを並列取得
+  const [categories, budgets] = await Promise.all([
+    prisma.category.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.budget.findMany({
+      where: { userId, month: selectedMonth },
+    }),
+  ]);
 
   // 「その他」を sortOrder に関わらず末尾にソート
   const sorted = [...categories].sort((a, b) => {
-    if (a.isDefault && a.name === "その他") return 1;
-    if (b.isDefault && b.name === "その他") return -1;
+    if (a.isDefault && a.name === FIXED_LAST_CATEGORY_NAME) return 1;
+    if (b.isDefault && b.name === FIXED_LAST_CATEGORY_NAME) return -1;
     return a.sortOrder - b.sortOrder;
-  });
-
-  // 選択月の予算データを取得
-  const budgets = await prisma.budget.findMany({
-    where: { userId, month: selectedMonth },
   });
 
   return (

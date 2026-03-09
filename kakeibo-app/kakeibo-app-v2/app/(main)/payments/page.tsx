@@ -11,29 +11,27 @@ import { PaymentList } from "@/components/payments/payment-list";
 export default async function PaymentsPage() {
   const userId = await getAuthUserId();
 
-  // 支払い一覧を取得（月降順、sortOrder昇順）
-  const payments = await prisma.payment.findMany({
-    where: { userId },
-    include: {
-      creditCard: { select: { name: true } },
-      category: { select: { name: true, color: true } },
-    },
-    orderBy: [{ month: "desc" }, { sortOrder: "asc" }],
-  });
-
-  // カード一覧を取得
-  const creditCards = await prisma.creditCard.findMany({
-    where: { userId },
-    select: { id: true, name: true },
-    orderBy: { sortOrder: "asc" },
-  });
-
-  // カテゴリ一覧を取得
-  const categories = await prisma.category.findMany({
-    where: { userId },
-    select: { id: true, name: true, color: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  // 支払い・カード・カテゴリを並列取得
+  const [payments, creditCards, categories] = await Promise.all([
+    prisma.payment.findMany({
+      where: { userId },
+      include: {
+        creditCard: { select: { name: true } },
+        category: { select: { name: true, color: true } },
+      },
+      orderBy: [{ month: "desc" }, { sortOrder: "asc" }],
+    }),
+    prisma.creditCard.findMany({
+      where: { userId },
+      select: { id: true, name: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.category.findMany({
+      where: { userId },
+      select: { id: true, name: true, color: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">

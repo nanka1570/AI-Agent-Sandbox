@@ -6,6 +6,7 @@ import { MonthlyExpenseChart } from "@/components/reports/monthly-expense-chart"
 import { CategoryPieChart } from "@/components/reports/category-pie-chart";
 import { AnnualSummary } from "@/components/reports/annual-summary";
 import { YearSelector } from "@/components/reports/year-selector";
+import { getCurrentYearJST } from "@/lib/utils/date";
 
 export default async function ReportsPage({
   searchParams,
@@ -13,7 +14,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ year?: string }>;
 }) {
   const params = await searchParams;
-  const currentYear = new Date().getFullYear();
+  const currentYear = getCurrentYearJST();
   const year = params.year ? Number(params.year) : currentYear;
   const validYear = isNaN(year) ? currentYear : year;
 

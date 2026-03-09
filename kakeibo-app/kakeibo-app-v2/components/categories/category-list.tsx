@@ -34,6 +34,7 @@ import {
   deleteCategory,
   createDefaultCategories,
 } from "@/lib/actions/category-actions";
+import { FIXED_LAST_CATEGORY_NAME } from "@/lib/constants";
 
 interface CategoryItem {
   id: string;
@@ -173,12 +174,12 @@ export function CategoryList({ categories: initialCategories }: CategoryListProp
   const isEmpty = initialCategories.length === 0;
   const [isCreatingDefaults, setIsCreatingDefaults] = useState(false);
 
-  // 「その他」カテゴリを分離
+  // 末尾固定カテゴリを分離
   const otherCategory = initialCategories.find(
-    (c) => c.isDefault && c.name === "その他"
+    (c) => c.isDefault && c.name === FIXED_LAST_CATEGORY_NAME
   );
   const sortableCategories = initialCategories.filter(
-    (c) => !(c.isDefault && c.name === "その他")
+    (c) => !(c.isDefault && c.name === FIXED_LAST_CATEGORY_NAME)
   );
 
   const [items, setItems] = useState(sortableCategories);

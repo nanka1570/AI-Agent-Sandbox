@@ -26,6 +26,7 @@ import {
 import { salarySchema, type SalaryInput } from "@/lib/validations/salary";
 import { createSalary, updateSalary } from "@/lib/actions/salary-actions";
 import { formatCurrency } from "@/lib/utils/format";
+import { LAST_DAY_CODE } from "@/lib/constants";
 
 interface SalaryItem {
   id: string;
@@ -85,7 +86,7 @@ export function SalaryForm({
   });
 
   const payDay = watch("payDay");
-  const isLastDay = payDay === 32;
+  const isLastDay = payDay === LAST_DAY_CODE;
 
   // ダイアログが開くたびにフォームをリセット
   useEffect(() => {

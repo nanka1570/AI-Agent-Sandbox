@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { getDashboardData, type DashboardData } from "@/lib/utils/dashboard";
 import { getCurrentMonthJST } from "@/lib/utils/date";
+import { MONTH_PARAM_REGEX } from "@/lib/constants";
 import { MonthSelector } from "@/components/dashboard/month-selector";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { StatusBreakdown } from "@/components/dashboard/status-breakdown";
@@ -28,7 +29,7 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const rawMonth = params.month;
-  const isValidMonth = rawMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(rawMonth);
+  const isValidMonth = rawMonth && MONTH_PARAM_REGEX.test(rawMonth);
   const selectedMonth = isValidMonth ? rawMonth : getCurrentMonthJST();
 
   const userId = await getAuthUserId();

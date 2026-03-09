@@ -31,7 +31,7 @@ import {
   createCreditCard,
   updateCreditCard,
 } from "@/lib/actions/credit-card-actions";
-import { CARD_BRANDS } from "@/lib/constants";
+import { CARD_BRANDS, LAST_DAY_CODE } from "@/lib/constants";
 
 interface CreditCardItem {
   id: string;
@@ -165,10 +165,10 @@ export function CreditCardForm({
   const confirmationDay = watch("confirmationDay");
 
   // 末日チェック状態の管理
-  const isClosingLastDay = closingDay === 32;
-  const isPaymentLastDay = paymentDay === 32;
+  const isClosingLastDay = closingDay === LAST_DAY_CODE;
+  const isPaymentLastDay = paymentDay === LAST_DAY_CODE;
   const hasConfirmation = confirmationDay !== null && confirmationDay !== undefined;
-  const isConfirmationLastDay = confirmationDay === 32;
+  const isConfirmationLastDay = confirmationDay === LAST_DAY_CODE;
 
   // ダイアログが開くたびにフォームをリセット
   useEffect(() => {

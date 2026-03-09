@@ -57,15 +57,15 @@ export async function deleteBudget(id: string): Promise<ActionResult> {
     const userId = await getAuthUserId();
 
     const budget = await prisma.budget.findUnique({
-      where: { id },
+      where: { id, userId },
     });
 
-    if (!budget || budget.userId !== userId) {
+    if (!budget) {
       return { success: false, error: "予算が見つかりません" };
     }
 
     await prisma.budget.delete({
-      where: { id },
+      where: { id, userId },
     });
 
     revalidatePath("/budget");

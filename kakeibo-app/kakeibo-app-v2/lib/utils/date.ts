@@ -15,12 +15,12 @@ export function getCurrentMonthJST(): string {
 }
 
 export function resolveDay(day: number, year: number, month: number): number {
-  if (day === 32) {
-    const lastDay = endOfMonth(new Date(year, month - 1)).getDate();
-    return lastDay;
-  }
   const lastDay = endOfMonth(new Date(year, month - 1)).getDate();
   return Math.min(day, lastDay);
+}
+
+export function getCurrentYearJST(): number {
+  return getNowJST().getFullYear();
 }
 
 export function getDateFromMonthAndDay(month: string, day: number): Date {

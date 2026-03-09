@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { categorySchema } from "@/lib/validations/category";
-import { DEFAULT_CATEGORIES } from "@/lib/constants";
+import { DEFAULT_CATEGORIES, FIXED_LAST_CATEGORY_NAME, SORT_ORDER_INITIAL } from "@/lib/constants";
 import type { ActionResult } from "@/lib/types";
 import type { Category } from "@prisma/client";
 
@@ -40,7 +40,7 @@ export async function createCategory(data: unknown): Promise<ActionResult<Catego
       where: { userId },
       _max: { sortOrder: true },
     });
-    const nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
+    const nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
     const newCategory = await prisma.category.create({
       data: {
@@ -129,6 +129,10 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
       return { success: false, error: "カテゴリが見つかりません" };
     }
 
+    if (category.isDefault) {
+      return { success: false, error: "デフォルトカテゴリは削除できません" };
+    }
+
     await prisma.category.delete({
       where: { id, userId },
     });
@@ -181,8 +185,8 @@ export async function createDefaultCategories(): Promise<ActionResult> {
 
     // 「その他」を末尾に配置するためにソート
     const sorted = [...DEFAULT_CATEGORIES].sort((a, b) => {
-      if (a.name === "その他") return 1;
-      if (b.name === "その他") return -1;
+      if (a.name === FIXED_LAST_CATEGORY_NAME) return 1;
+      if (b.name === FIXED_LAST_CATEGORY_NAME) return -1;
       return 0;
     });
 

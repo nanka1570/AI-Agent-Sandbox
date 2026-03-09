@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { SalaryForm } from "@/components/salary/salary-form";
 import { deleteSalary } from "@/lib/actions/salary-actions";
-import { formatCurrency, formatMonth } from "@/lib/utils/format";
+import { formatCurrency, formatMonth, formatDay } from "@/lib/utils/format";
 
 interface SalaryItem {
   id: string;
@@ -29,11 +29,6 @@ interface SalaryItem {
 interface SalaryListProps {
   salaries: SalaryItem[];
   recentAmounts: number[];
-}
-
-/** 支給日の表示フォーマット（32は「末日」と表示） */
-function formatPayDay(payDay: number): string {
-  return payDay === 32 ? "末日" : `${payDay}日`;
 }
 
 export function SalaryList({ salaries, recentAmounts }: SalaryListProps) {
@@ -107,7 +102,7 @@ export function SalaryList({ salaries, recentAmounts }: SalaryListProps) {
                     {formatMonth(salary.month)}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    支給日: {formatPayDay(salary.payDay)}
+                    支給日: {formatDay(salary.payDay)}
                   </span>
                 </div>
                 <p className="text-lg font-bold mt-1">

@@ -35,6 +35,7 @@ import {
   deleteCreditCard,
 } from "@/lib/actions/credit-card-actions";
 import { CARD_BRANDS } from "@/lib/constants";
+import { formatDay } from "@/lib/utils/format";
 
 interface CreditCardItem {
   id: string;
@@ -51,11 +52,6 @@ interface CreditCardItem {
 
 interface CreditCardListProps {
   cards: CreditCardItem[];
-}
-
-/** 日付表示のフォーマット（32は「末日」と表示） */
-function formatDay(day: number): string {
-  return day === 32 ? "末日" : `${day}日`;
 }
 
 /** ブランドのラベルを取得する */

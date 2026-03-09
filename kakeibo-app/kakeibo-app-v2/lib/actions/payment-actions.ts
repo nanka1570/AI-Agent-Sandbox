@@ -12,6 +12,7 @@ import { z } from "zod/v4";
 import { determineAutoStatus, getNextStatus } from "@/lib/utils/status";
 import { addMonthsToMonth } from "@/lib/utils/date";
 import type { ActionResult } from "@/lib/types";
+import { SORT_ORDER_INITIAL } from "@/lib/constants";
 import type { PaymentStatus } from "@/lib/constants";
 
 /**
@@ -74,7 +75,7 @@ export async function createPayment(data: unknown): Promise<ActionResult> {
       where: { userId },
       _max: { sortOrder: true },
     });
-    const nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
+    const nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
     await prisma.payment.create({
       data: {
@@ -222,14 +223,15 @@ export async function bulkUpdatePaymentStatus(
 
   try {
     const userId = await getAuthUserId();
+    const validated = statusResult.data;
 
     await prisma.payment.updateMany({
       where: {
         userId,
-        creditCardId,
-        month,
+        creditCardId: validated.creditCardId,
+        month: validated.month,
       },
-      data: { status: newStatus },
+      data: { status: validated.newStatus },
     });
 
     revalidatePath("/payments");
@@ -264,7 +266,7 @@ export async function createRecurringPayments(
       where: { userId },
       _max: { sortOrder: true },
     });
-    let nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
+    let nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
     // 4件分のデータを生成（baseMonth, +1, +2, +3）
     const months = [0, 1, 2, 3].map((offset) =>
@@ -385,7 +387,7 @@ export async function bulkRegisterPayments(
       where: { userId },
       _max: { sortOrder: true },
     });
-    let nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
+    let nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
     // 同一カード・同一月なのでステータス判定は1回のみ実行（N+1解消）
     const status = await getAutoStatusForCard(

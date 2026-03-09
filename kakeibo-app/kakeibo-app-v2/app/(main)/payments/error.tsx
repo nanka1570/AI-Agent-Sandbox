@@ -21,8 +21,13 @@ export default function PaymentsError({
     <div className="flex flex-col items-center justify-center gap-4 py-12">
       <h2 className="text-xl font-semibold">エラーが発生しました</h2>
       <p className="text-sm text-muted-foreground">
-        {error.message || "支払いデータの読み込みに失敗しました"}
+        支払いデータの読み込みに失敗しました
       </p>
+      {error.digest && (
+        <p className="text-[10px] font-mono text-muted-foreground mt-2">
+          Error ID: {error.digest}
+        </p>
+      )}
       <Button onClick={reset}>再試行</Button>
     </div>
   );

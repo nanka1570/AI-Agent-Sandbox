@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { creditCardSchema } from "@/lib/validations/credit-card";
+import { SORT_ORDER_INITIAL } from "@/lib/constants";
 import type { ActionResult } from "@/lib/types";
 import type { CreditCard } from "@prisma/client";
 
@@ -28,7 +29,7 @@ export async function createCreditCard(data: unknown): Promise<ActionResult<Cred
       where: { userId },
       _max: { sortOrder: true },
     });
-    const nextSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
+    const nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
     const newCard = await prisma.creditCard.create({
       data: {

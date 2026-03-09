@@ -71,3 +71,26 @@ export const CHART_THEME = {
 export const YEAR_RANGE = 5;
 
 export const TIMEZONE = "Asia/Tokyo";
+
+/** 末日を表すコード値（日付フィールドで「末日」を指定する場合に使用） */
+export const LAST_DAY_CODE = 32;
+
+/** sortOrder の初期値（新規追加時に aggregate で最大値を取得し +1 する際の基準） */
+export const SORT_ORDER_INITIAL = -1;
+
+/** 末尾に固定配置するデフォルトカテゴリ名 */
+export const FIXED_LAST_CATEGORY_NAME = "その他";
+
+/** 月パラメータの正規表現（yyyy-MM 形式） */
+export const MONTH_PARAM_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/** 認証不要のパブリックパス */
+export const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+] as const;
+
+/** 繰り返し支払いの件数 */
+export const RECURRING_PAYMENT_COUNT = 4;

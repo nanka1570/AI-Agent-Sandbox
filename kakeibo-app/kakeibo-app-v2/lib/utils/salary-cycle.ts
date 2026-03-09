@@ -1,5 +1,6 @@
 import { endOfMonth, addMonths, subDays } from "date-fns";
 import { resolveDay } from "@/lib/utils/date";
+import { LAST_DAY_CODE } from "@/lib/constants";
 
 export interface SalaryCycle {
   start: Date;
@@ -16,7 +17,7 @@ export function calculateSalaryCycle(payDay: number, month: string): SalaryCycle
   if (payDay === 1) {
     // payDay=1の場合: 当月1日〜当月末日
     end = endOfMonth(start);
-  } else if (payDay === 32) {
+  } else if (payDay === LAST_DAY_CODE) {
     // 末日指定: 翌月末日が終了日
     const nextMonth = addMonths(new Date(year, m - 1, 1), 1);
     end = endOfMonth(nextMonth);
