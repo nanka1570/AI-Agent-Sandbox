@@ -1,0 +1,16 @@
+{
+  "name": "転スラ家計簿 - 大賢者家計解析",
+  "short_name": "転スラ家計簿",
+  "description": "手取りでクレカ代が払えるか一目でわかる家計簿アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0E14",
+  "theme_color": "#FFB300",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

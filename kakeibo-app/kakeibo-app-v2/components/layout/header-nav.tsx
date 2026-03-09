@@ -8,6 +8,7 @@ import {
   Wallet,
   Receipt,
   Tag,
+  BarChart3,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const navLinks = [
   { href: "/salary", label: "手取り管理", icon: Wallet },
   { href: "/payments", label: "支払い管理", icon: Receipt },
   { href: "/budget", label: "カテゴリ", icon: Tag },
+  { href: "/reports", label: "レポート", icon: BarChart3 },
 ] as const;
 
 export function HeaderNav() {

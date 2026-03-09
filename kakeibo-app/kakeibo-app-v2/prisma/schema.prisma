@@ -77,7 +77,24 @@ model Category {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   payments Payment[]
+  budgets  Budget[]
 
   @@index([userId, sortOrder])
   @@map("categories")
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  categoryId String   @map("category_id")
+  month      String
+  amount     Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, month])
+  @@index([userId, month])
+  @@map("budgets")
 }

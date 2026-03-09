@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import { PaymentForm } from "@/components/payments/payment-form";
 import { BulkRegisterDialog } from "@/components/payments/bulk-register-dialog";
+import { CsvExportButton } from "@/components/payments/csv-export-button";
 import {
   togglePaymentStatus,
   deletePayment,
@@ -223,6 +224,7 @@ export function PaymentList({
           <ListPlus className="size-4" />
           一括登録
         </Button>
+        <CsvExportButton />
       </div>
 
       {/* フィルター */}

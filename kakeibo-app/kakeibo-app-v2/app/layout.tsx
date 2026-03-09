@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { M_PLUS_1, Share_Tech_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
 
 const mplus1 = M_PLUS_1({
@@ -20,6 +21,16 @@ const sharetech = Share_Tech_Mono({
 export const metadata: Metadata = {
   title: "大賢者 家計解析 | 転スラ家計簿",
   description: "手取りでクレカ代が払えるか一目でわかる家計簿アプリ",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "転スラ家計簿",
+  },
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +43,7 @@ export default function RootLayout({
       <body className={`${mplus1.variable} ${sharetech.variable} antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

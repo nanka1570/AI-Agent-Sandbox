@@ -2,13 +2,24 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
+import { getCurrentMonthJST } from "@/lib/utils/date";
 import { CategoryList } from "@/components/categories/category-list";
+import { BudgetSettings } from "@/components/budget/budget-settings";
 
 /**
- * カテゴリ管理ページ（読み取り専用 Server Component）
- * カテゴリが0件の場合は CategoryList 側でデフォルト作成ボタンを表示する
+ * カテゴリ管理・予算設定ページ
+ * カテゴリ一覧の下に、月別の予算設定セクションを表示する
  */
-export default async function BudgetPage() {
+export default async function BudgetPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const params = await searchParams;
+  const rawMonth = params.month;
+  const isValidMonth = rawMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(rawMonth);
+  const selectedMonth = isValidMonth ? rawMonth : getCurrentMonthJST();
+
   const userId = await getAuthUserId();
 
   // カテゴリを取得
@@ -24,6 +35,11 @@ export default async function BudgetPage() {
     return a.sortOrder - b.sortOrder;
   });
 
+  // 選択月の予算データを取得
+  const budgets = await prisma.budget.findMany({
+    where: { userId, month: selectedMonth },
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -33,6 +49,29 @@ export default async function BudgetPage() {
         </p>
       </div>
       <CategoryList categories={sorted} />
+
+      {/* 予算設定セクション */}
+      {categories.length > 0 && (
+        <section>
+          <div className="section-label">
+            <div className="section-label-line left" />
+            <div className="section-label-tag font-mono">BUDGET</div>
+            <div className="section-label-line right" />
+          </div>
+          <div className="mt-3">
+            <BudgetSettings
+              categories={sorted.map((c) => ({ id: c.id, name: c.name, color: c.color }))}
+              budgets={budgets.map((b) => ({
+                id: b.id,
+                categoryId: b.categoryId,
+                month: b.month,
+                amount: b.amount,
+              }))}
+              selectedMonth={selectedMonth}
+            />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

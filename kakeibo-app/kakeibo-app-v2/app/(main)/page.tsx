@@ -8,6 +8,7 @@ import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { StatusBreakdown } from "@/components/dashboard/status-breakdown";
 import { PaymentSchedule } from "@/components/dashboard/payment-schedule";
 import { FundFlow } from "@/components/dashboard/fund-flow";
+import { BudgetConsumption } from "@/components/dashboard/budget-consumption";
 import { MagicCircleHero } from "@/components/dashboard/magic-circle-hero";
 
 /** 魔法陣周辺の金色パーティクル設定 */
@@ -134,6 +135,21 @@ export default async function DashboardPage({
         </div>
         <FundFlow fundFlow={data.fundFlow} />
       </section>
+
+      {/* 予算消化率 */}
+      {data.budgetConsumption.length > 0 && (
+        <>
+          <div className="py-3"><div className="tensura-divider" /></div>
+          <section className="pb-2">
+            <div className="section-label">
+              <div className="section-label-line left" />
+              <div className="section-label-tag font-mono">BUDGET</div>
+              <div className="section-label-line right" />
+            </div>
+            <BudgetConsumption items={data.budgetConsumption} />
+          </section>
+        </>
+      )}
 
       {/* 最終メッセージ */}
       <div className="mt-4 mb-2 animate-fadein">
