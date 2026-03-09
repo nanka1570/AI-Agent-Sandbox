@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { YEAR_RANGE } from "@/lib/constants";
 
 interface YearSelectorProps {
   selectedYear: number;
@@ -16,7 +17,7 @@ interface YearSelectorProps {
 export function YearSelector({ selectedYear }: YearSelectorProps) {
   const router = useRouter();
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const years = Array.from({ length: YEAR_RANGE }, (_, i) => currentYear - i);
 
   return (
     <Select

@@ -3,6 +3,8 @@
  * 支払いデータをCSV形式に変換する
  */
 
+import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/constants";
+
 interface PaymentForCSV {
   month: string;
   creditCard: { name: string };
@@ -11,13 +13,6 @@ interface PaymentForCSV {
   status: string;
   memo: string | null;
 }
-
-/** ステータスの日本語ラベル */
-const STATUS_LABELS: Record<string, string> = {
-  unconfirmed: "未確定",
-  confirmed: "確定",
-  paid: "支払済",
-};
 
 /**
  * CSV用に値をエスケープする
@@ -43,7 +38,8 @@ export function generatePaymentCSV(payments: PaymentForCSV[]): string {
     const card = escapeCSV(p.creditCard.name);
     const amount = String(p.amount);
     const category = p.category ? escapeCSV(p.category.name) : "";
-    const status = STATUS_LABELS[p.status] ?? p.status;
+    const statusEntry = PAYMENT_STATUSES[p.status as PaymentStatus];
+    const status = statusEntry ? statusEntry.label : p.status;
     const memo = p.memo ? escapeCSV(p.memo) : "";
     return `${month},${card},${amount},${category},${status},${memo}`;
   });

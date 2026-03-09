@@ -51,4 +51,23 @@ export const PAYMENT_STATUS_DISPLAY = {
 
 export type PaymentStatus = keyof typeof PAYMENT_STATUSES;
 
+/** 予算消化率の閾値（%） */
+export const BUDGET_THRESHOLD_WARNING = 80;
+export const BUDGET_THRESHOLD_DANGER = 100;
+
+/** チャート共通テーマカラー（転スラダークテーマ） */
+export const CHART_THEME = {
+  tooltipBg: "#161B28",
+  tooltipBorder: "#FFB300",
+  tooltipBorderRadius: "4px",
+  tooltipText: "#F5E6C8",
+  axisColor: "#8A7560",
+  axisFontSize: 11,
+  gridColor: "rgba(255,179,0,0.1)",
+  accentColor: "#FFB300",
+} as const;
+
+/** 年セレクターに表示する年数 */
+export const YEAR_RANGE = 5;
+
 export const TIMEZONE = "Asia/Tokyo";

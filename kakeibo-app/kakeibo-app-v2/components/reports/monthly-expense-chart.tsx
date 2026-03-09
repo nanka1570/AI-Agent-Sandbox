@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { CHART_THEME } from "@/lib/constants";
 
 interface MonthlyExpenseChartProps {
   data: Array<{ month: string; total: number }>;
@@ -32,30 +33,30 @@ export function MonthlyExpenseChart({ data }: MonthlyExpenseChartProps) {
     <div className="data-panel p-4">
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,179,0,0.1)" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.gridColor} />
           <XAxis
             dataKey="name"
-            tick={{ fill: "#8A7560", fontSize: 11 }}
-            axisLine={{ stroke: "#8A7560" }}
+            tick={{ fill: CHART_THEME.axisColor, fontSize: CHART_THEME.axisFontSize }}
+            axisLine={{ stroke: CHART_THEME.axisColor }}
           />
           <YAxis
-            tick={{ fill: "#8A7560", fontSize: 11 }}
-            axisLine={{ stroke: "#8A7560" }}
+            tick={{ fill: CHART_THEME.axisColor, fontSize: CHART_THEME.axisFontSize }}
+            axisLine={{ stroke: CHART_THEME.axisColor }}
             tickFormatter={(v) => `${(v / 10000).toFixed(0)}万`}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#161B28",
-              border: "1px solid #FFB300",
-              borderRadius: "4px",
-              color: "#F5E6C8",
+              backgroundColor: CHART_THEME.tooltipBg,
+              border: `1px solid ${CHART_THEME.tooltipBorder}`,
+              borderRadius: CHART_THEME.tooltipBorderRadius,
+              color: CHART_THEME.tooltipText,
             }}
             formatter={(value) => [
               `¥${Number(value).toLocaleString()}`,
               "支出",
             ]}
           />
-          <Bar dataKey="金額" fill="#FFB300" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="金額" fill={CHART_THEME.accentColor} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

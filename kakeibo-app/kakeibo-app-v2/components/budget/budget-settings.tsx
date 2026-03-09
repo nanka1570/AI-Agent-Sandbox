@@ -44,23 +44,32 @@ export function BudgetSettings({ categories, budgets, selectedMonth }: BudgetSet
 
   const handleSave = async () => {
     setSaving(true);
+
+    const targets = categories.filter((cat) => {
+      const amountStr = amounts[cat.id];
+      return amountStr && amountStr !== "0" && amountStr !== "";
+    });
+
+    const results = await Promise.allSettled(
+      targets.map((cat) =>
+        upsertBudget({
+          categoryId: cat.id,
+          month: selectedMonth,
+          amount: Number(amounts[cat.id]),
+        })
+      )
+    );
+
     let hasError = false;
-
-    for (const category of categories) {
-      const amountStr = amounts[category.id];
-      if (!amountStr || amountStr === "0" || amountStr === "") continue;
-
-      const result = await upsertBudget({
-        categoryId: category.id,
-        month: selectedMonth,
-        amount: Number(amountStr),
-      });
-
-      if (!result.success) {
-        toast.error(`${category.name}: ${result.error}`);
+    results.forEach((result, i) => {
+      if (result.status === "rejected") {
+        toast.error(`${targets[i].name}: 保存に失敗しました`);
+        hasError = true;
+      } else if (!result.value.success) {
+        toast.error(`${targets[i].name}: ${result.value.error}`);
         hasError = true;
       }
-    }
+    });
 
     if (!hasError) {
       toast.success("予算を保存しました");

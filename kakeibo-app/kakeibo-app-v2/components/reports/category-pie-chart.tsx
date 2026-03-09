@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { CHART_THEME } from "@/lib/constants";
 
 interface CategoryPieChartProps {
   data: Array<{ name: string; color: string; total: number }>;
@@ -42,25 +43,25 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
             label={({ name, percent }) =>
               `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
             }
-            labelLine={{ stroke: "#8A7560" }}
+            labelLine={{ stroke: CHART_THEME.axisColor }}
           >
-            {chartData.map((entry, index) => (
-              <Cell key={index} fill={entry.color} />
+            {chartData.map((entry) => (
+              <Cell key={entry.name} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: "#161B28",
-              border: "1px solid #FFB300",
-              borderRadius: "4px",
-              color: "#F5E6C8",
+              backgroundColor: CHART_THEME.tooltipBg,
+              border: `1px solid ${CHART_THEME.tooltipBorder}`,
+              borderRadius: CHART_THEME.tooltipBorderRadius,
+              color: CHART_THEME.tooltipText,
             }}
             formatter={(value) => [
               `¥${Number(value).toLocaleString()}`,
               "支出",
             ]}
           />
-          <Legend wrapperStyle={{ fontSize: "11px", color: "#8A7560" }} />
+          <Legend wrapperStyle={{ fontSize: `${CHART_THEME.axisFontSize}px`, color: CHART_THEME.axisColor }} />
         </PieChart>
       </ResponsiveContainer>
     </div>

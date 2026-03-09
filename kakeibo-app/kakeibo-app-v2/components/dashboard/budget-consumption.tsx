@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/utils/format";
+import { BUDGET_THRESHOLD_WARNING, BUDGET_THRESHOLD_DANGER } from "@/lib/constants";
 
 interface BudgetConsumptionProps {
   items: Array<{
@@ -23,16 +24,16 @@ export function BudgetConsumption({ items }: BudgetConsumptionProps) {
       {items.map((item) => {
         // 消化率に応じたカラークラスを決定
         const colorClass =
-          item.percentage >= 100
+          item.percentage >= BUDGET_THRESHOLD_DANGER
             ? "bg-destructive"
-            : item.percentage >= 80
+            : item.percentage >= BUDGET_THRESHOLD_WARNING
               ? "bg-sage-amber"
               : "bg-sage-success";
 
         const textColorClass =
-          item.percentage >= 100
+          item.percentage >= BUDGET_THRESHOLD_DANGER
             ? "text-destructive"
-            : item.percentage >= 80
+            : item.percentage >= BUDGET_THRESHOLD_WARNING
               ? "text-sage-amber"
               : "text-sage-success";
 
