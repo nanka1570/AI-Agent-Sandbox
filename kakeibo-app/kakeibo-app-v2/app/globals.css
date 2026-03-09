@@ -107,6 +107,19 @@
   }
 }
 
+/* ===== Autofill 背景色オーバーライド ===== */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* ============================================================
    転スラ（大賢者ラファエル）テーマ
    ============================================================ */

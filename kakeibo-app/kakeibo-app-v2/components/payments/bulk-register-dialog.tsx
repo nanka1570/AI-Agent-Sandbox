@@ -32,8 +32,14 @@ interface BulkRegisterDialogProps {
 
 /** 振り分け行の型 */
 interface AllocationItem {
+  id: string;
   categoryId: string | null;
   amount: number;
+}
+
+/** 一意IDつきの新規振り分け行を生成 */
+function createAllocationItem(): AllocationItem {
+  return { id: crypto.randomUUID(), categoryId: null, amount: 0 };
 }
 
 /**
@@ -57,7 +63,7 @@ export function BulkRegisterDialog({
 
   // STEP2 の振り分けデータ
   const [items, setItems] = useState<AllocationItem[]>([
-    { categoryId: null, amount: 0 },
+    createAllocationItem(),
   ]);
 
   /** 振り分け合計額 */
@@ -73,7 +79,7 @@ export function BulkRegisterDialog({
       setCreditCardId("");
       setMonth("");
       setTotalAmount(0);
-      setItems([{ categoryId: null, amount: 0 }]);
+      setItems([createAllocationItem()]);
     }
     onOpenChange(newOpen);
   };
@@ -91,7 +97,7 @@ export function BulkRegisterDialog({
 
   /** 振り分け行を追加 */
   const addItem = () => {
-    setItems([...items, { categoryId: null, amount: 0 }]);
+    setItems([...items, createAllocationItem()]);
   };
 
   /** 振り分け行を削除 */
@@ -126,21 +132,25 @@ export function BulkRegisterDialog({
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    const result = await bulkRegisterPayments({
-      creditCardId,
-      month,
-      totalAmount,
-      items,
-    });
+    try {
+      const result = await bulkRegisterPayments({
+        creditCardId,
+        month,
+        totalAmount,
+        items,
+      });
 
-    if (result.success) {
-      toast.success("一括登録が完了しました");
-      handleOpenChange(false);
-    } else {
-      toast.error(result.error);
+      if (result.success) {
+        toast.success("一括登録が完了しました");
+        handleOpenChange(false);
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("通信エラーが発生しました");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   return (
@@ -247,7 +257,7 @@ export function BulkRegisterDialog({
             {/* 振り分け行 */}
             <div className="space-y-3">
               {items.map((item, index) => (
-                <div key={index} className="flex items-end gap-2">
+                <div key={item.id} className="flex items-end gap-2">
                   {/* カテゴリ選択 */}
                   <div className="flex-1 space-y-1">
                     <Label className="text-xs">カテゴリ</Label>

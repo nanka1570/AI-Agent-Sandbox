@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getAuthUserId } from "@/lib/supabase/server";
-import { getDashboardData } from "@/lib/utils/dashboard";
+import { getDashboardData, type DashboardData } from "@/lib/utils/dashboard";
 import { getCurrentMonthJST } from "@/lib/utils/date";
 import { MonthSelector } from "@/components/dashboard/month-selector";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
@@ -32,7 +32,13 @@ export default async function DashboardPage({
   const selectedMonth = isValidMonth ? rawMonth : getCurrentMonthJST();
 
   const userId = await getAuthUserId();
-  const data = await getDashboardData(userId, selectedMonth);
+
+  let data: DashboardData | null = null;
+  try {
+    data = await getDashboardData(userId, selectedMonth);
+  } catch (e) {
+    console.error("Dashboard data fetch failed:", e);
+  }
 
   return (
     <div className="space-y-0 relative overflow-hidden">
@@ -72,94 +78,107 @@ export default async function DashboardPage({
       <div className="px-0 pb-4 animate-fadein-2">
         <div className="sage-voice">
           <p className="text-[13px] leading-relaxed text-sage-text">
-            <span className="text-sage-gold font-bold">告。</span>
-            {selectedMonth.replace('-', '年').replace(/^(\d{4})年0?/, '$1年')}月度の家計データ解析が完了しました。
+            {data ? (
+              <>
+                <span className="text-sage-gold font-bold">告。</span>
+                {selectedMonth.replace('-', '年').replace(/^(\d{4})年0?/, '$1年')}月度の家計データ解析が完了しました。
+              </>
+            ) : (
+              <>
+                <span className="text-destructive font-bold">警告。</span>
+                データ取得に失敗しました。しばらく待ってからページを再読み込みしてください。
+              </>
+            )}
           </p>
         </div>
       </div>
 
-      {/* 残高サマリー */}
-      <section className="pb-2">
-        <div className="section-label">
-          <div className="section-label-line left" />
-          <div className="section-label-tag font-mono">BALANCE</div>
-          <div className="section-label-line right" />
-        </div>
-        <SummaryCards
-          salaryTotal={data.salaryTotal}
-          paymentTotal={data.paymentTotal}
-          balance={data.balance}
-          confirmedBalance={data.confirmedBalance}
-        />
-      </section>
-
-      <div className="py-3"><div className="tensura-divider" /></div>
-
-      {/* ステータス別内訳 */}
-      <section className="pb-2">
-        <div className="sage-voice mb-4">
-          <p className="text-[13px] leading-relaxed text-sage-text">
-            <span className="text-sage-gold font-bold">解。</span>
-            ステータス別に分類した結果です。
-          </p>
-        </div>
-        <StatusBreakdown statusBreakdown={data.statusBreakdown} />
-      </section>
-
-      <div className="py-3"><div className="tensura-divider" /></div>
-
-      {/* 支払い予定 */}
-      <section className="pb-2">
-        <div className="section-label">
-          <div className="section-label-line left" />
-          <div className="section-label-tag font-mono">SCHEDULE</div>
-          <div className="section-label-line right" />
-        </div>
-        <PaymentSchedule paymentsByCard={data.paymentsByCard} />
-      </section>
-
-      <div className="py-3"><div className="tensura-divider" /></div>
-
-      {/* 資金繰り */}
-      <section className="pb-2">
-        <div className="sage-voice mb-4">
-          <p className="text-[13px] leading-relaxed text-sage-text">
-            <span className="text-sage-gold font-bold">告。</span>
-            時系列による資金推移を報告します。
-          </p>
-        </div>
-        <div className="section-label">
-          <div className="section-label-line left" />
-          <div className="section-label-tag font-mono">TIMELINE</div>
-          <div className="section-label-line right" />
-        </div>
-        <FundFlow fundFlow={data.fundFlow} />
-      </section>
-
-      {/* 予算消化率 */}
-      {data.budgetConsumption.length > 0 && (
+      {data && (
         <>
-          <div className="py-3"><div className="tensura-divider" /></div>
+          {/* 残高サマリー */}
           <section className="pb-2">
             <div className="section-label">
               <div className="section-label-line left" />
-              <div className="section-label-tag font-mono">BUDGET</div>
+              <div className="section-label-tag font-mono">BALANCE</div>
               <div className="section-label-line right" />
             </div>
-            <BudgetConsumption items={data.budgetConsumption} />
+            <SummaryCards
+              salaryTotal={data.salaryTotal}
+              paymentTotal={data.paymentTotal}
+              balance={data.balance}
+              confirmedBalance={data.confirmedBalance}
+            />
           </section>
+
+          <div className="py-3"><div className="tensura-divider" /></div>
+
+          {/* ステータス別内訳 */}
+          <section className="pb-2">
+            <div className="sage-voice mb-4">
+              <p className="text-[13px] leading-relaxed text-sage-text">
+                <span className="text-sage-gold font-bold">解。</span>
+                ステータス別に分類した結果です。
+              </p>
+            </div>
+            <StatusBreakdown statusBreakdown={data.statusBreakdown} />
+          </section>
+
+          <div className="py-3"><div className="tensura-divider" /></div>
+
+          {/* 支払い予定 */}
+          <section className="pb-2">
+            <div className="section-label">
+              <div className="section-label-line left" />
+              <div className="section-label-tag font-mono">SCHEDULE</div>
+              <div className="section-label-line right" />
+            </div>
+            <PaymentSchedule paymentsByCard={data.paymentsByCard} />
+          </section>
+
+          <div className="py-3"><div className="tensura-divider" /></div>
+
+          {/* 資金繰り */}
+          <section className="pb-2">
+            <div className="sage-voice mb-4">
+              <p className="text-[13px] leading-relaxed text-sage-text">
+                <span className="text-sage-gold font-bold">告。</span>
+                時系列による資金推移を報告します。
+              </p>
+            </div>
+            <div className="section-label">
+              <div className="section-label-line left" />
+              <div className="section-label-tag font-mono">TIMELINE</div>
+              <div className="section-label-line right" />
+            </div>
+            <FundFlow fundFlow={data.fundFlow} />
+          </section>
+
+          {/* 予算消化率 */}
+          {data.budgetConsumption.length > 0 && (
+            <>
+              <div className="py-3"><div className="tensura-divider" /></div>
+              <section className="pb-2">
+                <div className="section-label">
+                  <div className="section-label-line left" />
+                  <div className="section-label-tag font-mono">BUDGET</div>
+                  <div className="section-label-line right" />
+                </div>
+                <BudgetConsumption items={data.budgetConsumption} />
+              </section>
+            </>
+          )}
+
+          {/* 最終メッセージ */}
+          <div className="mt-4 mb-2 animate-fadein">
+            <div className="sage-voice">
+              <p className="text-[13px] leading-relaxed text-sage-text">
+                <span className="text-sage-gold font-bold">解。</span>
+                以上で報告を終了します<span className="cursor" />
+              </p>
+            </div>
+          </div>
         </>
       )}
-
-      {/* 最終メッセージ */}
-      <div className="mt-4 mb-2 animate-fadein">
-        <div className="sage-voice">
-          <p className="text-[13px] leading-relaxed text-sage-text">
-            <span className="text-sage-gold font-bold">解。</span>
-            以上で報告を終了します<span className="cursor" />
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

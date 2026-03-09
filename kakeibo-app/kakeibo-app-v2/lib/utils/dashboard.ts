@@ -249,35 +249,36 @@ export async function getDashboardData(
     return a.sortOrder - b.sortOrder;
   });
 
-  // 10. 予算消化率の集計
-  const budgetRecords = await prisma.budget.findMany({
-    where: { userId, month: selectedMonth },
-    include: { category: true },
-  });
+  // 10. 予算消化率の集計（テーブル未存在時もエラーにしない）
+  let budgetConsumption: DashboardData["budgetConsumption"] = [];
+  try {
+    const budgetRecords = await prisma.budget.findMany({
+      where: { userId, month: selectedMonth },
+      include: { category: true },
+    });
 
-  // 選択月の支払いをカテゴリ別に集計（サイクルではなく利用月ベース）
-  const monthPayments = await prisma.payment.findMany({
-    where: { userId, month: selectedMonth },
-  });
-
-  const spentByCategory: Record<string, number> = {};
-  for (const p of monthPayments) {
-    if (p.categoryId) {
-      spentByCategory[p.categoryId] = (spentByCategory[p.categoryId] ?? 0) + p.amount;
+    // 選択月の支払いをカテゴリ別に集計（既に取得済みの payments を再利用）
+    const spentByCategory: Record<string, number> = {};
+    for (const p of payments.filter((p) => p.month === selectedMonth)) {
+      if (p.categoryId) {
+        spentByCategory[p.categoryId] = (spentByCategory[p.categoryId] ?? 0) + p.amount;
+      }
     }
-  }
 
-  const budgetConsumption = budgetRecords.map((b) => {
-    const spentAmount = spentByCategory[b.categoryId] ?? 0;
-    const percentage = Math.round((spentAmount / b.amount) * 100);
-    return {
-      categoryName: b.category.name,
-      categoryColor: b.category.color,
-      budgetAmount: b.amount,
-      spentAmount,
-      percentage,
-    };
-  });
+    budgetConsumption = budgetRecords.map((b) => {
+      const spentAmount = spentByCategory[b.categoryId] ?? 0;
+      const percentage = b.amount > 0 ? Math.round((spentAmount / b.amount) * 100) : 0;
+      return {
+        categoryName: b.category.name,
+        categoryColor: b.category.color,
+        budgetAmount: b.amount,
+        spentAmount,
+        percentage,
+      };
+    });
+  } catch (e) {
+    console.error("Budget data fetch failed (table may not exist):", e);
+  }
 
   return {
     selectedMonth,
