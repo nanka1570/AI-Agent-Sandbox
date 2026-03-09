@@ -16,7 +16,8 @@ export default async function ReportsPage({
   const params = await searchParams;
   const currentYear = getCurrentYearJST();
   const year = params.year ? Number(params.year) : currentYear;
-  const validYear = isNaN(year) ? currentYear : year;
+  const isValidYear = !isNaN(year) && year >= 2000 && year <= currentYear + 1;
+  const validYear = isValidYear ? year : currentYear;
 
   const userId = await getAuthUserId();
   const data = await getReportData(userId, validYear);

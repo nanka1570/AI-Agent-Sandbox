@@ -16,6 +16,7 @@ export default function ReportsError({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12">
+      <h2 className="text-xl font-semibold">エラーが発生しました</h2>
       <p className="text-sm text-muted-foreground">
         レポートの読み込みに失敗しました
       </p>

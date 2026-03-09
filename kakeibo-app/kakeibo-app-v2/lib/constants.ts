@@ -24,7 +24,7 @@ export const PAYMENT_STATUSES = {
   paid: { label: "支払済", variant: "default" as const },
 } as const;
 
-/** ステータスごとの転スラテーマ表示設定 */
+/** ステータスごとの表示設定（色・ラベル・アイコン） */
 export const PAYMENT_STATUS_DISPLAY = {
   paid: {
     color: "#69F0AE",
@@ -94,3 +94,7 @@ export const PUBLIC_PATHS = [
 
 /** 繰り返し支払いの件数 */
 export const RECURRING_PAYMENT_COUNT = 4;
+
+/** カテゴリ未設定時のフォールバック表示 */
+export const UNCATEGORIZED_LABEL = "未分類";
+export const UNCATEGORIZED_COLOR = "#666666";

@@ -53,5 +53,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   // その他はネットワーク優先
-  event.respondWith(fetch(request).catch(() => caches.match(request)));
+  event.respondWith(
+    fetch(request).catch(async () => {
+      const cached = await caches.match(request);
+      return cached ?? Response.error();
+    })
+  );
 });

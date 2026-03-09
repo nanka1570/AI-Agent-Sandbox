@@ -62,10 +62,14 @@ function getBrandLabel(brandValue: string | null): string | null {
 }
 
 /** 支払月オフセットのラベル */
+const OFFSET_LABELS: Record<number, string> = {
+  0: "当月",
+  1: "翌月",
+  2: "翌々月",
+};
+
 function getOffsetLabel(offset: number): string {
-  if (offset === 0) return "当月";
-  if (offset === 1) return "翌月";
-  return "翌々月";
+  return OFFSET_LABELS[offset] ?? `${offset}ヶ月後`;
 }
 
 /** ソート可能なクレジットカードアイテム */

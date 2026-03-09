@@ -237,7 +237,7 @@ export function BulkRegisterDialog({
                 <span
                   className={`font-medium ${
                     isTotalMatched
-                      ? "text-green-600"
+                      ? "text-sage-success"
                       : "text-destructive"
                   }`}
                 >

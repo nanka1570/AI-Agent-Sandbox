@@ -49,7 +49,7 @@ interface PaymentItem {
   creditCardId: string;
   month: string;
   amount: number;
-  status: string;
+  status: PaymentStatus;
   memo: string | null;
   categoryId: string | null;
   isRecurring: boolean;
@@ -92,13 +92,16 @@ export function PaymentList({
   const [recurringDeleteTarget, setRecurringDeleteTarget] = useState<string | null>(null);
   const [isDeletingRecurring, setIsDeletingRecurring] = useState(false);
 
+  // ステータストグル中のID（多重クリック防止）
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
   // 一括ステータス変更ダイアログ
   const [bulkStatusTarget, setBulkStatusTarget] = useState<{
     creditCardId: string;
     month: string;
     cardName: string;
   } | null>(null);
-  const [bulkNewStatus, setBulkNewStatus] = useState<string>("confirmed");
+  const [bulkNewStatus, setBulkNewStatus] = useState<PaymentStatus>("confirmed");
   const [isUpdatingBulk, setIsUpdatingBulk] = useState(false);
 
   /** フィルター適用後の支払い一覧 */
@@ -136,10 +139,13 @@ export function PaymentList({
 
   /** ステータスをトグルする */
   const handleToggleStatus = async (id: string) => {
+    if (togglingId) return;
+    setTogglingId(id);
     const result = await togglePaymentStatus(id);
     if (!result.success) {
       toast.error(result.error ?? "ステータスの変更に失敗しました");
     }
+    setTogglingId(null);
   };
 
   /** 単体削除を実行する */
@@ -186,7 +192,7 @@ export function PaymentList({
     );
     if (result.success) {
       const statusLabel =
-        PAYMENT_STATUSES[bulkNewStatus as PaymentStatus]?.label ?? bulkNewStatus;
+        PAYMENT_STATUSES[bulkNewStatus]?.label ?? bulkNewStatus;
       toast.success(`一括で「${statusLabel}」に変更しました`);
     } else {
       toast.error(result.error ?? "一括変更に失敗しました");
@@ -369,7 +375,7 @@ export function PaymentList({
                   {/* ステータス */}
                   <TableCell>
                     <PaymentStatusBadge
-                      status={payment.status as PaymentStatus}
+                      status={payment.status}
                       onClick={() => handleToggleStatus(payment.id)}
                     />
                   </TableCell>
@@ -512,14 +518,16 @@ export function PaymentList({
           </DialogHeader>
           <div className="space-y-3">
             <Label>変更先ステータス</Label>
-            <Select value={bulkNewStatus} onValueChange={setBulkNewStatus}>
+            <Select value={bulkNewStatus} onValueChange={(v) => setBulkNewStatus(v as PaymentStatus)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="confirmed">確定</SelectItem>
-                <SelectItem value="paid">支払済</SelectItem>
-                <SelectItem value="unconfirmed">未確定</SelectItem>
+                {(Object.entries(PAYMENT_STATUSES) as [PaymentStatus, (typeof PAYMENT_STATUSES)[PaymentStatus]][]).map(
+                  ([value, { label }]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>

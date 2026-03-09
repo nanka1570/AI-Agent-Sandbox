@@ -16,18 +16,18 @@ interface MonthlyExpenseChartProps {
 }
 
 export function MonthlyExpenseChart({ data }: MonthlyExpenseChartProps) {
-  const chartData = data.map((d) => ({
-    name: d.month.split("-")[1] + "月",
-    金額: d.total,
-  }));
-
-  if (data.every((d) => d.total === 0)) {
+  if (data.length === 0 || data.every((d) => d.total === 0)) {
     return (
       <div className="data-panel p-6 text-center text-sm text-muted-foreground">
         この年のデータがありません
       </div>
     );
   }
+
+  const chartData = data.map((d) => ({
+    name: d.month.split("-")[1] + "月",
+    金額: d.total,
+  }));
 
   return (
     <div className="data-panel p-4">

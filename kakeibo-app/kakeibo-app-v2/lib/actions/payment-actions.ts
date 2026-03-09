@@ -12,7 +12,7 @@ import { z } from "zod/v4";
 import { determineAutoStatus, getNextStatus } from "@/lib/utils/status";
 import { addMonthsToMonth } from "@/lib/utils/date";
 import type { ActionResult } from "@/lib/types";
-import { SORT_ORDER_INITIAL } from "@/lib/constants";
+import { SORT_ORDER_INITIAL, MONTH_PARAM_REGEX, RECURRING_PAYMENT_COUNT } from "@/lib/constants";
 import type { PaymentStatus } from "@/lib/constants";
 
 /**
@@ -187,7 +187,7 @@ export async function togglePaymentStatus(
       return { success: false, error: "支払いデータが見つかりません" };
     }
 
-    const nextStatus = getNextStatus(payment.status as PaymentStatus);
+    const nextStatus = getNextStatus(payment.status as PaymentStatus); // Prisma returns string from DB
 
     await prisma.payment.update({
       where: { id, userId },
@@ -208,12 +208,12 @@ export async function togglePaymentStatus(
 export async function bulkUpdatePaymentStatus(
   creditCardId: string,
   month: string,
-  newStatus: string
+  newStatus: PaymentStatus
 ): Promise<ActionResult> {
   // パラメータのバリデーション
   const paramsSchema = z.object({
     creditCardId: z.string().min(1),
-    month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    month: z.string().regex(MONTH_PARAM_REGEX),
     newStatus: z.enum(["unconfirmed", "confirmed", "paid"]),
   });
   const statusResult = paramsSchema.safeParse({ creditCardId, month, newStatus });
@@ -268,9 +268,8 @@ export async function createRecurringPayments(
     });
     let nextSortOrder = (maxSortOrder._max.sortOrder ?? SORT_ORDER_INITIAL) + 1;
 
-    // 4件分のデータを生成（baseMonth, +1, +2, +3）
-    const months = [0, 1, 2, 3].map((offset) =>
-      addMonthsToMonth(parsed.data.month, offset)
+    const months = Array.from({ length: RECURRING_PAYMENT_COUNT }, (_, i) =>
+      addMonthsToMonth(parsed.data.month, i)
     );
 
     // カード情報を1回だけ取得し、各月のステータスを判定（N+1解消）

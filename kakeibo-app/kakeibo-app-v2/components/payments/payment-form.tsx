@@ -29,6 +29,7 @@ import {
   updatePayment,
   createRecurringPayments,
 } from "@/lib/actions/payment-actions";
+import { RECURRING_PAYMENT_COUNT } from "@/lib/constants";
 
 interface PaymentFormProps {
   /** 編集対象の支払い（新規作成時は undefined） */
@@ -117,7 +118,7 @@ export function PaymentForm({
         const message = isEditing
           ? "支払いを更新しました"
           : formData.isRecurring
-            ? "繰り返し支払い（4件）を登録しました"
+            ? `繰り返し支払い（${RECURRING_PAYMENT_COUNT}件）を登録しました`
             : "支払いを登録しました";
         toast.success(message);
         reset();
@@ -261,7 +262,7 @@ export function PaymentForm({
                 )}
               />
               <Label className="text-sm font-normal">
-                繰り返し登録（指定月から4ヶ月分を一括登録）
+                繰り返し登録（指定月から{RECURRING_PAYMENT_COUNT}ヶ月分を一括登録）
               </Label>
             </div>
           )}
@@ -269,7 +270,7 @@ export function PaymentForm({
           {/* 繰り返し説明文 */}
           {!isEditing && isRecurring && (
             <p className="text-xs text-muted-foreground rounded-md bg-muted p-3">
-              指定した利用月を起点に、翌月・翌々月・3ヶ月後の計4件が同じ内容で登録されます。
+              指定した利用月を起点に、翌月・翌々月・3ヶ月後の計{RECURRING_PAYMENT_COUNT}件が同じ内容で登録されます。
               同一の繰り返しグループとして管理され、一括削除が可能です。
             </p>
           )}
@@ -288,7 +289,7 @@ export function PaymentForm({
                 : isEditing
                   ? "更新"
                   : isRecurring
-                    ? "4件登録"
+                    ? `${RECURRING_PAYMENT_COUNT}件登録`
                     : "登録"}
             </Button>
           </DialogFooter>

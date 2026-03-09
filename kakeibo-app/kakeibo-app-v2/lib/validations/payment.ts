@@ -1,8 +1,9 @@
 import { z } from "zod/v4";
+import { MONTH_PARAM_REGEX } from "@/lib/constants";
 
 export const paymentSchema = z.object({
   creditCardId: z.string().min(1, "カードを選択してください"),
-  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "YYYY-MM 形式で入力してください"),
+  month: z.string().regex(MONTH_PARAM_REGEX, "YYYY-MM 形式で入力してください"),
   amount: z.number().int().min(1, "1円以上で入力してください"),
   categoryId: z.string().nullable().optional(),
   memo: z
@@ -28,7 +29,7 @@ export type RecurringPaymentInput = z.infer<typeof recurringPaymentSchema>;
 
 export const bulkRegisterSchema = z.object({
   creditCardId: z.string().min(1, "カードを選択してください"),
-  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "YYYY-MM 形式で入力してください"),
+  month: z.string().regex(MONTH_PARAM_REGEX, "YYYY-MM 形式で入力してください"),
   totalAmount: z.number().int().min(1, "1円以上で入力してください"),
   items: z
     .array(

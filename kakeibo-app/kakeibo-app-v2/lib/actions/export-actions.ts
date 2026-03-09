@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { generatePaymentCSV } from "@/lib/utils/csv";
 import type { ActionResult } from "@/lib/types";
+import { MONTH_PARAM_REGEX } from "@/lib/constants";
 
 /**
  * 支払いデータをCSV文字列として生成するServer Action
@@ -12,6 +13,9 @@ import type { ActionResult } from "@/lib/types";
 export async function exportPaymentsCSV(
   month?: string
 ): Promise<ActionResult<string>> {
+  if (month && !MONTH_PARAM_REGEX.test(month)) {
+    return { success: false, error: "月の形式が正しくありません" };
+  }
   try {
     const userId = await getAuthUserId();
 

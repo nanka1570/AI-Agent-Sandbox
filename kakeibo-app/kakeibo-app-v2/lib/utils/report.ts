@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { UNCATEGORIZED_LABEL, UNCATEGORIZED_COLOR } from "@/lib/constants";
 
 export interface ReportData {
   year: number;
@@ -59,8 +60,8 @@ export async function getReportData(
     { name: string; color: string; total: number }
   >();
   payments.forEach((p) => {
-    const name = p.category?.name ?? "未分類";
-    const color = p.category?.color ?? "#666666";
+    const name = p.category?.name ?? UNCATEGORIZED_LABEL;
+    const color = p.category?.color ?? UNCATEGORIZED_COLOR;
     const key = name;
     const existing = categoryMap.get(key);
     if (existing) {
