@@ -1,28 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Zen_Maru_Gothic } from "next/font/google";
+import { M_PLUS_1, Share_Tech_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const mplus1 = M_PLUS_1({
+  variable: "--font-mplus1",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sharetech = Share_Tech_Mono({
+  variable: "--font-share-tech-mono",
   subsets: ["latin"],
-});
-
-const zenMaruGothic = Zen_Maru_Gothic({
-  variable: "--font-zen-maru",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "kakeibo",
+  title: "大賢者 家計解析 | 転スラ家計簿",
   description: "手取りでクレカ代が払えるか一目でわかる家計簿アプリ",
 };
 
@@ -33,13 +29,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${zenMaruGothic.variable} antialiased`}>
-        <div className="comic-bg" aria-hidden="true">
-          <div className="comic-burst" />
-        </div>
-        <div className="relative z-10">
-          {children}
-        </div>
+      <body className={`${mplus1.variable} ${sharetech.variable} antialiased`}>
+        {children}
         <Toaster richColors position="top-right" />
       </body>
     </html>

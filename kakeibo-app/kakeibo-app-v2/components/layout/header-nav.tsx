@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions/auth-actions";
 
-/** PC用ナビゲーションリンクの定義 */
 const navLinks = [
   { href: "/", label: "ダッシュボード", icon: Home },
   { href: "/credit-cards", label: "クレカ管理", icon: CreditCard },
@@ -25,48 +24,54 @@ const navLinks = [
 export function HeaderNav() {
   const pathname = usePathname();
 
-  /** パスがアクティブかどうかを判定する */
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
 
   return (
-    <header className="hidden md:flex items-center justify-between border-b-3 border-foreground bg-white sticky top-0 z-40 px-6 py-3">
-      {/* ロゴ */}
-      <Link href="/" className="font-[family-name:var(--font-zen-maru)] text-xl font-bold text-primary uppercase tracking-wider">
-        kakeibo
-      </Link>
+    <header className="hidden md:block sticky top-0 z-40">
+      <div className="flex items-center justify-between bg-secondary border-b border-border px-6 py-3">
+        {/* ロゴ */}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-slime-purple flex items-center justify-center text-sm font-black text-white shadow-[0_0_12px_rgba(6,147,227,0.3)]">
+            転
+          </div>
+          <div>
+            <p className="font-bold text-sm text-foreground tracking-wider">転スラ家計簿</p>
+            <p className="font-mono text-[9px] text-muted-foreground tracking-[0.15em]">TENSURA KAKEIBO</p>
+          </div>
+        </Link>
 
-      {/* ナビゲーションリンク */}
-      <nav className="flex items-center gap-1">
-        {navLinks.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-all ${
-              isActive(href)
-                ? "bg-secondary text-foreground border-2 border-foreground shadow-[2px_2px_0px_oklch(0.50_0.01_280)]"
-                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-            }`}
-          >
-            <Icon className="size-4" />
-            {label}
-          </Link>
-        ))}
-      </nav>
+        {/* ナビゲーション */}
+        <nav className="flex items-center gap-1">
+          {navLinks.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`relative flex items-center gap-2 rounded-md px-3 py-2 text-xs font-bold tracking-wider transition-all ${
+                isActive(href)
+                  ? "text-slime-cyan-bright bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <Icon className="size-3.5" />
+              {label}
+              {isActive(href) && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-sm bg-gradient-to-r from-accent to-slime-purple" />
+              )}
+            </Link>
+          ))}
+        </nav>
 
-      {/* ログアウトボタン */}
-      <form
-        action={async () => {
-          await logout();
-        }}
-      >
-        <Button variant="ghost" size="sm" type="submit">
-          <LogOut className="size-4" />
-          ログアウト
-        </Button>
-      </form>
+        {/* ログアウト */}
+        <form action={async () => { await logout(); }}>
+          <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground hover:text-foreground">
+            <LogOut className="size-4" />
+            ログアウト
+          </Button>
+        </form>
+      </div>
     </header>
   );
 }

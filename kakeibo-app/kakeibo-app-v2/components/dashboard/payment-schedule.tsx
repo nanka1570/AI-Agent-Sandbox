@@ -7,30 +7,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatMonth } from "@/lib/utils/format";
-import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/constants";
+import { PAYMENT_STATUS_DISPLAY, type PaymentStatus } from "@/lib/constants";
 import type { DashboardData } from "@/lib/utils/dashboard";
 
 interface PaymentScheduleProps {
   paymentsByCard: DashboardData["paymentsByCard"];
 }
 
-/**
- * 支払い予定テーブル
- * カードごとに折りたたみ表示（初期状態: 全カード展開）
- */
 export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
-  // 全カードの展開状態を管理（初期: 全て展開）
   const [openCards, setOpenCards] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     paymentsByCard.forEach((group) => {
@@ -39,7 +25,6 @@ export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
     return initial;
   });
 
-  /** カードの展開/折りたたみを切り替える */
   const toggleCard = (cardId: string) => {
     setOpenCards((prev) => ({
       ...prev,
@@ -56,23 +41,23 @@ export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 animate-fadein-3">
       {paymentsByCard.map((group) => (
         <Collapsible
           key={group.card.id}
           open={openCards[group.card.id]}
           onOpenChange={() => toggleCard(group.card.id)}
         >
-          <div className="flex items-center justify-between rounded-lg border-2 border-foreground bg-secondary/50 px-4 py-3 shadow-[2px_2px_0px_oklch(0.50_0.01_280)]">
+          <div className="flex items-center justify-between rounded-md border border-border bg-secondary px-4 py-3">
             <div className="flex items-center gap-3">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-0 h-auto">
+                <Button variant="ghost" size="sm" className="p-0 h-auto text-muted-foreground hover:text-foreground">
                   <ChevronsUpDown className="h-4 w-4" />
                   <span className="sr-only">切り替え</span>
                 </Button>
               </CollapsibleTrigger>
               <div>
-                <span className="font-medium">{group.card.name}</span>
+                <span className="font-medium text-sage-text">{group.card.name}</span>
                 {group.card.brand && (
                   <span className="text-xs text-muted-foreground ml-2">
                     ({group.card.brand})
@@ -80,72 +65,55 @@ export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
                 )}
               </div>
             </div>
-            <span className="font-semibold">
+            <span className="font-mono font-semibold text-sage-gold tracking-wider">
               {formatCurrency(group.subtotal)}
             </span>
           </div>
 
           <CollapsibleContent>
-            <div className="mt-1 rounded-lg border">
+            <div className="mt-1 space-y-1.5 pl-2">
               {group.payments.length === 0 ? (
                 <p className="px-4 py-6 text-sm text-muted-foreground text-center">
                   このサイクルに支払いはありません
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>利用月</TableHead>
-                        <TableHead className="text-right">金額</TableHead>
-                        <TableHead>カテゴリ</TableHead>
-                        <TableHead>ステータス</TableHead>
-                        <TableHead>メモ</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.payments.map((payment) => {
-                        const statusConfig =
-                          PAYMENT_STATUSES[payment.status as PaymentStatus];
-                        return (
-                          <TableRow key={payment.id}>
-                            <TableCell>
+                group.payments.map((payment) => {
+                  const status = payment.status as PaymentStatus;
+                  const display = PAYMENT_STATUS_DISPLAY[status] || PAYMENT_STATUS_DISPLAY.unconfirmed;
+                  return (
+                    <div
+                      key={payment.id}
+                      className={`data-panel p-3 px-4 ${display.isPulsing ? "stream-bg" : ""}`}
+                      style={{ borderLeft: `2px solid ${display.color}` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`status-dot ${display.isPulsing ? "animate-pulse-slow" : ""}`}
+                            style={{ background: display.color, boxShadow: `0 0 6px ${display.color}66` }}
+                          />
+                          <div>
+                            <p className="text-[13px] text-sage-text">
+                              {payment.category?.name || formatMonth(payment.month)}
+                            </p>
+                            <p className="font-mono text-[9px] text-muted-foreground tracking-wider">
                               {formatMonth(payment.month)}
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {formatCurrency(payment.amount)}
-                            </TableCell>
-                            <TableCell>
-                              {payment.category ? (
-                                <Badge
-                                  variant="outline"
-                                  style={{
-                                    borderColor: payment.category.color,
-                                    color: payment.category.color,
-                                  }}
-                                >
-                                  {payment.category.name}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {statusConfig && (
-                                <Badge variant={statusConfig.variant}>
-                                  {statusConfig.label}
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                              {payment.memo || "-"}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                              {payment.memo && ` · ${payment.memo}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-[13px] tracking-wider text-sage-text">
+                            {formatCurrency(payment.amount)}
+                          </p>
+                          <p className={`font-mono text-[7px] ${display.colorClass} tracking-[0.2em] ${display.isPulsing ? "animate-pulse-slow" : ""}`}>
+                            {display.engLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </CollapsibleContent>

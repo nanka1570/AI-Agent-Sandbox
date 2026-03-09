@@ -24,6 +24,31 @@ export const PAYMENT_STATUSES = {
   paid: { label: "支払済", variant: "default" as const },
 } as const;
 
+/** ステータスごとの転スラテーマ表示設定 */
+export const PAYMENT_STATUS_DISPLAY = {
+  paid: {
+    color: "#69F0AE",
+    colorClass: "text-sage-success",
+    engLabel: "EXECUTED",
+    icon: "●",
+    isPulsing: false,
+  },
+  confirmed: {
+    color: "#FFB300",
+    colorClass: "text-sage-gold",
+    engLabel: "CONFIRMED",
+    icon: "●",
+    isPulsing: false,
+  },
+  unconfirmed: {
+    color: "#FF8F00",
+    colorClass: "text-sage-gold-deep",
+    engLabel: "ANALYZING",
+    icon: "◌",
+    isPulsing: true,
+  },
+} as const;
+
 export type PaymentStatus = keyof typeof PAYMENT_STATUSES;
 
 export const TIMEZONE = "Asia/Tokyo";

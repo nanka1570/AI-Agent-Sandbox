@@ -10,15 +10,9 @@ interface MonthSelectorProps {
   selectedMonth: string;
 }
 
-/**
- * 月セレクター
- * 前月・次月ボタンで表示月を切り替える
- * URL の searchParams を使って月を管理する
- */
 export function MonthSelector({ selectedMonth }: MonthSelectorProps) {
   const router = useRouter();
 
-  /** 月を変更し、URL を更新する */
   const handleMonthChange = (offset: number) => {
     const newMonth = addMonthsToMonth(selectedMonth, offset);
     router.push(`/?month=${newMonth}`);
@@ -34,7 +28,7 @@ export function MonthSelector({ selectedMonth }: MonthSelectorProps) {
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="text-lg font-bold min-w-[140px] text-center text-foreground border-2 border-foreground rounded-lg px-4 py-1 bg-secondary shadow-[2px_2px_0px_oklch(0.50_0.01_280)]">
+      <span className="font-mono text-sm tracking-[0.15em] min-w-[140px] text-center text-slime-cyan-bright border border-accent/25 rounded bg-accent/10 px-4 py-1.5">
         {formatMonth(selectedMonth)}
       </span>
       <Button

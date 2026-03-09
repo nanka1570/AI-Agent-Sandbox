@@ -1,17 +1,19 @@
 import { format } from "date-fns";
-import { AlertTriangle, Wallet, CreditCard } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
+import { PAYMENT_STATUS_DISPLAY } from "@/lib/constants";
 import type { DashboardData } from "@/lib/utils/dashboard";
 
 interface FundFlowProps {
   fundFlow: DashboardData["fundFlow"];
 }
 
-/**
- * 資金繰りセクション
- * 給料日と各カードの引き落とし日を時系列で表示
- * 給料日より前の引き落としには警告アイコンを表示
- */
+/** タイムラインノードの追加表示設定（共通定義にない部分） */
+const NODE_STYLES = {
+  paid: { nodeClass: "done", nodeStyle: {} },
+  confirmed: { nodeClass: "", nodeStyle: {} },
+  unconfirmed: { nodeClass: "", nodeStyle: { borderColor: PAYMENT_STATUS_DISPLAY.unconfirmed.color } },
+} as const;
+
 export function FundFlow({ fundFlow }: FundFlowProps) {
   if (fundFlow.length === 0) {
     return (
@@ -21,64 +23,87 @@ export function FundFlow({ fundFlow }: FundFlowProps) {
     );
   }
 
+  const hasBeforePayDayWarning = fundFlow.some(
+    (entry) => entry.isBeforePayDay && entry.type !== "salary"
+  );
+
   return (
-    <div className="space-y-2">
-      {fundFlow.map((entry, index) => {
-        const isSalary = entry.type === "salary";
+    <div className="animate-fadein-4">
+      <div className="relative pl-9 pb-2">
+        <div className="tl-track" />
 
-        return (
-          <div
-            key={`${entry.type}-${entry.label}-${index}`}
-            className={`flex items-center gap-3 rounded-lg border-2 border-foreground px-4 py-3 ${
-              isSalary
-                ? "bg-[oklch(0.92_0.08_150)] shadow-[3px_3px_0px_oklch(0.40_0.15_150)]"
-                : "bg-white shadow-[2px_2px_0px_oklch(0.50_0.01_280)]"
-            }`}
-          >
-            {/* アイコン */}
-            <div className="flex-shrink-0">
-              {entry.isBeforePayDay && !isSalary ? (
-                <span className="bg-secondary rounded-lg p-1.5 border-2 border-foreground inline-flex">
-                  <AlertTriangle className="h-5 w-5 text-foreground" />
-                </span>
-              ) : isSalary ? (
-                <span className="bg-[oklch(0.55_0.20_150)] rounded-lg p-1.5 border-2 border-foreground inline-flex">
-                  <Wallet className="h-5 w-5 text-white" />
-                </span>
-              ) : (
-                <span className="bg-accent rounded-lg p-1.5 border-2 border-foreground inline-flex">
-                  <CreditCard className="h-5 w-5 text-white" />
-                </span>
-              )}
-            </div>
+        {fundFlow.map((entry, index) => {
+          const isSalary = entry.type === "salary";
+          const status = entry.status ?? "unconfirmed";
+          const display = PAYMENT_STATUS_DISPLAY[status];
+          const node = NODE_STYLES[status];
 
-            {/* 日付 */}
-            <div className="flex-shrink-0 w-20 text-sm font-bold text-muted-foreground">
-              {format(entry.date, "M/d")}
+          return (
+            <div key={`${entry.type}-${entry.label}-${index}`} className="flex items-start gap-3 mb-5">
+              <div
+                className={`tl-node ${isSalary ? "special" : node.nodeClass}`}
+                style={{
+                  marginLeft: '-24px',
+                  marginTop: '4px',
+                  ...(!isSalary ? node.nodeStyle : {}),
+                }}
+              />
+              <div className="flex-1">
+                {isSalary ? (
+                  <div className="data-panel skill-flash p-3 px-4" style={{ borderColor: 'rgba(255,213,79,0.18)' }}>
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <p className="font-mono text-[10px] text-sage-gold tracking-wider">
+                          {format(entry.date, "MM/dd")}
+                        </p>
+                        <p className="text-[13px] text-sage-gold-bright font-bold mt-0.5">
+                          {entry.label}
+                        </p>
+                      </div>
+                      <p className="font-mono text-base text-sage-gold-bright glow-gold tracking-wider font-bold">
+                        +{formatCurrency(entry.amount)}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-sage-gold mt-1.5">
+                      Extra Skill『魔素補給』発動
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <p className="font-mono text-[10px] text-muted-foreground tracking-wider">
+                          {format(entry.date, "MM/dd")}
+                        </p>
+                        <p className="text-[13px] mt-0.5 text-sage-text">
+                          {entry.label}
+                        </p>
+                      </div>
+                      <p className="font-mono text-[13px] text-destructive tracking-wider">
+                        -{formatCurrency(entry.amount)}
+                      </p>
+                    </div>
+                    <p className={`font-mono text-[7px] ${display.colorClass} tracking-[0.2em] mt-1 ${display.isPulsing ? "animate-pulse-slow" : ""}`}>
+                      {display.icon} {display.engLabel}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
+          );
+        })}
+      </div>
 
-            {/* ラベル */}
-            <div className="flex-1 font-bold text-sm">
-              {entry.label}
-              {entry.isBeforePayDay && !isSalary && (
-                <span className="text-xs text-primary font-bold ml-2">
-                  給料日前
-                </span>
-              )}
-            </div>
-
-            {/* 金額 */}
-            <div
-              className={`font-bold text-sm ${
-                isSalary ? "text-[oklch(0.40_0.18_150)]" : "text-foreground"
-              }`}
-            >
-              {isSalary ? "+" : "-"}
-              {formatCurrency(entry.amount)}
-            </div>
-          </div>
-        );
-      })}
+      {hasBeforePayDayWarning && (
+        <div className="warn-panel mt-3">
+          <p className="text-xs text-destructive leading-relaxed">
+            <span className="font-bold">⚠ 警告。</span>給料日前に引落が集中しています。
+          </p>
+          <p className="text-[11px] text-destructive leading-relaxed mt-1" style={{ opacity: 0.75 }}>
+            Unique Skill『捕食者<span className="text-[9px] text-sage-text-dim">（くいしんぼう）</span>』による支出抑制を推奨します。
+          </p>
+        </div>
+      )}
     </div>
   );
 }

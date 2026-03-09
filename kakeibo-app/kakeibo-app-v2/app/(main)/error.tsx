@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -21,14 +20,14 @@ export default function DashboardError({
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-16">
-      <AlertTriangle className="h-12 w-12 text-destructive" />
-      <h2 className="text-lg font-semibold">エラーが発生しました</h2>
-      <p className="text-sm text-muted-foreground text-center max-w-md">
-        ダッシュボードの読み込み中にエラーが発生しました。
-        もう一度お試しください。
-      </p>
-      <Button onClick={reset} variant="outline">
-        もう一度試す
+      <div className="sage-voice max-w-md w-full">
+        <p className="text-[13px] leading-relaxed text-sage-text">
+          <span className="text-destructive font-bold">警告。</span>
+          データ解析中にエラーが発生しました。再試行してください。
+        </p>
+      </div>
+      <Button onClick={reset} variant="outline" className="mt-2">
+        再試行
       </Button>
     </div>
   );

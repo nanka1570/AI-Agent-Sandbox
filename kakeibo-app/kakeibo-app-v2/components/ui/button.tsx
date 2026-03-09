@@ -1,7 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
-
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -9,15 +8,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground border-2 border-foreground hover:bg-primary/90 shadow-[3px_3px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[2px] hover:translate-y-[2px]",
+        default: "bg-primary text-primary-foreground border border-primary/50 hover:bg-primary/90 shadow-[0_0_12px_rgba(255,179,0,0.15)] hover:shadow-[0_0_20px_rgba(255,179,0,0.25)]",
         destructive:
-          "bg-destructive text-white border-2 border-foreground hover:bg-destructive/90 shadow-[3px_3px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[2px] hover:translate-y-[2px] focus-visible:ring-destructive/20",
+          "bg-destructive text-white border border-destructive/50 hover:bg-destructive/90 shadow-[0_0_12px_rgba(255,82,82,0.15)] focus-visible:ring-destructive/20",
         outline:
-          "border-2 border-foreground bg-white hover:bg-secondary hover:text-foreground shadow-[2px_2px_0px_oklch(0.50_0.01_280)] hover:shadow-[1px_1px_0px_oklch(0.50_0.01_280)] hover:translate-x-[1px] hover:translate-y-[1px]",
+          "border border-border bg-card hover:bg-muted hover:text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground border-2 border-foreground hover:bg-secondary/80 shadow-[2px_2px_0px_oklch(0.50_0.01_280)]",
+          "bg-muted text-secondary-foreground border border-border hover:bg-muted/80",
         ghost:
-          "hover:bg-secondary hover:text-foreground",
+          "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline font-bold",
       },
       size: {

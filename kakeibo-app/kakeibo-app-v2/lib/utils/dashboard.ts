@@ -36,6 +36,8 @@ interface FundFlowEntry {
   amount: number;
   isBeforePayDay: boolean;
   sortOrder: number;
+  /** カードグループの集約ステータス（payment type のみ） */
+  status?: PaymentStatus;
 }
 
 /** ダッシュボードデータ全体 */
@@ -211,6 +213,17 @@ export async function getDashboardData(
 
     const isBeforePayDay = cycle ? paymentDate < cycle.start : false;
 
+    // カードグループの集約ステータスを判定
+    const allPaid = cardGroup.payments.every((p) => p.status === "paid");
+    const allConfirmedOrPaid = cardGroup.payments.every(
+      (p) => p.status === "confirmed" || p.status === "paid",
+    );
+    const aggregatedStatus: PaymentStatus = allPaid
+      ? "paid"
+      : allConfirmedOrPaid
+        ? "confirmed"
+        : "unconfirmed";
+
     fundFlow.push({
       date: paymentDate,
       type: "payment",
@@ -218,6 +231,7 @@ export async function getDashboardData(
       amount: cardGroup.subtotal,
       isBeforePayDay,
       sortOrder: cardGroup.card.sortOrder,
+      status: aggregatedStatus,
     });
   }
 
