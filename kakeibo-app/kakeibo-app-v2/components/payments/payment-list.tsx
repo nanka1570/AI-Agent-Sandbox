@@ -43,6 +43,7 @@ import {
 import { formatCurrency, formatMonth } from "@/lib/utils/format";
 import type { PaymentStatus } from "@/lib/constants";
 import { PAYMENT_STATUSES } from "@/lib/constants";
+import { isPaymentStatus } from "@/lib/utils/status";
 
 interface PaymentItem {
   id: string;
@@ -408,10 +409,11 @@ export function PaymentList({
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() =>
-                            setRecurringDeleteTarget(payment.recurringGroupId!)
-                          }
-                          title="繰り返しグループ一括削除"
+                          onClick={() => {
+                            const groupId = payment.recurringGroupId;
+                            if (groupId) setRecurringDeleteTarget(groupId);
+                          }}
+                          aria-label="繰り返しグループを一括削除"
                         >
                           <Repeat className="size-4 text-destructive" />
                         </Button>
@@ -518,7 +520,7 @@ export function PaymentList({
           </DialogHeader>
           <div className="space-y-3">
             <Label>変更先ステータス</Label>
-            <Select value={bulkNewStatus} onValueChange={(v) => setBulkNewStatus(v as PaymentStatus)}>
+            <Select value={bulkNewStatus} onValueChange={(v) => { if (isPaymentStatus(v)) setBulkNewStatus(v); }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

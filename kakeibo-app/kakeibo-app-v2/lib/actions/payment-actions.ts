@@ -9,11 +9,10 @@ import {
   bulkRegisterSchema,
 } from "@/lib/validations/payment";
 import { z } from "zod/v4";
-import { determineAutoStatus, getNextStatus } from "@/lib/utils/status";
+import { determineAutoStatus, getNextStatus, isPaymentStatus } from "@/lib/utils/status";
 import { addMonthsToMonth } from "@/lib/utils/date";
 import type { ActionResult } from "@/lib/types";
-import { SORT_ORDER_INITIAL, MONTH_PARAM_REGEX, RECURRING_PAYMENT_COUNT } from "@/lib/constants";
-import type { PaymentStatus } from "@/lib/constants";
+import { SORT_ORDER_INITIAL, MONTH_PARAM_REGEX, RECURRING_PAYMENT_COUNT, PAYMENT_STATUS_KEYS, DEFAULT_PAYMENT_STATUS, type PaymentStatus } from "@/lib/constants";
 
 /**
  * カード情報から自動ステータスを判定するためのヘルパー
@@ -35,7 +34,7 @@ async function getAutoStatusForCard(
   });
 
   if (!card) {
-    return "unconfirmed";
+    return DEFAULT_PAYMENT_STATUS;
   }
 
   return determineAutoStatus({
@@ -187,7 +186,10 @@ export async function togglePaymentStatus(
       return { success: false, error: "支払いデータが見つかりません" };
     }
 
-    const nextStatus = getNextStatus(payment.status as PaymentStatus); // Prisma returns string from DB
+    if (!isPaymentStatus(payment.status)) {
+      return { success: false, error: "ステータスの変更に失敗しました" };
+    }
+    const nextStatus = getNextStatus(payment.status);
 
     await prisma.payment.update({
       where: { id, userId },
@@ -214,7 +216,7 @@ export async function bulkUpdatePaymentStatus(
   const paramsSchema = z.object({
     creditCardId: z.string().min(1),
     month: z.string().regex(MONTH_PARAM_REGEX),
-    newStatus: z.enum(["unconfirmed", "confirmed", "paid"]),
+    newStatus: z.enum(PAYMENT_STATUS_KEYS),
   });
   const statusResult = paramsSchema.safeParse({ creditCardId, month, newStatus });
   if (!statusResult.success) {
@@ -292,7 +294,7 @@ export async function createRecurringPayments(
             confirmationDay: card.confirmationDay,
             confirmationMonthOffset: card.confirmationMonthOffset,
           })
-        : ("unconfirmed" as const);
+        : DEFAULT_PAYMENT_STATUS;
       return {
         userId,
         creditCardId: parsed.data.creditCardId,

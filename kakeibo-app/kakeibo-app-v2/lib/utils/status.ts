@@ -1,6 +1,11 @@
 import { getNowJST } from "@/lib/utils/date";
 import { calculatePaymentDate, calculateConfirmationDate } from "@/lib/utils/payment-date";
-import type { PaymentStatus } from "@/lib/constants";
+import { PAYMENT_STATUS_KEYS, type PaymentStatus } from "@/lib/constants";
+
+/** 文字列が有効な PaymentStatus かどうかを判定する型ガード */
+export function isPaymentStatus(v: string): v is PaymentStatus {
+  return (PAYMENT_STATUS_KEYS as readonly string[]).includes(v);
+}
 
 interface StatusCheckParams {
   usageMonth: string;

@@ -51,6 +51,12 @@ export const PAYMENT_STATUS_DISPLAY = {
 
 export type PaymentStatus = keyof typeof PAYMENT_STATUSES;
 
+/** PAYMENT_STATUSES のキー配列（Zod enum 等で使用） */
+export const PAYMENT_STATUS_KEYS = Object.keys(PAYMENT_STATUSES) as [PaymentStatus, ...PaymentStatus[]];
+
+/** 支払いステータスのデフォルト値 */
+export const DEFAULT_PAYMENT_STATUS: PaymentStatus = "unconfirmed";
+
 /** 予算消化率の閾値（%） */
 export const BUDGET_THRESHOLD_WARNING = 80;
 export const BUDGET_THRESHOLD_DANGER = 100;
