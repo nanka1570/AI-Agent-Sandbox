@@ -95,6 +95,11 @@ export const PUBLIC_PATHS = [
 /** 繰り返し支払いの件数 */
 export const RECURRING_PAYMENT_COUNT = 4;
 
+/** 金額プリセット: 直近取得件数 */
+export const RECENT_AMOUNTS_TAKE = 10;
+/** 金額プリセット: 最大表示件数 */
+export const RECENT_AMOUNTS_MAX = 3;
+
 /** カテゴリ未設定時のフォールバック表示 */
 export const UNCATEGORIZED_LABEL = "未分類";
 export const UNCATEGORIZED_COLOR = "#666666";

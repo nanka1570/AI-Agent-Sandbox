@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
-import { getRecentAmounts } from "@/lib/actions/salary-actions";
 import { SalaryList } from "@/components/salary/salary-list";
+import { RECENT_AMOUNTS_TAKE, RECENT_AMOUNTS_MAX } from "@/lib/constants";
 
 /**
  * 手取り管理ページ
@@ -12,14 +12,15 @@ import { SalaryList } from "@/components/salary/salary-list";
 export default async function SalaryPage() {
   const userId = await getAuthUserId();
 
-  // 手取りデータと金額プリセットを並列取得
-  const [salaries, recentAmounts] = await Promise.all([
-    prisma.salary.findMany({
-      where: { userId },
-      orderBy: { sortOrder: "desc" },
-    }),
-    getRecentAmounts(),
-  ]);
+  const salaries = await prisma.salary.findMany({
+    where: { userId },
+    orderBy: { sortOrder: "desc" },
+  });
+
+  // 取得済みデータからプリセット金額を算出（追加DBクエリ不要）
+  const recentAmounts = [
+    ...new Set(salaries.slice(0, RECENT_AMOUNTS_TAKE).map((s) => s.amount)),
+  ].slice(0, RECENT_AMOUNTS_MAX);
 
   return (
     <div className="space-y-6">

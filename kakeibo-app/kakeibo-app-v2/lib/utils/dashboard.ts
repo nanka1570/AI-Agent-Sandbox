@@ -5,6 +5,7 @@ import { calculatePaymentDate } from "@/lib/utils/payment-date";
 import { addMonthsToMonth } from "@/lib/utils/date";
 import type { SalaryCycle } from "@/lib/utils/salary-cycle";
 import type { PaymentStatus } from "@/lib/constants";
+import type { Payment } from "@prisma/client";
 
 /** カードごとの支払い情報 */
 interface CardPaymentGroup {
@@ -319,7 +320,7 @@ function buildFundFlow(
 async function aggregateBudgetConsumption(
   userId: string,
   selectedMonth: string,
-  payments: Array<{ month: string; categoryId: string | null; amount: number }>,
+  payments: Pick<Payment, "month" | "categoryId" | "amount">[],
 ) {
   const budgetRecords = await prisma.budget.findMany({
     where: { userId, month: selectedMonth },

@@ -150,25 +150,3 @@ export async function deleteSalary(id: string): Promise<ActionResult> {
     return { success: false, error: "手取りの削除に失敗しました" };
   }
 }
-
-/**
- * 直近の手取りレコードからユニークな金額を最大3件取得する
- */
-export async function getRecentAmounts(): Promise<number[]> {
-  try {
-    const userId = await getAuthUserId();
-
-    const salaries = await prisma.salary.findMany({
-      where: { userId },
-      orderBy: { sortOrder: "desc" },
-      select: { amount: true },
-      take: 10,
-    });
-
-    // ユニークな金額を抽出し、最大3件返す
-    const uniqueAmounts = [...new Set(salaries.map((s) => s.amount))];
-    return uniqueAmounts.slice(0, 3);
-  } catch {
-    return [];
-  }
-}
