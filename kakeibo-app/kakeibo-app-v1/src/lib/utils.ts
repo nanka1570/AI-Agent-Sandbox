@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * 数値入力フィールド用: 文字列から数字のみを抽出し number に変換する。
+ * 空文字列の場合は undefined を返す（Zod の numericPreprocess が undefined を受け付ける）。
+ * react-hook-form の field.onChange に渡す際、型アサーション不要で型安全に使える。
+ */
+export function parseNumericInput(value: string): number | undefined {
+  const digits = value.replace(/[^0-9]/g, "");
+  return digits === "" ? undefined : Number(digits);
+}
+
 // 金額フォーマット: 250000 → "¥250,000"
 export function formatCurrency(amount: number): string {
   return `¥${new Intl.NumberFormat("ja-JP").format(amount)}`;

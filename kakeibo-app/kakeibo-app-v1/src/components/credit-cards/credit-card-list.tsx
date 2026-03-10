@@ -30,7 +30,7 @@ import {
   deleteCreditCard,
   updateCreditCardOrder,
 } from "@/lib/actions/credit-card";
-import { formatDay, formatPaymentDay } from "@/lib/utils";
+import { formatDay, formatPaymentDay, parseNumericInput } from "@/lib/utils";
 
 // カードブランド定義
 const BRANDS = [
@@ -375,14 +375,13 @@ export function CreditCardList({ cards }: Props) {
                           onBlur={field.onBlur}
                           value={field.value === 32 ? "" : String(field.value ?? "")}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/[^0-9]/g, "");
-                            field.onChange(digits as unknown as number);
+                            field.onChange(parseNumericInput(e.target.value));
                           }}
                           className={field.value === 32 ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
                             field.value === 32
                               ? "border-black bg-black text-white"
@@ -443,14 +442,13 @@ export function CreditCardList({ cards }: Props) {
                           onBlur={field.onBlur}
                           value={field.value === 32 ? "" : String(field.value ?? "")}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/[^0-9]/g, "");
-                            field.onChange(digits === "" ? (undefined as unknown as number) : (digits as unknown as number));
+                            field.onChange(parseNumericInput(e.target.value));
                           }}
                           className={field.value === 32 ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
                             field.value === 32
                               ? "border-black bg-black text-white"
@@ -509,14 +507,13 @@ export function CreditCardList({ cards }: Props) {
                           onBlur={field.onBlur}
                           value={field.value === 32 ? "" : String(field.value ?? "")}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/[^0-9]/g, "");
-                            field.onChange(digits as unknown as number);
+                            field.onChange(parseNumericInput(e.target.value));
                           }}
                           className={field.value === 32 ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? (undefined as unknown as number) : 32)}
+                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
                             field.value === 32
                               ? "border-black bg-black text-white"

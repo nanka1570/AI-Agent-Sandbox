@@ -32,7 +32,7 @@ import {
   deleteSalary,
   updateSalaryOrder,
 } from "@/lib/actions/salary";
-import { formatCurrency, formatCurrencyJP, formatDay, formatMonth } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatDay, formatMonth, parseNumericInput } from "@/lib/utils";
 import { AmountPresets } from "@/components/amount-presets";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -327,8 +327,7 @@ export function SalaryList({ salaries }: Props) {
                         onBlur={field.onBlur}
                         value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
+                          field.onChange(parseNumericInput(e.target.value));
                         }}
                       />
                     </FormControl>
@@ -353,8 +352,7 @@ export function SalaryList({ salaries }: Props) {
                         onBlur={field.onBlur}
                         value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
+                          field.onChange(parseNumericInput(e.target.value));
                         }}
                       />
                     </FormControl>

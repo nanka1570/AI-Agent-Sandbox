@@ -33,7 +33,7 @@ import {
   deleteRecurringPayments,
   updatePaymentOrder,
 } from "@/lib/actions/payment";
-import { formatCurrency, formatCurrencyJP, formatMonth, formatBillingPeriod, formatActualPaymentDate } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, formatMonth, formatBillingPeriod, formatActualPaymentDate, parseNumericInput } from "@/lib/utils";
 import { AmountPresets } from "@/components/amount-presets";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
@@ -83,8 +83,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-type PaymentWithCard = Payment & { creditCard: CreditCard; category: Category | null };
+import type { PaymentWithCard } from "@/lib/payment-query";
 
 type Props = {
   payments: PaymentWithCard[];
@@ -655,8 +654,7 @@ export function PaymentList({ payments, creditCards, categories, currentMonth, i
                         onBlur={field.onBlur}
                         value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
+                          field.onChange(parseNumericInput(e.target.value));
                         }}
                       />
                     </FormControl>

@@ -6,10 +6,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getActualDay } from "@/lib/utils";
 import { paymentSchema, paymentStatusSchema, type PaymentInput, type ActionResult } from "@/types";
-import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
-
-// Payment にリレーション（creditCard, category）を含めた型
-type PaymentWithCard = Payment & { creditCard: CreditCard; category: Category | null };
+import type { CreditCard } from "@/generated/prisma/client";
+import type { PaymentWithCard } from "@/lib/payment-query";
 
 // ステータス遷移マップ（循環: 支払い済み → 未確定に戻れる）
 const STATUS_TRANSITIONS: Record<string, string> = {

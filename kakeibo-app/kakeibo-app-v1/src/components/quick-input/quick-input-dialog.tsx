@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { formatCurrencyJP } from "@/lib/utils";
+import { formatCurrencyJP, parseNumericInput } from "@/lib/utils";
 import { AmountPresets } from "@/components/amount-presets";
 import type { CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput } from "@/types";
@@ -120,8 +120,7 @@ export function QuickInputDialog({
                       onBlur={field.onBlur}
                       value={String(field.value ?? "")}
                       onChange={(e) => {
-                        const digits = e.target.value.replace(/[^0-9]/g, "");
-                        field.onChange(digits as unknown as number);
+                        field.onChange(parseNumericInput(e.target.value));
                       }}
                     />
                   </FormControl>

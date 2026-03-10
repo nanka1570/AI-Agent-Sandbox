@@ -38,7 +38,7 @@ import {
   updateCategoryOrder,
 } from "@/lib/actions/category";
 import { upsertBudget } from "@/lib/actions/budget";
-import { formatCurrency, formatCurrencyJP } from "@/lib/utils";
+import { formatCurrency, formatCurrencyJP, parseNumericInput } from "@/lib/utils";
 import { MonthSelector } from "@/components/month-selector";
 import { EmptyState } from "@/components/empty-state";
 import { Progress } from "@/components/ui/progress";
@@ -651,8 +651,7 @@ export function BudgetManager({
                         onBlur={field.onBlur}
                         value={String(field.value ?? "")}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/[^0-9]/g, "");
-                          field.onChange(digits as unknown as number);
+                          field.onChange(parseNumericInput(e.target.value));
                         }}
                       />
                     </FormControl>
