@@ -8,6 +8,21 @@ import type { ActionResult } from "@/lib/types";
 import type { Salary } from "@prisma/client";
 
 /**
+ * "YYYY-MM" 形式の月文字列を sortOrder 用整数に変換する（例: "2026-03" → 202603）
+ * 呼び出し前に salarySchema（MONTH_PARAM_REGEX）で形式を保証済みのため、
+ * NaN ガードは防御的ブロックとして存在する
+ */
+function monthToSortOrder(month: string): number {
+  const [yearStr, monthStr] = month.split("-");
+  const year = parseInt(yearStr, 10);
+  const m = parseInt(monthStr, 10);
+  if (isNaN(year) || isNaN(m)) {
+    throw new Error(`Invalid month format: ${month}`);
+  }
+  return year * 100 + m;
+}
+
+/**
  * 手取りを新規作成する
  */
 export async function createSalary(data: unknown): Promise<ActionResult<Salary>> {
@@ -31,10 +46,7 @@ export async function createSalary(data: unknown): Promise<ActionResult<Salary>>
       return { success: false, error: "同じ月の手取りが既に登録されています" };
     }
 
-    // sortOrder を month の降順でソートするために、YYYY-MM を数値化して使う
-    // 例: 2026-03 → 202603 とすることで、大きい値ほど新しい月
-    const [year, month] = parsed.data.month.split("-").map(Number);
-    const sortOrder = year * 100 + month;
+    const sortOrder = monthToSortOrder(parsed.data.month);
 
     const newSalary = await prisma.salary.create({
       data: {
@@ -91,9 +103,7 @@ export async function updateSalary(id: string, data: unknown): Promise<ActionRes
       return { success: false, error: "同じ月の手取りが既に登録されています" };
     }
 
-    // sortOrder を更新
-    const [year, month] = parsed.data.month.split("-").map(Number);
-    const sortOrder = year * 100 + month;
+    const sortOrder = monthToSortOrder(parsed.data.month);
 
     const updatedSalary = await prisma.salary.update({
       where: { id, userId },

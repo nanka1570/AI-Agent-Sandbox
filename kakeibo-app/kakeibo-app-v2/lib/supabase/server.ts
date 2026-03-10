@@ -2,12 +2,17 @@ import { createServerClient as _createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    );
+  }
+
   const cookieStore = await cookies();
 
-  return _createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  return _createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -18,7 +23,7 @@ export async function createServerClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Server Component からの呼び出し時は set できないが問題なし
+            // Ignore: cannot set cookies in Server Components, which is expected behavior
           }
         },
       },
@@ -32,7 +37,7 @@ export async function getAuthUserId(): Promise<string> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    throw new Error("認証されていません");
+    throw new Error("Unauthorized: user session not found");
   }
   return user.id;
 }

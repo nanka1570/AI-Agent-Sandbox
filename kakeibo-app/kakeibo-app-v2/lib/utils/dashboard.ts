@@ -141,6 +141,41 @@ export async function getDashboardData(
   });
 
   // 7. 集計
+  const { paymentTotal, confirmedTotal, statusBreakdown } =
+    aggregatePaymentTotals(filteredPayments);
+  const balance = salaryTotal - paymentTotal;
+  const confirmedBalance = salaryTotal - confirmedTotal;
+
+  // 8. カードごとにグループ化（全カードを含む）
+  const paymentsByCard = groupPaymentsByCard(allCards, filteredPayments);
+
+  // 9. 資金繰り（fundFlow）
+  const fundFlow = buildFundFlow(paymentsByCard, cycle, salaryTotal, payDay, selectedMonth);
+
+  // 10. 予算消化率の集計
+  const budgetConsumption = await aggregateBudgetConsumption(
+    userId,
+    selectedMonth,
+    payments,
+  );
+
+  return {
+    selectedMonth,
+    cycle,
+    salaryTotal,
+    paymentTotal,
+    confirmedTotal,
+    balance,
+    confirmedBalance,
+    statusBreakdown,
+    paymentsByCard,
+    fundFlow,
+    budgetConsumption,
+  };
+}
+
+/** フィルタ済み支払いの合計・ステータス別集計 */
+function aggregatePaymentTotals(filteredPayments: Array<{ amount: number; status: string }>) {
   let paymentTotal = 0;
   let confirmedTotal = 0;
   const statusBreakdown = { unconfirmed: 0, confirmed: 0, paid: 0 };
@@ -156,11 +191,31 @@ export async function getDashboardData(
     }
   }
 
-  const balance = salaryTotal - paymentTotal;
-  const confirmedBalance = salaryTotal - confirmedTotal;
+  return { paymentTotal, confirmedTotal, statusBreakdown };
+}
 
-  // 8. カードごとにグループ化（全カードを含む）
-  const paymentsByCard: CardPaymentGroup[] = allCards.map((card) => {
+/** カードごとに支払いをグループ化 */
+function groupPaymentsByCard(
+  allCards: Array<{
+    id: string;
+    name: string;
+    brand: string | null;
+    sortOrder: number;
+    paymentDay: number;
+    paymentMonthOffset: number;
+  }>,
+  filteredPayments: Array<{
+    id: string;
+    creditCardId: string;
+    month: string;
+    amount: number;
+    status: string;
+    memo: string | null;
+    category: { name: string; color: string } | null;
+    sortOrder: number;
+  }>,
+): CardPaymentGroup[] {
+  return allCards.map((card) => {
     const cardPayments = filteredPayments
       .filter((p) => p.creditCardId === card.id)
       .map((p) => ({
@@ -190,8 +245,16 @@ export async function getDashboardData(
       subtotal,
     };
   });
+}
 
-  // 9. 資金繰り（fundFlow）
+/** 資金繰りエントリの構築 */
+function buildFundFlow(
+  paymentsByCard: CardPaymentGroup[],
+  cycle: SalaryCycle | null,
+  salaryTotal: number,
+  payDay: number | null,
+  selectedMonth: string,
+): FundFlowEntry[] {
   const fundFlow: FundFlowEntry[] = [];
 
   // 給料日エントリ
@@ -210,10 +273,10 @@ export async function getDashboardData(
   for (const cardGroup of paymentsByCard) {
     if (cardGroup.payments.length === 0) continue;
 
-    // カードの引き落とし日を算出（代表的な支払いの利用月から計算）
-    const representativePayment = cardGroup.payments[0];
+    // filteredPayments はサイクル（selectedMonth 基準）でフィルタ済みのため、
+    // 引き落とし日は selectedMonth を基準に計算する
     const paymentDate = calculatePaymentDate(
-      representativePayment.month,
+      selectedMonth,
       cardGroup.card.paymentMonthOffset,
       cardGroup.card.paymentDay,
     );
@@ -249,13 +312,20 @@ export async function getDashboardData(
     return a.sortOrder - b.sortOrder;
   });
 
-  // 10. 予算消化率の集計
+  return fundFlow;
+}
+
+/** 予算消化率の集計 */
+async function aggregateBudgetConsumption(
+  userId: string,
+  selectedMonth: string,
+  payments: Array<{ month: string; categoryId: string | null; amount: number }>,
+) {
   const budgetRecords = await prisma.budget.findMany({
     where: { userId, month: selectedMonth },
     include: { category: true },
   });
 
-  // 選択月の支払いをカテゴリ別に集計（既に取得済みの payments を再利用）
   const spentByCategory: Record<string, number> = {};
   for (const p of payments.filter((p) => p.month === selectedMonth)) {
     if (p.categoryId) {
@@ -263,7 +333,7 @@ export async function getDashboardData(
     }
   }
 
-  const budgetConsumption = budgetRecords.map((b) => {
+  return budgetRecords.map((b) => {
     const spentAmount = spentByCategory[b.categoryId] ?? 0;
     const percentage = b.amount > 0 ? Math.round((spentAmount / b.amount) * 100) : 0;
     return {
@@ -274,18 +344,4 @@ export async function getDashboardData(
       percentage,
     };
   });
-
-  return {
-    selectedMonth,
-    cycle,
-    salaryTotal,
-    paymentTotal,
-    confirmedTotal,
-    balance,
-    confirmedBalance,
-    statusBreakdown,
-    paymentsByCard,
-    fundFlow,
-    budgetConsumption,
-  };
 }
