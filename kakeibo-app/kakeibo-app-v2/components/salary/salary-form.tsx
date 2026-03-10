@@ -110,7 +110,8 @@ export function SalaryForm({
       if (result.success) {
         toast.success(isEditing ? "手取りを更新しました" : "手取りを登録しました");
         if (result.data) {
-          onSuccess?.(result.data as SalaryItem, isEditing);
+          const { id, month, payDay, amount, memo, sortOrder } = result.data;
+          onSuccess?.({ id, month, payDay, amount, memo, sortOrder }, isEditing);
         }
         reset();
         onOpenChange(false);

@@ -84,7 +84,8 @@ export function CategoryForm({
           isEditing ? "カテゴリを更新しました" : "カテゴリを追加しました"
         );
         if (result.data) {
-          onSuccess?.(result.data as CategoryItem, isEditing);
+          const { id, name, color, sortOrder, isDefault } = result.data;
+          onSuccess?.({ id, name, color, sortOrder, isDefault }, isEditing);
         }
         reset();
         onOpenChange(false);

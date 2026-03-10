@@ -198,7 +198,8 @@ export function CreditCardForm({
           isEditing ? "カードを更新しました" : "カードを追加しました"
         );
         if (result.data) {
-          onSuccess?.(result.data as CreditCardItem, isEditing);
+          const { id, name, closingDay, paymentDay, paymentMonthOffset, confirmationDay, confirmationMonthOffset, brand, memo, sortOrder } = result.data;
+          onSuccess?.({ id, name, closingDay, paymentDay, paymentMonthOffset, confirmationDay, confirmationMonthOffset, brand, memo, sortOrder }, isEditing);
         }
         reset();
         onOpenChange(false);

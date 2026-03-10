@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatMonth } from "@/lib/utils/format";
-import { PAYMENT_STATUS_DISPLAY, type PaymentStatus } from "@/lib/constants";
+import { PAYMENT_STATUS_DISPLAY } from "@/lib/constants";
+import { isPaymentStatus } from "@/lib/utils/status";
 import type { DashboardData } from "@/lib/utils/dashboard";
 
 interface PaymentScheduleProps {
@@ -78,8 +79,13 @@ export function PaymentSchedule({ paymentsByCard }: PaymentScheduleProps) {
                 </p>
               ) : (
                 group.payments.map((payment) => {
-                  const status = payment.status as PaymentStatus;
-                  const display = PAYMENT_STATUS_DISPLAY[status] || PAYMENT_STATUS_DISPLAY.unconfirmed;
+                  if (!isPaymentStatus(payment.status)) {
+                    console.warn(`[payment-schedule] 不正なステータス値: "${payment.status}" (id: ${payment.id})`);
+                  }
+                  const status = isPaymentStatus(payment.status)
+                    ? payment.status
+                    : "unconfirmed" as const;
+                  const display = PAYMENT_STATUS_DISPLAY[status];
                   return (
                     <div
                       key={payment.id}
