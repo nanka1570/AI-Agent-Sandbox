@@ -45,33 +45,32 @@ export function BudgetSettings({ categories, budgets, selectedMonth }: BudgetSet
   const handleSave = async () => {
     setSaving(true);
 
-    const targets = categories.filter((cat) => {
-      const amountStr = amounts[cat.id];
-      return amountStr && amountStr !== "0" && amountStr !== "";
+    const targets = categories.flatMap((cat) => {
+      const amount = parseInt(amounts[cat.id] ?? "", 10);
+      if (!amount || amount <= 0) return [];
+      return [{ cat, amount }];
     });
 
     const results = await Promise.allSettled(
-      targets.map((cat) =>
+      targets.map(({ cat, amount }) =>
         upsertBudget({
           categoryId: cat.id,
           month: selectedMonth,
-          amount: Number(amounts[cat.id]),
+          amount,
         })
       )
     );
 
-    let hasError = false;
-    results.forEach((result, i) => {
-      if (result.status === "rejected") {
-        toast.error(`${targets[i].name}: 保存に失敗しました`);
-        hasError = true;
-      } else if (!result.value.success) {
-        toast.error(`${targets[i].name}: ${result.value.error}`);
-        hasError = true;
+    const failedNames = results.flatMap((result, i) => {
+      if (result.status === "rejected" || !result.value.success) {
+        return [targets[i].cat.name];
       }
+      return [];
     });
 
-    if (!hasError) {
+    if (failedNames.length > 0) {
+      toast.error(`保存に失敗したカテゴリ: ${failedNames.join("、")}`);
+    } else {
       toast.success("予算を保存しました");
     }
     setSaving(false);

@@ -9,6 +9,7 @@ import {
   Legend,
 } from "recharts";
 import { CHART_THEME } from "@/lib/constants";
+import { formatCurrency } from "@/lib/utils/format";
 
 interface CategoryPieChartProps {
   data: Array<{ name: string; color: string; total: number }>;
@@ -56,10 +57,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
               borderRadius: CHART_THEME.tooltipBorderRadius,
               color: CHART_THEME.tooltipText,
             }}
-            formatter={(value) => [
-              `¥${Number(value).toLocaleString()}`,
-              "支出",
-            ]}
+            formatter={(value) => [formatCurrency(Number(value)), "支出"]}
           />
           <Legend wrapperStyle={{ fontSize: `${CHART_THEME.axisFontSize}px`, color: CHART_THEME.axisColor }} />
         </PieChart>

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { PaymentList } from "@/components/payments/payment-list";
-import type { PaymentStatus } from "@/lib/constants";
+import { isPaymentStatus } from "@/lib/utils/status";
 
 /**
  * 支払い管理ページ
@@ -43,7 +43,9 @@ export default async function PaymentsPage() {
         </p>
       </div>
       <PaymentList
-        payments={payments.map((p) => ({ ...p, status: p.status as PaymentStatus }))}
+        payments={payments.flatMap((p) =>
+          isPaymentStatus(p.status) ? [{ ...p, status: p.status }] : []
+        )}
         creditCards={creditCards}
         categories={categories}
       />

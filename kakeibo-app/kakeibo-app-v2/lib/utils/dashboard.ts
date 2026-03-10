@@ -5,6 +5,7 @@ import { calculatePaymentDate } from "@/lib/utils/payment-date";
 import { addMonthsToMonth } from "@/lib/utils/date";
 import type { SalaryCycle } from "@/lib/utils/salary-cycle";
 import type { PaymentStatus } from "@/lib/constants";
+import { isPaymentStatus } from "@/lib/utils/status";
 import type { Payment } from "@prisma/client";
 
 /** カードごとの支払い情報 */
@@ -183,13 +184,12 @@ function aggregatePaymentTotals(filteredPayments: Array<{ amount: number; status
 
   for (const p of filteredPayments) {
     paymentTotal += p.amount;
-    const status = p.status as PaymentStatus;
+    if (!isPaymentStatus(p.status)) continue;
+    const status = p.status;
     if (status === "confirmed" || status === "paid") {
       confirmedTotal += p.amount;
     }
-    if (status in statusBreakdown) {
-      statusBreakdown[status] += p.amount;
-    }
+    statusBreakdown[status] += p.amount;
   }
 
   return { paymentTotal, confirmedTotal, statusBreakdown };

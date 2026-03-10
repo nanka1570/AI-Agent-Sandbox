@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { CHART_THEME } from "@/lib/constants";
+import { formatCurrency } from "@/lib/utils/format";
 
 interface MonthlyExpenseChartProps {
   data: Array<{ month: string; total: number }>;
@@ -51,10 +52,7 @@ export function MonthlyExpenseChart({ data }: MonthlyExpenseChartProps) {
               borderRadius: CHART_THEME.tooltipBorderRadius,
               color: CHART_THEME.tooltipText,
             }}
-            formatter={(value) => [
-              `¥${Number(value).toLocaleString()}`,
-              "支出",
-            ]}
+            formatter={(value) => [formatCurrency(Number(value)), "支出"]}
           />
           <Bar dataKey="金額" fill={CHART_THEME.accentColor} radius={[4, 4, 0, 0]} />
         </BarChart>
