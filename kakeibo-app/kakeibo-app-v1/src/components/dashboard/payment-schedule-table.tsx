@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import type { PaymentStatus } from "@/types";
 import { formatCurrency, formatActualPaymentDate } from "@/lib/utils";
 import { updateCardPaymentsStatus } from "@/lib/actions/payment";
 import { StatusBadge } from "@/components/status-badge";
+import { STATUS_PRIORITY, STATUS_TRANSITIONS, DAY_LAST_OF_MONTH } from "@/lib/payment-constants";
 import {
   Table,
   TableBody,
@@ -41,20 +42,6 @@ type Props = {
   currentMonth: string;
 };
 
-// ステータス優先度: unconfirmed > confirmed > paid
-const STATUS_PRIORITY: Record<string, number> = {
-  unconfirmed: 0,
-  confirmed: 1,
-  paid: 2,
-};
-
-// ステータス遷移（循環）
-const STATUS_TRANSITIONS: Record<string, string> = {
-  unconfirmed: "confirmed",
-  confirmed: "paid",
-  paid: "unconfirmed",
-};
-
 // 締め月+offset+paymentDay から実際の引き落とし日を計算（ソート用）
 function calcActualPaymentDate(
   paymentDay: number,
@@ -64,7 +51,7 @@ function calcActualPaymentDate(
   const [year, month] = closingMonth.split("-").map(Number);
   const actualMonthIdx = month - 1 + monthOffset;
   const actualDay =
-    paymentDay === 32
+    paymentDay === DAY_LAST_OF_MONTH
       ? new Date(year, actualMonthIdx + 1, 0).getDate()
       : paymentDay;
   return new Date(year, actualMonthIdx, actualDay);
@@ -111,7 +98,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
   const router = useRouter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const groups = groupPayments(payments);
+  const groups = useMemo(() => groupPayments(payments), [payments]);
 
   function toggleExpand(groupKey: string) {
     setExpandedIds((prev) => {
@@ -146,10 +133,9 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
         </TableHeader>
         <TableBody>
           {groups.map((group) => (
-            <>
+            <Fragment key={group.groupKey}>
               {/* グループ行 */}
               <TableRow
-                key={group.groupKey}
                 className={`border-b-2 border-border hover:bg-secondary/20 ${group.count > 1 ? "cursor-pointer" : "cursor-default"}`}
                 onClick={() => group.count > 1 && toggleExpand(group.groupKey)}
               >
@@ -223,7 +209,7 @@ export function PaymentScheduleTable({ payments, currentMonth }: Props) {
                     </TableCell>
                   </TableRow>
                 ))}
-            </>
+            </Fragment>
           ))}
         </TableBody>
       </Table>

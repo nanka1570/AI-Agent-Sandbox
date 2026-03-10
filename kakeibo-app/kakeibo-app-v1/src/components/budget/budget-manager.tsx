@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -97,14 +97,15 @@ type Props = {
   currentMonth: string;
 };
 
-// カテゴリ別の実績を計算する
-function calcActualByCategory(
-  payments: Payment[],
-  categoryId: string
-): number {
-  return payments
-    .filter((p) => p.categoryId === categoryId)
-    .reduce((sum, p) => sum + p.amount, 0);
+// カテゴリ別の実績を Map で一括集計する
+function buildActualByCategory(payments: Payment[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const p of payments) {
+    if (p.categoryId) {
+      map.set(p.categoryId, (map.get(p.categoryId) ?? 0) + p.amount);
+    }
+  }
+  return map;
 }
 
 // 消化率を計算する（0-100、超過時は100以上）
@@ -289,6 +290,17 @@ export function BudgetManager({
     defaultValues: { categoryId: "", month: currentMonth, amount: undefined },
   });
 
+  // カテゴリ別実績を一括集計（O(N)で1回だけ計算）
+  const actualByCategory = useMemo(() => buildActualByCategory(payments), [payments]);
+
+  // 合計行の計算
+  const totals = useMemo(() => {
+    const budget = budgets.reduce((s, b) => s + b.amount, 0);
+    const actual = items.reduce((s, c) => s + (actualByCategory.get(c.id) ?? 0), 0);
+    const progress = budget > 0 ? Math.round((actual / budget) * 100) : 0;
+    return { budget, actual, progress };
+  }, [budgets, items, actualByCategory]);
+
   const isCategorySubmitting = categoryForm.formState.isSubmitting;
   const isBudgetSubmitting = budgetForm.formState.isSubmitting;
 
@@ -443,7 +455,7 @@ export function BudgetManager({
                         key={category.id}
                         category={category}
                         budget={budgets.find((b) => b.categoryId === category.id)}
-                        actual={calcActualByCategory(payments, category.id)}
+                        actual={actualByCategory.get(category.id) ?? 0}
                         onEdit={handleOpenEditCategory}
                         onDelete={setDeleteCategoryTarget}
                         onBudget={handleOpenBudget}
@@ -451,26 +463,19 @@ export function BudgetManager({
                     ))}
                   </TableBody>
                   <TableFooter>
-                    {(() => {
-                      const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
-                      const totalActual = items.reduce((s, c) => s + calcActualByCategory(payments, c.id), 0);
-                      const totalProgress = totalBudget > 0 ? Math.round((totalActual / totalBudget) * 100) : 0;
-                      return (
-                        <TableRow className="border-t-2 border-border bg-muted">
-                          <TableCell colSpan={2} className="font-black">合計</TableCell>
-                          <TableCell className="font-mono font-black">{formatCurrency(totalBudget)}</TableCell>
-                          <TableCell className="font-mono font-black">{formatCurrency(totalActual)}</TableCell>
-                          <TableCell>
-                            {totalBudget > 0 && (
-                              <span className={`text-sm font-black ${totalProgress > 100 ? "text-red-600" : ""}`}>
-                                {totalProgress}%
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell />
-                        </TableRow>
-                      );
-                    })()}
+                    <TableRow className="border-t-2 border-border bg-muted">
+                      <TableCell colSpan={2} className="font-black">合計</TableCell>
+                      <TableCell className="font-mono font-black">{formatCurrency(totals.budget)}</TableCell>
+                      <TableCell className="font-mono font-black">{formatCurrency(totals.actual)}</TableCell>
+                      <TableCell>
+                        {totals.budget > 0 && (
+                          <span className={`text-sm font-black ${totals.progress > 100 ? "text-red-600" : ""}`}>
+                            {totals.progress}%
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell />
+                    </TableRow>
                   </TableFooter>
                 </Table>
               </SortableContext>

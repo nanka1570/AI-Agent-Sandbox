@@ -31,6 +31,7 @@ import {
   updateCreditCardOrder,
 } from "@/lib/actions/credit-card";
 import { formatDay, formatPaymentDay, parseNumericInput } from "@/lib/utils";
+import { DAY_LAST_OF_MONTH } from "@/lib/payment-constants";
 
 // カードブランド定義
 const BRANDS = [
@@ -369,21 +370,21 @@ export function CreditCardList({ cards }: Props) {
                           inputMode="numeric"
                           pattern="[0-9]*"
                           placeholder="1〜31"
-                          disabled={field.value === 32}
+                          disabled={field.value === DAY_LAST_OF_MONTH}
                           name={field.name}
                           ref={field.ref}
                           onBlur={field.onBlur}
-                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          value={field.value === DAY_LAST_OF_MONTH ? "" : String(field.value ?? "")}
                           onChange={(e) => {
                             field.onChange(parseNumericInput(e.target.value));
                           }}
-                          className={field.value === 32 ? "bg-muted" : ""}
+                          className={field.value === DAY_LAST_OF_MONTH ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
+                          onClick={() => field.onChange(field.value === DAY_LAST_OF_MONTH ? undefined : DAY_LAST_OF_MONTH)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
-                            field.value === 32
+                            field.value === DAY_LAST_OF_MONTH
                               ? "border-black bg-black text-white"
                               : "border-border bg-white hover:bg-secondary"
                           }`}
@@ -436,21 +437,21 @@ export function CreditCardList({ cards }: Props) {
                           inputMode="numeric"
                           pattern="[0-9]*"
                           placeholder="1〜31（任意）"
-                          disabled={field.value === 32}
+                          disabled={field.value === DAY_LAST_OF_MONTH}
                           name={field.name}
                           ref={field.ref}
                           onBlur={field.onBlur}
-                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          value={field.value === DAY_LAST_OF_MONTH ? "" : String(field.value ?? "")}
                           onChange={(e) => {
                             field.onChange(parseNumericInput(e.target.value));
                           }}
-                          className={field.value === 32 ? "bg-muted" : ""}
+                          className={field.value === DAY_LAST_OF_MONTH ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
+                          onClick={() => field.onChange(field.value === DAY_LAST_OF_MONTH ? undefined : DAY_LAST_OF_MONTH)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
-                            field.value === 32
+                            field.value === DAY_LAST_OF_MONTH
                               ? "border-black bg-black text-white"
                               : "border-border bg-white hover:bg-secondary"
                           }`}
@@ -501,21 +502,21 @@ export function CreditCardList({ cards }: Props) {
                           inputMode="numeric"
                           pattern="[0-9]*"
                           placeholder="1〜31"
-                          disabled={field.value === 32}
+                          disabled={field.value === DAY_LAST_OF_MONTH}
                           name={field.name}
                           ref={field.ref}
                           onBlur={field.onBlur}
-                          value={field.value === 32 ? "" : String(field.value ?? "")}
+                          value={field.value === DAY_LAST_OF_MONTH ? "" : String(field.value ?? "")}
                           onChange={(e) => {
                             field.onChange(parseNumericInput(e.target.value));
                           }}
-                          className={field.value === 32 ? "bg-muted" : ""}
+                          className={field.value === DAY_LAST_OF_MONTH ? "bg-muted" : ""}
                         />
                         <button
                           type="button"
-                          onClick={() => field.onChange(field.value === 32 ? undefined : 32)}
+                          onClick={() => field.onChange(field.value === DAY_LAST_OF_MONTH ? undefined : DAY_LAST_OF_MONTH)}
                           className={`rounded border-2 px-2 py-1 text-sm font-bold transition-colors ${
-                            field.value === 32
+                            field.value === DAY_LAST_OF_MONTH
                               ? "border-black bg-black text-white"
                               : "border-border bg-white hover:bg-secondary"
                           }`}

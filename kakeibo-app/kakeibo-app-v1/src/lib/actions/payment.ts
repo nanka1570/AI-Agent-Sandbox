@@ -8,13 +8,7 @@ import { getActualDay } from "@/lib/utils";
 import { paymentSchema, paymentStatusSchema, type PaymentInput, type ActionResult } from "@/types";
 import type { CreditCard } from "@/generated/prisma/client";
 import type { PaymentWithCard } from "@/lib/payment-query";
-
-// ステータス遷移マップ（循環: 支払い済み → 未確定に戻れる）
-const STATUS_TRANSITIONS: Record<string, string> = {
-  unconfirmed: "confirmed",
-  confirmed: "paid",
-  paid: "unconfirmed",
-};
+import { STATUS_TRANSITIONS } from "@/lib/payment-constants";
 
 /**
  * 利用月と紐づくカードの設定から初期ステータスを計算する。
@@ -185,7 +179,11 @@ export async function updatePaymentStatus(
     return { success: false, error: "支払いデータが見つかりません" };
   }
 
-  const nextStatus = STATUS_TRANSITIONS[existing.status];
+  const currentStatus = paymentStatusSchema.safeParse(existing.status);
+  if (!currentStatus.success) {
+    return { success: false, error: "無効なステータスです" };
+  }
+  const nextStatus = STATUS_TRANSITIONS[currentStatus.data];
 
   const payment = await prisma.payment.update({
     where: { id, userId },

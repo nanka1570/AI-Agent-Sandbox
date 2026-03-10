@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { DAY_LAST_OF_MONTH } from "@/lib/payment-constants";
 import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
 
 export type PaymentWithCard = Payment & {
@@ -76,9 +77,9 @@ export async function fetchPaymentsForCycle(
       const [py, pm] = p.month.split("-").map(Number);
       const actualMonthIdx = pm - 1 + p.creditCard.paymentMonthOffset;
       const rawDay = p.creditCard.paymentDay;
-      // 32日設定（末日）を実際の末日に変換
+      // 末日設定を実際の末日に変換
       const actualDay =
-        rawDay === 32
+        rawDay === DAY_LAST_OF_MONTH
           ? new Date(py, actualMonthIdx + 1, 0).getDate()
           : rawDay;
       const actualDate = new Date(py, actualMonthIdx, actualDay);

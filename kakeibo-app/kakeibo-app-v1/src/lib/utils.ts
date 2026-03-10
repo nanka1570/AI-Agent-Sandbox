@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { DAY_LAST_OF_MONTH } from "@/lib/payment-constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -28,7 +29,7 @@ export function formatMonth(month: string): string {
 
 // 日表示: 25 → "25日", 32 → "末日"
 export function formatDay(day: number): string {
-  return day === 32 ? "末日" : `${day}日`;
+  return day === DAY_LAST_OF_MONTH ? "末日" : `${day}日`;
 }
 
 // 金額を日本語単位で表示: 250000 → "25万円", 253000 → "25万3,000円", 3000 → "3,000円"
@@ -67,7 +68,7 @@ export function formatActualPaymentDate(
  * @param month 月（1-12）
  */
 export function getActualDay(day: number, year: number, month: number): number {
-  if (day !== 32) return day;
+  if (day !== DAY_LAST_OF_MONTH) return day;
   return new Date(year, month, 0).getDate();
 }
 
@@ -92,14 +93,14 @@ export function formatBillingPeriod(targetMonth: string, closingDay: number): st
   const [year, month] = targetMonth.split("-").map(Number);
 
   // 終了日: 今月の締め日（32=末日）
-  const endDay = closingDay === 32
+  const endDay = closingDay === DAY_LAST_OF_MONTH
     ? new Date(year, month, 0).getDate()
     : closingDay;
 
   // 開始日: 前月の締め日 + 1日
   const prevYear = month === 1 ? year - 1 : year;
   const prevMonth = month === 1 ? 12 : month - 1;
-  const prevClosingDay = closingDay === 32
+  const prevClosingDay = closingDay === DAY_LAST_OF_MONTH
     ? new Date(prevYear, prevMonth, 0).getDate()
     : closingDay;
 
