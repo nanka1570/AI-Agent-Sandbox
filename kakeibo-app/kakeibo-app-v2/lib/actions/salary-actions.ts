@@ -38,14 +38,6 @@ export async function createSalary(data: unknown): Promise<ActionResult<Salary>>
   try {
     const userId = await getAuthUserId();
 
-    // 同月の重複チェック
-    const existing = await prisma.salary.findFirst({
-      where: { userId, month: parsed.data.month },
-    });
-    if (existing) {
-      return { success: false, error: "同じ月の手取りが既に登録されています" };
-    }
-
     const sortOrder = monthToSortOrder(parsed.data.month);
 
     const newSalary = await prisma.salary.create({
@@ -89,18 +81,6 @@ export async function updateSalary(id: string, data: unknown): Promise<ActionRes
     });
     if (!target) {
       return { success: false, error: "手取りデータが見つかりません" };
-    }
-
-    // 同月の重複チェック（自身を除外）
-    const existing = await prisma.salary.findFirst({
-      where: {
-        userId,
-        month: parsed.data.month,
-        id: { not: id },
-      },
-    });
-    if (existing) {
-      return { success: false, error: "同じ月の手取りが既に登録されています" };
     }
 
     const sortOrder = monthToSortOrder(parsed.data.month);

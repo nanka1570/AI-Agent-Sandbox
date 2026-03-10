@@ -152,7 +152,7 @@ export async function getDashboardData(
   const paymentsByCard = groupPaymentsByCard(allCards, filteredPayments);
 
   // 9. 資金繰り（fundFlow）
-  const fundFlow = buildFundFlow(paymentsByCard, cycle, salaryTotal, payDay, selectedMonth);
+  const fundFlow = buildFundFlow(paymentsByCard, cycle, salaryTotal, payDay);
 
   // 10. 予算消化率の集計
   const budgetConsumption = await aggregateBudgetConsumption(
@@ -254,7 +254,6 @@ function buildFundFlow(
   cycle: SalaryCycle | null,
   salaryTotal: number,
   payDay: number | null,
-  selectedMonth: string,
 ): FundFlowEntry[] {
   const fundFlow: FundFlowEntry[] = [];
 
@@ -271,39 +270,57 @@ function buildFundFlow(
   }
 
   // 各カードの引き落とし日エントリ（サイクル内に支払いがあるカードのみ）
+  // 同一カードでも利用月が異なれば引き落とし日が異なるため、引き落とし日ごとにサブグループ化
   for (const cardGroup of paymentsByCard) {
     if (cardGroup.payments.length === 0) continue;
 
-    // filteredPayments はサイクル（selectedMonth 基準）でフィルタ済みのため、
-    // 引き落とし日は selectedMonth を基準に計算する
-    const paymentDate = calculatePaymentDate(
-      selectedMonth,
-      cardGroup.card.paymentMonthOffset,
-      cardGroup.card.paymentDay,
-    );
+    // 支払いを実際の引き落とし日でグループ化
+    const byPaymentDate = new Map<string, typeof cardGroup.payments>();
+    for (const p of cardGroup.payments) {
+      const pDate = calculatePaymentDate(
+        p.month,
+        cardGroup.card.paymentMonthOffset,
+        cardGroup.card.paymentDay,
+      );
+      const key = format(pDate, "yyyy-MM-dd");
+      const group = byPaymentDate.get(key);
+      if (group) {
+        group.push(p);
+      } else {
+        byPaymentDate.set(key, [p]);
+      }
+    }
 
-    const isBeforePayDay = cycle ? paymentDate < cycle.start : false;
+    for (const [, payments] of byPaymentDate) {
+      const paymentDate = calculatePaymentDate(
+        payments[0].month,
+        cardGroup.card.paymentMonthOffset,
+        cardGroup.card.paymentDay,
+      );
+      const isBeforePayDay = cycle ? paymentDate < cycle.start : false;
+      const subtotal = payments.reduce((sum, p) => sum + p.amount, 0);
 
-    // カードグループの集約ステータスを判定
-    const allPaid = cardGroup.payments.every((p) => p.status === "paid");
-    const allConfirmedOrPaid = cardGroup.payments.every(
-      (p) => p.status === "confirmed" || p.status === "paid",
-    );
-    const aggregatedStatus: PaymentStatus = allPaid
-      ? "paid"
-      : allConfirmedOrPaid
-        ? "confirmed"
-        : "unconfirmed";
+      // サブグループの集約ステータスを判定
+      const allPaid = payments.every((p) => p.status === "paid");
+      const allConfirmedOrPaid = payments.every(
+        (p) => p.status === "confirmed" || p.status === "paid",
+      );
+      const aggregatedStatus: PaymentStatus = allPaid
+        ? "paid"
+        : allConfirmedOrPaid
+          ? "confirmed"
+          : "unconfirmed";
 
-    fundFlow.push({
-      date: paymentDate,
-      type: "payment",
-      label: cardGroup.card.name,
-      amount: cardGroup.subtotal,
-      isBeforePayDay,
-      sortOrder: cardGroup.card.sortOrder,
-      status: aggregatedStatus,
-    });
+      fundFlow.push({
+        date: paymentDate,
+        type: "payment",
+        label: cardGroup.card.name,
+        amount: subtotal,
+        isBeforePayDay,
+        sortOrder: cardGroup.card.sortOrder,
+        status: aggregatedStatus,
+      });
+    }
   }
 
   // 日付順にソート（同日の場合は sortOrder で、給料日は最初）
