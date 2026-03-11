@@ -8,37 +8,45 @@ test.beforeEach(async ({ page }) => {
 
 test("E2E-003: 支払いステータス変更確認", async ({ page }) => {
   const currentMonth = format(new Date(), "yyyy-MM");
+  // ユニークなカード名（前回テスト実行データとの競合回避）
+  const cardName = `ステータス確認${Date.now()}`;
 
   // --- 準備: クレカ登録 ---
+  // paymentDay=27: 給料日(25日)以降にすることで、給料サイクルモードでも当月に表示される
   await page.goto("/credit-cards");
   await page.click("text=+ 新規登録");
-  await page.fill('input[placeholder="楽天カード"]', "ステータス確認用");
+  await page.fill('input[placeholder="楽天カード"]', cardName);
   await page.locator('input[placeholder="1〜31"]').first().fill("20");
-  await page.locator('input[placeholder="1〜31"]').last().fill("5");
+  await page.locator('input[placeholder="1〜31"]').last().fill("27");
   await page.click("text=登録する");
   await expect(page.locator("text=登録しました")).toBeVisible();
 
-  // --- 準備: 支払い登録 ---
+  // --- 準備: 支払い登録（当月 + offset=0 → 当月27日引き落とし） ---
   await page.goto("/payments");
   await page.click("text=+ 新規登録");
   await page.locator("text=カードを選択").click();
-  await page.locator('[role="option"]').filter({ hasText: "ステータス確認用" }).first().click();
+  await page.locator('[role="option"]').filter({ hasText: cardName }).first().click();
   await page.fill('input[type="month"]', currentMonth);
   await page.fill('input[placeholder="50000"]', "40000");
   await page.click("text=登録する");
   await expect(page.locator("text=登録しました")).toBeVisible();
   await expect(page.locator('[role="dialog"]')).toBeHidden();
 
+  // 当月の支払い一覧に遷移して確認
+  await page.goto(`/payments?month=${currentMonth}`);
+  await page.waitForLoadState("networkidle");
+
   // --- 未確定 → 確定 ---
-  const row = page.locator("tbody tr").filter({ hasText: "ステータス確認用" }).first();
+  const row = page.locator("tbody tr").filter({ hasText: cardName }).first();
+  await expect(row).toBeVisible({ timeout: 10000 });
   const statusButton = row.getByRole("button", { name: "未確定" });
-  await expect(statusButton).toBeVisible();
+  await expect(statusButton).toBeVisible({ timeout: 10000 });
   await statusButton.click();
 
   // 確定に変わる
-  await expect(row.getByRole("button", { name: "確定" })).toBeVisible();
+  await expect(row.getByRole("button", { name: "確定" })).toBeVisible({ timeout: 10000 });
 
   // --- 確定 → 支払い済み ---
   await row.getByRole("button", { name: "確定" }).click();
-  await expect(row.getByText("支払い済み")).toBeVisible();
+  await expect(row.getByText("支払い済み")).toBeVisible({ timeout: 10000 });
 });

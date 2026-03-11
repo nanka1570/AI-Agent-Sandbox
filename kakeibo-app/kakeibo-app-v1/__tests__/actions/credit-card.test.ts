@@ -36,7 +36,9 @@ const mockCard = {
   paymentMonthOffset: 0,
   confirmationDay: null,
   confirmationMonthOffset: null,
+  brand: null,
   memo: null,
+  sortOrder: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -56,21 +58,21 @@ describe("createCreditCard", () => {
 
   // UT-CC-002: 名前空
   it("名前空で登録エラー", async () => {
-    const result = await createCreditCard({ name: "", closingDay: 31, paymentDay: 27 });
+    const result = await createCreditCard({ name: "", closingDay: 31, paymentDay: 27, paymentMonthOffset: 1 });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("必須");
   });
 
   // UT-CC-003: 名前51文字
   it("名前51文字で登録エラー", async () => {
-    const result = await createCreditCard({ name: "a".repeat(51), closingDay: 31, paymentDay: 27 });
+    const result = await createCreditCard({ name: "a".repeat(51), closingDay: 31, paymentDay: 27, paymentMonthOffset: 1 });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("50文字以内");
   });
 
   // UT-CC-004: closingDay 0
   it("closingDay 0で登録エラー", async () => {
-    const result = await createCreditCard({ name: "テスト", closingDay: 0, paymentDay: 27 });
+    const result = await createCreditCard({ name: "テスト", closingDay: 0, paymentDay: 27, paymentMonthOffset: 1 });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("1〜31");
   });
@@ -91,7 +93,7 @@ describe("createCreditCard", () => {
 
   // UT-CC-006: paymentDay 0
   it("paymentDay 0で登録エラー", async () => {
-    const result = await createCreditCard({ name: "テスト", closingDay: 31, paymentDay: 0 });
+    const result = await createCreditCard({ name: "テスト", closingDay: 31, paymentDay: 0, paymentMonthOffset: 1 });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("1〜31");
   });

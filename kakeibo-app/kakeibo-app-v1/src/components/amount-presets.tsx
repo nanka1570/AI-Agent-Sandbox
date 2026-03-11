@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatCurrencyJP } from "@/lib/utils";
 
 type Props = {
@@ -9,28 +9,30 @@ type Props = {
   onSelect: (value: number) => void;
 };
 
-export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
-  const [presets, setPresets] = useState<number[]>(defaults);
-  const [isEditing, setIsEditing] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-
-  // localStorage からカスタムプリセットを読み込み
-  useEffect(() => {
+// localStorage からカスタムプリセットを読み込み（遅延初期化用）
+function loadPresets(storageKey: string, defaults: number[]): number[] {
+  if (typeof window === "undefined") return defaults;
+  try {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as unknown;
-        if (
-          Array.isArray(parsed) &&
-          parsed.every((v) => typeof v === "number")
-        ) {
-          setPresets(parsed as number[]);
-        }
-      } catch {
-        // 無効なデータは無視
+      const parsed = JSON.parse(stored) as unknown;
+      if (
+        Array.isArray(parsed) &&
+        parsed.every((v) => typeof v === "number")
+      ) {
+        return parsed as number[];
       }
     }
-  }, [storageKey]);
+  } catch {
+    // 無効なデータは無視
+  }
+  return defaults;
+}
+
+export function AmountPresets({ storageKey, defaults, onSelect }: Props) {
+  const [presets, setPresets] = useState<number[]>(() => loadPresets(storageKey, defaults));
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   function save(next: number[]) {
     setPresets(next);

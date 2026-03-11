@@ -39,7 +39,6 @@ type CardGroup = {
 
 type Props = {
   payments: PaymentWithRelations[];
-  currentMonth: string;
 };
 
 // 締め月+offset+paymentDay から実際の引き落とし日を計算（ソート用）
@@ -94,7 +93,7 @@ function groupPayments(payments: PaymentWithRelations[]): CardGroup[] {
   });
 }
 
-export function PaymentScheduleTable({ payments, currentMonth }: Props) {
+export function PaymentScheduleTable({ payments }: Props) {
   const router = useRouter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 

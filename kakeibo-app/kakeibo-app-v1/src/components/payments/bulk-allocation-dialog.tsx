@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { format } from "date-fns";
 import { formatCurrencyJP } from "@/lib/utils";
 import { createBulkPayments } from "@/lib/actions/payment";
 import type { CreditCard, Category } from "@/generated/prisma/client";
@@ -193,7 +192,7 @@ export function BulkAllocationDialog({
           {/* 振り分け行 */}
           <div className="space-y-2">
             <Label>カテゴリ振り分け</Label>
-            {rows.map((row, idx) => (
+            {rows.map((row) => (
               <div key={row.id} className="flex items-center gap-2">
                 {/* カテゴリ */}
                 <Select

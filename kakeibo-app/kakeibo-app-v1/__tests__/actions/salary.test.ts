@@ -31,6 +31,7 @@ const mockSalary = {
   payDay: 25,
   amount: 250000,
   memo: null,
+  sortOrder: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

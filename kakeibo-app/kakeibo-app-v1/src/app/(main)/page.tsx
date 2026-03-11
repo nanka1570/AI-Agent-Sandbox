@@ -56,7 +56,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const salaryPayDay = await getSalaryPayDay(userId, currentMonth);
 
   // 給料サイクル変数（JSX表示用に外部で定義）
-  const { cycleStart, cycleEnd, actualSalaryDay } = calcSalaryCycle(currentMonth, salaryPayDay);
+  const { cycleStart, cycleEnd } = calcSalaryCycle(currentMonth, salaryPayDay);
 
   // 支払いデータ取得（給料サイクルベース or 引き落とし月ベース）
   const payments = await fetchPaymentsForCycle(userId, currentMonth, salaryPayDay);
@@ -233,7 +233,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             ? `${cycleStart.getMonth() + 1}/${cycleStart.getDate()} 〜 ${cycleEnd.getMonth() + 1}/${cycleEnd.getDate()} の引き落とし予定`
             : `${formatMonth(currentMonth)} の引き落とし予定`}
         </h2>
-        <PaymentScheduleTable payments={payments} currentMonth={currentMonth} />
+        <PaymentScheduleTable payments={payments} />
       </div>
 
       {/* グラフ */}

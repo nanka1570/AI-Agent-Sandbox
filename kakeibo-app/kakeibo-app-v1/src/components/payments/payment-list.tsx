@@ -24,7 +24,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Payment, CreditCard, Category } from "@/generated/prisma/client";
+import type { CreditCard, Category } from "@/generated/prisma/client";
 import { paymentSchema, type PaymentInput, type PaymentStatus } from "@/types";
 import {
   createPayment,

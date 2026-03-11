@@ -23,5 +23,5 @@ test("E2E-002: 給料登録 → ダッシュボード確認", async ({ page }) =
 
   // --- ダッシュボード確認 ---
   await page.goto("/");
-  await expect(page.getByText("給料合計")).toBeVisible();
+  await expect(page.getByText("手取り合計")).toBeVisible();
 });
