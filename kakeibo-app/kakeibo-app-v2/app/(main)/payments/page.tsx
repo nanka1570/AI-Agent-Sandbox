@@ -12,27 +12,43 @@ import { isPaymentStatus } from "@/lib/utils/status";
 export default async function PaymentsPage() {
   const userId = await getAuthUserId();
 
-  // 支払い・カード・カテゴリを並列取得
-  const [payments, creditCards, categories] = await Promise.all([
-    prisma.payment.findMany({
-      where: { userId },
-      include: {
-        creditCard: { select: { name: true } },
-        category: { select: { name: true, color: true } },
-      },
-      orderBy: [{ month: "desc" }, { sortOrder: "asc" }],
-    }),
-    prisma.creditCard.findMany({
-      where: { userId },
-      select: { id: true, name: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.category.findMany({
-      where: { userId },
-      select: { id: true, name: true, color: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-  ]);
+  let payments: Awaited<ReturnType<typeof prisma.payment.findMany<{ include: { creditCard: { select: { name: true } }; category: { select: { name: true; color: true } } } }>>> = [];
+  let creditCards: Array<{ id: string; name: string; closingDay: number; paymentDay: number; paymentMonthOffset: number; confirmationDay: number | null; confirmationMonthOffset: number | null }> = [];
+  let categories: Array<{ id: string; name: string; color: string }> = [];
+
+  try {
+    // 支払い・カード・カテゴリを並列取得
+    [payments, creditCards, categories] = await Promise.all([
+      prisma.payment.findMany({
+        where: { userId },
+        include: {
+          creditCard: { select: { name: true } },
+          category: { select: { name: true, color: true } },
+        },
+        orderBy: [{ month: "desc" }, { sortOrder: "asc" }],
+      }),
+      prisma.creditCard.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          name: true,
+          closingDay: true,
+          paymentDay: true,
+          paymentMonthOffset: true,
+          confirmationDay: true,
+          confirmationMonthOffset: true,
+        },
+        orderBy: { sortOrder: "asc" },
+      }),
+      prisma.category.findMany({
+        where: { userId },
+        select: { id: true, name: true, color: true },
+        orderBy: { sortOrder: "asc" },
+      }),
+    ]);
+  } catch (e) {
+    console.error("PaymentsPage data fetch error:", e);
+  }
 
   return (
     <div className="space-y-6">

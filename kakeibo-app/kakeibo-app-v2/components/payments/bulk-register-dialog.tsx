@@ -22,12 +22,37 @@ import {
 } from "@/components/ui/select";
 import { bulkRegisterPayments } from "@/lib/actions/payment-actions";
 import { formatCurrency } from "@/lib/utils/format";
+import { LAST_DAY_CODE } from "@/lib/constants";
+import { addMonthsToMonth } from "@/lib/utils/date";
+
+interface CreditCardWithDates {
+  id: string;
+  name: string;
+  closingDay: number;
+  paymentDay: number;
+  paymentMonthOffset: number;
+  confirmationDay: number | null;
+  confirmationMonthOffset: number | null;
+}
 
 interface BulkRegisterDialogProps {
-  creditCards: Array<{ id: string; name: string }>;
+  creditCards: CreditCardWithDates[];
   categories: Array<{ id: string; name: string; color: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function formatDay(day: number): string {
+  return day === LAST_DAY_CODE ? "末日" : `${day}日`;
+}
+
+function formatMonthOffset(offset: number): string {
+  switch (offset) {
+    case 0: return "当月";
+    case 1: return "翌月";
+    case 2: return "翌々月";
+    default: return `+${offset}ヶ月`;
+  }
 }
 
 /** 振り分け行の型 */
@@ -188,10 +213,48 @@ export function BulkRegisterDialog({
               <Input
                 id="bulk-month"
                 type="month"
+                className="cursor-pointer"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
+                onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
               />
             </div>
+
+            {/* カード・利用月選択後に締め日/確定日/支払日を表示 */}
+            {creditCardId && month && (() => {
+              const card = creditCards.find((c) => c.id === creditCardId);
+              if (!card) return null;
+              return (
+                <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>締め日</span>
+                    <span>利用月 {formatDay(card.closingDay)}</span>
+                  </div>
+                  {card.confirmationDay != null && card.confirmationMonthOffset != null && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>確定日</span>
+                      <span>
+                        {formatMonthOffset(card.confirmationMonthOffset)}{" "}
+                        {formatDay(card.confirmationDay)}
+                        <span className="text-muted-foreground/60 ml-1">
+                          ({addMonthsToMonth(month, card.confirmationMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>支払日</span>
+                    <span>
+                      {formatMonthOffset(card.paymentMonthOffset)}{" "}
+                      {formatDay(card.paymentDay)}
+                      <span className="text-muted-foreground/60 ml-1">
+                        ({addMonthsToMonth(month, card.paymentMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 合計額 */}
             <div className="space-y-2">

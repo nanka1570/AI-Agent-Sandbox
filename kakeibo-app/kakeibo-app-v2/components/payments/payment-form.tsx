@@ -29,7 +29,18 @@ import {
   updatePayment,
   createRecurringPayments,
 } from "@/lib/actions/payment-actions";
-import { RECURRING_PAYMENT_COUNT } from "@/lib/constants";
+import { RECURRING_PAYMENT_COUNT, LAST_DAY_CODE } from "@/lib/constants";
+import { addMonthsToMonth } from "@/lib/utils/date";
+
+interface CreditCardWithDates {
+  id: string;
+  name: string;
+  closingDay: number;
+  paymentDay: number;
+  paymentMonthOffset: number;
+  confirmationDay: number | null;
+  confirmationMonthOffset: number | null;
+}
 
 interface PaymentFormProps {
   /** 編集対象の支払い（新規作成時は undefined） */
@@ -43,10 +54,23 @@ interface PaymentFormProps {
     isRecurring: boolean;
     recurringGroupId: string | null;
   };
-  creditCards: Array<{ id: string; name: string }>;
+  creditCards: CreditCardWithDates[];
   categories: Array<{ id: string; name: string; color: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function formatDay(day: number): string {
+  return day === LAST_DAY_CODE ? "末日" : `${day}日`;
+}
+
+function formatMonthOffset(offset: number): string {
+  switch (offset) {
+    case 0: return "当月";
+    case 1: return "翌月";
+    case 2: return "翌々月";
+    default: return `+${offset}ヶ月`;
+  }
 }
 
 /**
@@ -83,6 +107,9 @@ export function PaymentForm({
   });
 
   const isRecurring = watch("isRecurring");
+  const watchedCardId = watch("creditCardId");
+  const watchedMonth = watch("month");
+  const selectedCard = creditCards.find((c) => c.id === watchedCardId) ?? null;
 
   // ダイアログが開くたびにフォームをリセット
   useEffect(() => {
@@ -175,6 +202,8 @@ export function PaymentForm({
             <Input
               id="payment-month"
               type="month"
+              className="cursor-pointer"
+              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
               {...register("month")}
             />
             {errors.month && (
@@ -183,6 +212,38 @@ export function PaymentForm({
               </p>
             )}
           </div>
+
+          {/* カード・利用月選択後に締め日/確定日/支払日を表示 */}
+          {selectedCard && watchedMonth && (
+            <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+              <div className="flex justify-between text-muted-foreground">
+                <span>締め日</span>
+                <span>利用月 {formatDay(selectedCard.closingDay)}</span>
+              </div>
+              {selectedCard.confirmationDay != null && selectedCard.confirmationMonthOffset != null && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>確定日</span>
+                  <span>
+                    {formatMonthOffset(selectedCard.confirmationMonthOffset)}{" "}
+                    {formatDay(selectedCard.confirmationDay)}
+                    <span className="text-muted-foreground/60 ml-1">
+                      ({addMonthsToMonth(watchedMonth, selectedCard.confirmationMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                    </span>
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between text-muted-foreground">
+                <span>支払日</span>
+                <span>
+                  {formatMonthOffset(selectedCard.paymentMonthOffset)}{" "}
+                  {formatDay(selectedCard.paymentDay)}
+                  <span className="text-muted-foreground/60 ml-1">
+                    ({addMonthsToMonth(watchedMonth, selectedCard.paymentMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* 金額 */}
           <div className="space-y-2">

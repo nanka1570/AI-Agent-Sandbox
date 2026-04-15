@@ -59,9 +59,19 @@ interface PaymentItem {
   category: { name: string; color: string } | null;
 }
 
+interface CreditCardWithDates {
+  id: string;
+  name: string;
+  closingDay: number;
+  paymentDay: number;
+  paymentMonthOffset: number;
+  confirmationDay: number | null;
+  confirmationMonthOffset: number | null;
+}
+
 interface PaymentListProps {
   payments: PaymentItem[];
-  creditCards: Array<{ id: string; name: string }>;
+  creditCards: CreditCardWithDates[];
   categories: Array<{ id: string; name: string; color: string }>;
 }
 
