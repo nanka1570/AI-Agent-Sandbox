@@ -105,6 +105,13 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
   }
+  /* チェックボックス・セレクトボックスにポインターカーソル */
+  [role="checkbox"],
+  [role="combobox"],
+  [role="listbox"],
+  select {
+    cursor: pointer;
+  }
 }
 
 /* ===== Autofill 背景色オーバーライド ===== */

@@ -114,10 +114,11 @@ function DaySelect({
         />
         <div className="flex items-center gap-2">
           <Checkbox
+            id={`${name}-last-day`}
             checked={isLastDay}
             onCheckedChange={(checked) => onLastDayChange(!!checked)}
           />
-          <Label className="text-sm font-normal">末日</Label>
+          <Label htmlFor={`${name}-last-day`} className="text-sm font-normal cursor-pointer">末日</Label>
         </div>
       </div>
       {errors[name] && (
@@ -245,18 +246,6 @@ export function CreditCardForm({
             errors={errors}
           />
 
-          {/* 支払日 */}
-          <DaySelect
-            name="paymentDay"
-            label="支払日"
-            isLastDay={isPaymentLastDay}
-            onLastDayChange={(checked) =>
-              setValue("paymentDay", checked ? 32 : 10)
-            }
-            control={control}
-            errors={errors}
-          />
-
           {/* 支払月オフセット */}
           <div className="space-y-2">
             <Label>支払月（締め月からのオフセット）</Label>
@@ -286,10 +275,23 @@ export function CreditCardForm({
             )}
           </div>
 
+          {/* 支払日 */}
+          <DaySelect
+            name="paymentDay"
+            label="支払日"
+            isLastDay={isPaymentLastDay}
+            onLastDayChange={(checked) =>
+              setValue("paymentDay", checked ? 32 : 10)
+            }
+            control={control}
+            errors={errors}
+          />
+
           {/* 確定日（任意） */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Checkbox
+                id="has-confirmation"
                 checked={hasConfirmation}
                 onCheckedChange={(checked) => {
                   if (checked) {
@@ -301,7 +303,7 @@ export function CreditCardForm({
                   }
                 }}
               />
-              <Label className="text-sm font-normal">確定日を設定する</Label>
+              <Label htmlFor="has-confirmation" className="text-sm font-normal cursor-pointer">確定日を設定する</Label>
             </div>
             {hasConfirmation && (
               <div className="ml-6 space-y-3">
