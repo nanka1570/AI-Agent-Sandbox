@@ -1,5 +1,6 @@
 import { createServerClient as _createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function createServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,7 +38,7 @@ export async function getAuthUserId(): Promise<string> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    throw new Error("Unauthorized: user session not found");
+    redirect("/login");
   }
   return user.id;
 }
