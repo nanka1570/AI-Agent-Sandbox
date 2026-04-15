@@ -19,11 +19,9 @@ export function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (hasSession && isPublicPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
+  // Cookie の有無だけではセッションの有効性を判断できないため、
+  // 公開ページへの逆リダイレクトはここでは行わない。
+  // ログイン済みユーザーの保護ページへの転送は getAuthUserId() が担う。
 
   return NextResponse.next({ request });
 }
