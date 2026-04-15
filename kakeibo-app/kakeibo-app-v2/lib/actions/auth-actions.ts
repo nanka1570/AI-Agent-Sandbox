@@ -68,11 +68,13 @@ export async function register(data: unknown): Promise<ActionResult> {
     });
 
     if (error) {
+      console.error("[register] Supabase error:", error.message);
       return { success: false, error: translateAuthError(error.message) };
     }
 
     return { success: true };
-  } catch {
+  } catch (e) {
+    console.error("[register] unexpected error:", e);
     return { success: false, error: "アカウント登録に失敗しました" };
   }
 }

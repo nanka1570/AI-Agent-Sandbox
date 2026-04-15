@@ -20,5 +20,5 @@ export function translateAuthError(message: string): string {
       return value;
     }
   }
-  return "認証エラーが発生しました。もう一度お試しください";
+  return `認証エラー: ${message}`;
 }
