@@ -500,7 +500,7 @@ export function BulkRegisterDialog({
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!isTotalMatched || isSubmitting}
+                disabled={itemsTotal < 1 || isSubmitting}
               >
                 {isSubmitting ? "登録中..." : "一括登録"}
               </Button>

@@ -362,18 +362,6 @@ export async function bulkRegisterPayments(
     };
   }
 
-  // 振り分け合計額が合計額と一致するかチェック
-  const itemsTotal = parsed.data.items.reduce(
-    (sum, item) => sum + item.amount,
-    0
-  );
-  if (itemsTotal !== parsed.data.totalAmount) {
-    return {
-      success: false,
-      error: `振り分け合計（${itemsTotal}円）が合計額（${parsed.data.totalAmount}円）と一致しません`,
-    };
-  }
-
   // 金額が0のアイテムは除外
   const validItems = parsed.data.items.filter((item) => item.amount > 0);
   if (validItems.length === 0) {
