@@ -73,6 +73,15 @@ function formatMonthOffset(offset: number): string {
   }
 }
 
+function formatMonthOffsetLabel(offset: number): string {
+  switch (offset) {
+    case 0: return "利用月";
+    case 1: return "利用月の翌月";
+    case 2: return "利用月の翌々月";
+    default: return `利用月の+${offset}ヶ月後`;
+  }
+}
+
 /**
  * 支払い登録・編集フォームダイアログ
  * 新規作成時は繰り返し登録チェックボックスを表示
@@ -224,10 +233,10 @@ export function PaymentForm({
                 <div className="flex justify-between text-muted-foreground">
                   <span>確定日</span>
                   <span>
-                    {formatMonthOffset(selectedCard.confirmationMonthOffset)}{" "}
+                    {Number(addMonthsToMonth(watchedMonth, selectedCard.confirmationMonthOffset).split("-")[1])}月
                     {formatDay(selectedCard.confirmationDay)}
                     <span className="text-muted-foreground/60 ml-1">
-                      ({addMonthsToMonth(watchedMonth, selectedCard.confirmationMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                      （{formatMonthOffsetLabel(selectedCard.confirmationMonthOffset)}）
                     </span>
                   </span>
                 </div>
@@ -235,10 +244,10 @@ export function PaymentForm({
               <div className="flex justify-between text-muted-foreground">
                 <span>支払日</span>
                 <span>
-                  {formatMonthOffset(selectedCard.paymentMonthOffset)}{" "}
+                  {Number(addMonthsToMonth(watchedMonth, selectedCard.paymentMonthOffset).split("-")[1])}月
                   {formatDay(selectedCard.paymentDay)}
                   <span className="text-muted-foreground/60 ml-1">
-                    ({addMonthsToMonth(watchedMonth, selectedCard.paymentMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                    （{formatMonthOffsetLabel(selectedCard.paymentMonthOffset)}）
                   </span>
                 </span>
               </div>

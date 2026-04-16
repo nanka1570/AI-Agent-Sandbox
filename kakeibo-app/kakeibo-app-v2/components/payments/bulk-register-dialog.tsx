@@ -55,6 +55,15 @@ function formatMonthOffset(offset: number): string {
   }
 }
 
+function formatMonthOffsetLabel(offset: number): string {
+  switch (offset) {
+    case 0: return "利用月";
+    case 1: return "利用月の翌月";
+    case 2: return "利用月の翌々月";
+    default: return `利用月の+${offset}ヶ月後`;
+  }
+}
+
 /** 振り分け行の型 */
 interface AllocationItem {
   id: string;
@@ -234,10 +243,10 @@ export function BulkRegisterDialog({
                     <div className="flex justify-between text-muted-foreground">
                       <span>確定日</span>
                       <span>
-                        {formatMonthOffset(card.confirmationMonthOffset)}{" "}
+                        {Number(addMonthsToMonth(month, card.confirmationMonthOffset).split("-")[1])}月
                         {formatDay(card.confirmationDay)}
                         <span className="text-muted-foreground/60 ml-1">
-                          ({addMonthsToMonth(month, card.confirmationMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                          （{formatMonthOffsetLabel(card.confirmationMonthOffset)}）
                         </span>
                       </span>
                     </div>
@@ -245,10 +254,10 @@ export function BulkRegisterDialog({
                   <div className="flex justify-between text-muted-foreground">
                     <span>支払日</span>
                     <span>
-                      {formatMonthOffset(card.paymentMonthOffset)}{" "}
+                      {Number(addMonthsToMonth(month, card.paymentMonthOffset).split("-")[1])}月
                       {formatDay(card.paymentDay)}
                       <span className="text-muted-foreground/60 ml-1">
-                        ({addMonthsToMonth(month, card.paymentMonthOffset).replace("-", "年").replace(/^(\d{4})年0?/, "$1年")}月)
+                        （{formatMonthOffsetLabel(card.paymentMonthOffset)}）
                       </span>
                     </span>
                   </div>
