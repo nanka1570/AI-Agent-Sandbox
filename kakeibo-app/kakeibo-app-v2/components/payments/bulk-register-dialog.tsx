@@ -334,16 +334,16 @@ export function BulkRegisterDialog({
                   <div className="flex-1 space-y-1">
                     <Label className="text-xs">カテゴリ</Label>
                     <Select
-                      value={item.categoryId ?? ""}
+                      value={item.categoryId ?? "__none__"}
                       onValueChange={(val) =>
-                        updateCategoryId(index, val === "" ? null : val)
+                        updateCategoryId(index, val === "__none__" ? null : val)
                       }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="カテゴリを選択" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">未分類</SelectItem>
+                        <SelectItem value="__none__">未分類</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem
                             key={cat.id}
