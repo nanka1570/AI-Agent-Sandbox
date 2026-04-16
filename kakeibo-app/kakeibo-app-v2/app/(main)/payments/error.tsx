@@ -23,8 +23,11 @@ export default function PaymentsError({
       <p className="text-sm text-muted-foreground">
         支払いデータの読み込みに失敗しました
       </p>
+      <p className="text-[10px] font-mono text-muted-foreground mt-2 max-w-xs break-all">
+        {error.message || "(no message)"}
+      </p>
       {error.digest && (
-        <p className="text-[10px] font-mono text-muted-foreground mt-2">
+        <p className="text-[10px] font-mono text-muted-foreground mt-1">
           Error ID: {error.digest}
         </p>
       )}
