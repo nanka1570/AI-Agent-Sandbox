@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { bulkRegisterPayments } from "@/lib/actions/payment-actions";
+import { createCategory } from "@/lib/actions/category-actions";
 import { formatCurrency } from "@/lib/utils/format";
 import { LAST_DAY_CODE } from "@/lib/constants";
 import { addMonthsToMonth } from "@/lib/utils/date";
@@ -100,6 +101,18 @@ export function BulkRegisterDialog({
     createAllocationItem(),
   ]);
 
+  // STEP2 で追加したカテゴリ（サーバーから取得済みのものと合わせて表示）
+  const [localCategories, setLocalCategories] = useState<
+    Array<{ id: string; name: string; color: string }>
+  >([]);
+  const allCategories = [...categories, ...localCategories];
+
+  // 新規カテゴリ追加フォームの表示状態
+  const [showNewCatForm, setShowNewCatForm] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatColor, setNewCatColor] = useState("#6366f1");
+  const [isCreatingCat, setIsCreatingCat] = useState(false);
+
   /** 振り分け合計額 */
   const itemsTotal = items.reduce((sum, item) => sum + item.amount, 0);
 
@@ -114,6 +127,10 @@ export function BulkRegisterDialog({
       setMonth("");
       setTotalAmount(0);
       setItems([createAllocationItem()]);
+      setLocalCategories([]);
+      setShowNewCatForm(false);
+      setNewCatName("");
+      setNewCatColor("#6366f1");
     }
     onOpenChange(newOpen);
   };
@@ -154,12 +171,30 @@ export function BulkRegisterDialog({
     setItems(newItems);
   };
 
-  /** カテゴリが既に他の行で選択されているか */
-  const isCategoryUsed = (categoryId: string | null, currentIndex: number) => {
-    if (!categoryId) return false;
-    return items.some(
-      (item, i) => i !== currentIndex && item.categoryId === categoryId
-    );
+  /** 新規カテゴリを作成してローカルリストに追加 */
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return;
+    setIsCreatingCat(true);
+    try {
+      const result = await createCategory({ name: newCatName.trim(), color: newCatColor });
+      if (result.success && result.data) {
+        const cat = result.data;
+        setLocalCategories((prev) => [
+          ...prev,
+          { id: cat.id, name: cat.name, color: cat.color },
+        ]);
+        setNewCatName("");
+        setNewCatColor("#6366f1");
+        setShowNewCatForm(false);
+        toast.success(`カテゴリ「${cat.name}」を追加しました`);
+      } else if (!result.success) {
+        toast.error(result.error ?? "カテゴリの作成に失敗しました");
+      }
+    } catch {
+      toast.error("通信エラーが発生しました");
+    } finally {
+      setIsCreatingCat(false);
+    }
   };
 
   /** 一括登録を実行 */
@@ -344,11 +379,10 @@ export function BulkRegisterDialog({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__none__">未分類</SelectItem>
-                        {categories.map((cat) => (
+                        {allCategories.map((cat) => (
                           <SelectItem
                             key={cat.id}
                             value={cat.id}
-                            disabled={isCategoryUsed(cat.id, index)}
                           >
                             <span className="flex items-center gap-2">
                               <span
@@ -401,6 +435,63 @@ export function BulkRegisterDialog({
               <Plus className="size-4" />
               行を追加
             </Button>
+
+            {/* 新規カテゴリ追加 */}
+            {showNewCatForm ? (
+              <div className="rounded-md border p-3 space-y-2">
+                <p className="text-xs font-medium">新規カテゴリを追加</p>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">カテゴリ名</Label>
+                    <Input
+                      type="text"
+                      placeholder="例: 食費"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateCategory(); } }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">カラー</Label>
+                    <input
+                      type="color"
+                      value={newCatColor}
+                      onChange={(e) => setNewCatColor(e.target.value)}
+                      className="h-9 w-12 cursor-pointer rounded-md border border-input bg-transparent p-1"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setShowNewCatForm(false); setNewCatName(""); setNewCatColor("#6366f1"); }}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateCategory}
+                    disabled={!newCatName.trim() || isCreatingCat}
+                  >
+                    {isCreatingCat ? "追加中..." : "追加"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewCatForm(true)}
+                className="w-full text-muted-foreground"
+              >
+                <Plus className="size-4" />
+                新規カテゴリを追加
+              </Button>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleBack}>
