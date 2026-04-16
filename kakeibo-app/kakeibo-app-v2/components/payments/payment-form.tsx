@@ -218,7 +218,7 @@ export function PaymentForm({
             <div className="rounded-md bg-muted p-3 text-xs space-y-1">
               <div className="flex justify-between text-muted-foreground">
                 <span>締め日</span>
-                <span>利用月 {formatDay(selectedCard.closingDay)}</span>
+                <span>{Number(watchedMonth.split("-")[1])}月 {formatDay(selectedCard.closingDay)}</span>
               </div>
               {selectedCard.confirmationDay != null && selectedCard.confirmationMonthOffset != null && (
                 <div className="flex justify-between text-muted-foreground">

@@ -228,7 +228,7 @@ export function BulkRegisterDialog({
                 <div className="rounded-md bg-muted p-3 text-xs space-y-1">
                   <div className="flex justify-between text-muted-foreground">
                     <span>締め日</span>
-                    <span>利用月 {formatDay(card.closingDay)}</span>
+                    <span>{Number(month.split("-")[1])}月 {formatDay(card.closingDay)}</span>
                   </div>
                   {card.confirmationDay != null && card.confirmationMonthOffset != null && (
                     <div className="flex justify-between text-muted-foreground">

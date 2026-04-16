@@ -33,12 +33,19 @@ export async function createServerClient() {
 }
 
 export async function getAuthUserId(): Promise<string> {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  try {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      redirect("/login");
+    }
+    return user.id;
+  } catch (e) {
+    // redirect() が投げる NEXT_REDIRECT エラーはそのまま再スロー
+    if (e && typeof e === "object" && "digest" in e) throw e;
+    // ネットワークエラー等は未認証として扱い、ログインページへ
     redirect("/login");
   }
-  return user.id;
 }
