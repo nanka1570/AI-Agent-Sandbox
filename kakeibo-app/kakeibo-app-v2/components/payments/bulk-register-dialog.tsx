@@ -300,9 +300,9 @@ export function BulkRegisterDialog({
               );
             })()}
 
-            {/* 合計額 */}
+            {/* 支払合計額 */}
             <div className="space-y-2">
-              <Label htmlFor="bulk-total">合計額</Label>
+              <Label htmlFor="bulk-total">支払合計額</Label>
               <Input
                 id="bulk-total"
                 type="number"
@@ -336,7 +336,7 @@ export function BulkRegisterDialog({
             {/* 合計額の表示 */}
             <div className="rounded-md bg-muted p-3 text-sm">
               <div className="flex justify-between">
-                <span>合計額:</span>
+                <span>支払合計額:</span>
                 <span className="font-medium">{formatCurrency(totalAmount)}</span>
               </div>
               <div className="flex justify-between mt-1">
