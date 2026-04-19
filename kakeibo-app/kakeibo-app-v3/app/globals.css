@@ -233,11 +233,11 @@
     z-index: 1;
   }
 
-  /* 見出し: タクティカル + 学園 */
+  /* 見出し: 可読性優先で Zen Kaku Gothic Bold、装飾箇所のみ RocknRoll One */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display), "RocknRoll One", sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.02em;
+    font-family: var(--font-jp), "Noto Sans JP", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.01em;
   }
 
   /* 金額は DM Serif Display — ドラマティック */

@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 import { logout } from "@/lib/actions/auth-actions";
 
 const navLinks = [
-  { href: "/", label: "司令部", code: "HQ" },
-  { href: "/accounts", label: "金庫", code: "V" },
-  { href: "/salary", label: "補給", code: "S" },
-  { href: "/credit-cards", label: "札", code: "C" },
-  { href: "/payments", label: "戦果", code: "R" },
-  { href: "/calendar", label: "作戦暦", code: "O" },
-  { href: "/budget", label: "予算", code: "B" },
-  { href: "/reports", label: "戦況", code: "I" },
+  { href: "/", label: "ダッシュボード", code: "HQ" },
+  { href: "/accounts", label: "口座", code: "01" },
+  { href: "/salary", label: "手取り", code: "02" },
+  { href: "/credit-cards", label: "カード", code: "03" },
+  { href: "/payments", label: "支払い", code: "04" },
+  { href: "/calendar", label: "カレンダー", code: "05" },
+  { href: "/budget", label: "予算", code: "06" },
+  { href: "/reports", label: "レポート", code: "07" },
 ] as const;
 
 export function HeaderNav() {
@@ -61,10 +61,10 @@ export function HeaderNav() {
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] transition-all ${
+                className={`group relative flex items-center gap-2 px-3 py-2 text-[14px] font-medium transition-all ${
                   active
                     ? "text-[oklch(var(--feather))]"
-                    : "text-[oklch(var(--sky-deep))] hover:text-[oklch(var(--sss))]"
+                    : "text-[oklch(var(--foreground))] hover:text-[oklch(var(--sss))]"
                 }`}
               >
                 {active && (
@@ -95,9 +95,9 @@ export function HeaderNav() {
         >
           <button
             type="submit"
-            className="group flex items-center gap-1.5 border border-[oklch(var(--sss))] px-3 py-1 font-display text-[11px] tracking-[0.15em] text-[oklch(var(--sss))] transition-colors hover:bg-[oklch(var(--sss))] hover:text-[oklch(var(--feather))]"
+            className="group flex items-center gap-1.5 border border-[oklch(var(--sss))] px-3 py-1 font-jp text-[12px] text-[oklch(var(--sss))] transition-colors hover:bg-[oklch(var(--sss))] hover:text-[oklch(var(--feather))]"
           >
-            退場
+            ログアウト
             <span className="transition-transform group-hover:translate-x-0.5">
               →
             </span>

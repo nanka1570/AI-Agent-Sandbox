@@ -63,25 +63,25 @@ export default async function DashboardPage() {
 
         {/* クイックアクション */}
         <section className="slide-in" style={{ animationDelay: "0.1s" }}>
-          <OpHeader op="01" label="ACTION" caption="出撃準備" />
+          <OpHeader op="01" label="ACTION" caption="クイック操作" />
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <ActionLink
               href="/payments"
               title="支払いを記録"
-              subtitle="戦果を一件報告"
-              code="REPORT"
+              subtitle="手入力で 1 件追加"
+              code="RECORD"
             />
             <ActionLink
               href="/payments/import"
-              title="明細を取込"
-              subtitle="CSV 一括展開"
-              code="DEPLOY"
+              title="CSV 明細を取込"
+              subtitle="カード明細を一括登録"
+              code="IMPORT"
             />
             <ActionLink
               href="/reports"
-              title="戦況分析"
-              subtitle="月次レポート"
-              code="ANALYZE"
+              title="月次レポート"
+              subtitle="支出をグラフで確認"
+              code="REPORT"
             />
           </div>
         </section>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
         {/* 口座残高 */}
         {accounts.length > 0 && (
           <section className="slide-in" style={{ animationDelay: "0.15s" }}>
-            <OpHeader op="02" label="VAULT" caption="金庫状況" />
+            <OpHeader op="02" label="ACCOUNTS" caption="口座残高" />
             <div className="mt-5 feather-card divide-y divide-[oklch(var(--border))]">
               {accounts.map((a) => (
                 <div
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
         {/* カード照合 */}
         {cardsWithStatements.length > 0 && (
           <section className="slide-in" style={{ animationDelay: "0.2s" }}>
-            <OpHeader op="03" label="RECONCILE" caption="請求照合" />
+            <OpHeader op="03" label="RECONCILE" caption="今月のカード照合" />
             <div className="mt-5 feather-card divide-y divide-[oklch(var(--border))]">
               {cardsWithStatements.map((c) => {
                 const stmt = c.statements[0];
@@ -138,8 +138,8 @@ export default async function DashboardPage() {
                     <span className="flex items-center gap-3">
                       {stmt ? (
                         paid ? (
-                          <span className="font-display text-[10px] tracking-[0.15em] text-[oklch(var(--sky-deep))]">
-                            [CLEARED]
+                          <span className="font-jp text-[13px] font-medium text-[oklch(var(--sky-deep))]">
+                            引落済
                           </span>
                         ) : (
                           <span className="numeric text-[18px] text-[oklch(var(--sunset))]">
@@ -147,8 +147,8 @@ export default async function DashboardPage() {
                           </span>
                         )
                       ) : (
-                        <span className="font-display text-[10px] tracking-[0.15em] text-muted-foreground">
-                          [PENDING]
+                        <span className="font-jp text-[13px] text-muted-foreground">
+                          未入力
                         </span>
                       )}
                       <span
@@ -165,13 +165,13 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {/* 最近の戦果 */}
+        {/* 最近の支払い */}
         <section className="slide-in" style={{ animationDelay: "0.25s" }}>
-          <OpHeader op="04" label="RECENT" caption="最近の戦果" />
+          <OpHeader op="04" label="RECENT" caption="最近の支払い" />
           {recentPayments.length === 0 ? (
             <div className="mt-5 feather-card border-dashed p-10 text-center">
               <p className="font-jp text-sm text-muted-foreground">
-                戦果はまだ記録されていません
+                まだ支払いが記録されていません
               </p>
               <p className="mt-2 font-hand text-base text-[oklch(var(--sss))]">
                 lets start the battle
@@ -197,16 +197,16 @@ export default async function DashboardPage() {
                       }}
                     />
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="font-jp text-[15px] text-foreground">
+                      <span className="font-jp text-[15px] font-medium text-foreground">
                         {p.category.name}
                       </span>
                       {p.creditCard?.name && (
-                        <span className="font-display text-[10px] tracking-widest text-[oklch(var(--sky-deep))]">
+                        <span className="font-jp text-[12px] text-[oklch(var(--sky-deep))]">
                           {p.creditCard.name}
                         </span>
                       )}
-                      <span className="font-display text-[9px] tracking-[0.2em] text-[oklch(var(--sss))]">
-                        [{st.label}]
+                      <span className="font-jp text-[11px] text-[oklch(var(--sss))]">
+                        {st.label}
                       </span>
                     </div>
                     <span className="numeric text-[20px] text-foreground">
@@ -253,7 +253,7 @@ function OpHeader({
   return (
     <div className="flex items-center gap-3">
       <span className="sss-tag">OP // {op}</span>
-      <h2 className="font-display text-[18px] tracking-[0.08em] text-[oklch(var(--sky-deep))]">
+      <h2 className="font-jp text-[20px] font-bold tracking-wide text-[oklch(var(--sky-deep))]">
         {caption}
       </h2>
       <div className="h-px flex-1 bg-[oklch(var(--border))]" />
@@ -287,15 +287,17 @@ function ActionLink({
       <span className="font-display text-[9px] tracking-[0.25em] text-[oklch(var(--sss))]">
         // {code}
       </span>
-      <span className="font-jp text-[16px] font-medium text-foreground">
+      <span className="font-jp text-[17px] font-bold text-foreground">
         {title}
       </span>
-      <span className="text-[12px] text-muted-foreground">{subtitle}</span>
+      <span className="font-jp text-[13px] text-muted-foreground">
+        {subtitle}
+      </span>
       <span
         aria-hidden
-        className="mt-1 inline-flex items-center gap-1 font-display text-[11px] tracking-widest text-[oklch(var(--sky-deep))] transition-transform group-hover:translate-x-1"
+        className="mt-1 inline-flex items-center gap-1 font-jp text-[12px] font-medium text-[oklch(var(--sky-deep))] transition-transform group-hover:translate-x-1"
       >
-        EXECUTE →
+        開く →
       </span>
     </Link>
   );

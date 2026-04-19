@@ -7,13 +7,11 @@ interface AvailableMoneyCardProps {
 
 function Figure({
   label,
-  code,
   value,
   sign,
   tone,
 }: {
   label: string;
-  code: string;
   value: number;
   sign: "+" | "−";
   tone: "sky" | "sunset" | "sss" | "navy";
@@ -26,20 +24,18 @@ function Figure({
   }[tone];
 
   return (
-    <div className="relative flex flex-col gap-1.5 p-4 sm:p-5">
+    <div className="relative flex flex-col gap-2 p-4 sm:p-5">
       <div className="flex items-center gap-2">
-        <span className={`font-display text-[9px] tracking-[0.2em] ${toneClass}`}>
-          [{code}]
-        </span>
-        <span className="h-px flex-1 bg-[oklch(var(--border))]" />
-        <span className="font-display text-sm leading-none text-[oklch(var(--sss))]">
+        <span
+          className={`inline-flex size-5 items-center justify-center font-display text-[13px] leading-none ${toneClass}`}
+        >
           {sign}
         </span>
+        <p className="font-jp text-[13px] font-medium text-foreground">
+          {label}
+        </p>
       </div>
-      <p className="font-jp text-[11px] tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      <p className="numeric text-[22px] leading-none text-foreground md:text-[26px]">
+      <p className="numeric text-[24px] leading-none text-foreground md:text-[28px]">
         {formatCurrency(value)}
       </p>
     </div>
@@ -52,9 +48,12 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
 
   return (
     <section className="slide-in relative">
-      {/* 作戦ヘッダ */}
+      {/* ヘッダ */}
       <div className="flex items-center gap-3 pb-5">
         <span className="sss-tag">OPERATION // HQ</span>
+        <span className="font-jp text-[13px] font-medium text-[oklch(var(--sky-deep))]">
+          今月の家計状況
+        </span>
         <div className="h-px flex-1 bg-[oklch(var(--sky-deep))]" />
         <span className="font-hand text-[15px] text-[oklch(var(--sss))]">
           dont stop now
@@ -83,11 +82,11 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
               <p className="tactical font-display text-[11px] tracking-[0.3em] text-[oklch(var(--sss))]">
                 AVAILABLE BUDGET
               </p>
-              <h2 className="mt-4 font-display text-[28px] tracking-[0.05em] text-[oklch(var(--sky-deep))] md:text-[34px]">
+              <h2 className="mt-3 font-jp text-[28px] font-bold tracking-wide text-[oklch(var(--sky-deep))] md:text-[34px]">
                 使えるお金
               </h2>
-              <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
-                銀行残高 ＋ 未到来の手取り − 未払い支払い − 請求差額
+              <p className="mt-2 max-w-md font-jp text-[13px] leading-relaxed text-muted-foreground">
+                口座残高 ＋ 未到来の手取り − 未払い支払い − 請求差額
               </p>
             </div>
 
@@ -140,18 +139,18 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
               </span>
             </div>
 
-            {/* SSS スラッシュ */}
+            {/* ステータス */}
             <div className="mt-6 flex items-center gap-4 md:mt-10">
               <span className="sss-tag">STATUS</span>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[oklch(var(--sss))] via-[oklch(var(--sky-deep))] to-transparent" />
               <span
-                className={`font-display text-[11px] tracking-[0.2em] ${
+                className={`font-jp text-[13px] font-bold ${
                   negative
                     ? "text-[oklch(var(--sss))]"
                     : "text-[oklch(var(--sky-deep))]"
                 }`}
               >
-                {negative ? "作戦失敗圏内" : "作戦続行可能"}
+                {negative ? "支出超過に注意" : "今月は余裕あり"}
               </span>
             </div>
           </div>
@@ -159,28 +158,24 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
           {/* 内訳 */}
           <div className="mt-6 grid grid-cols-2 divide-x divide-y divide-[oklch(var(--border))] border border-[oklch(var(--border))] md:grid-cols-4 md:divide-y-0">
             <Figure
-              code="A"
               label="口座残高"
               value={breakdown.accountsTotal}
               sign="+"
               tone="navy"
             />
             <Figure
-              code="B"
-              label="未到来手取"
+              label="未到来の手取り"
               value={breakdown.incomingSalary}
               sign="+"
               tone="sky"
             />
             <Figure
-              code="C"
-              label="未払支払"
+              label="未払いの支払い"
               value={breakdown.unpaidPayments}
               sign="−"
               tone="sss"
             />
             <Figure
-              code="D"
               label="請求差額"
               value={breakdown.statementGap}
               sign="−"
