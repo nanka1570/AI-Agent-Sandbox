@@ -13,44 +13,66 @@ export default async function DashboardPage() {
   const userId = await getAuthUserId();
   const month = getCurrentMonthJST();
 
-  const [available, recentPayments, cardsWithStatements, accounts] =
-    await Promise.all([
-      getAvailableMoney(userId),
-      prisma.payment.findMany({
-        where: { userId },
-        orderBy: { usageDate: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          usageDate: true,
-          amount: true,
-          status: true,
-          category: { select: { name: true, color: true } },
-          creditCard: { select: { name: true } },
-        },
-      }),
-      prisma.creditCard.findMany({
-        where: { userId },
-        orderBy: { sortOrder: "asc" },
-        select: {
-          id: true,
-          name: true,
-          statements: {
-            where: { month },
-            select: {
-              id: true,
-              confirmedAmount: true,
-              withdrawnAt: true,
-            },
+  const [
+    available,
+    recentPayments,
+    cardsWithStatements,
+    accounts,
+    usageByCard,
+  ] = await Promise.all([
+    getAvailableMoney(userId),
+    prisma.payment.findMany({
+      where: { userId },
+      orderBy: { usageDate: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        usageDate: true,
+        amount: true,
+        status: true,
+        category: { select: { name: true, color: true } },
+        creditCard: { select: { name: true } },
+      },
+    }),
+    prisma.creditCard.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        name: true,
+        statements: {
+          where: { month },
+          select: {
+            id: true,
+            confirmedAmount: true,
+            withdrawnAt: true,
           },
         },
-      }),
-      prisma.account.findMany({
-        where: { userId },
-        orderBy: { sortOrder: "asc" },
-        select: { id: true, name: true, balance: true },
-      }),
-    ]);
+      },
+    }),
+    prisma.account.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true, balance: true },
+    }),
+    prisma.payment.groupBy({
+      by: ["creditCardId"],
+      where: {
+        userId,
+        creditCardId: { not: null },
+        status: { not: "paid" },
+      },
+      _sum: { amount: true },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const usageMap = new Map(
+    usageByCard.map((g) => [
+      g.creditCardId,
+      { amount: g._sum.amount ?? 0, count: g._count._all },
+    ]),
+  );
 
   return (
     <>
@@ -121,43 +143,69 @@ export default async function DashboardPage() {
               {cardsWithStatements.map((c) => {
                 const stmt = c.statements[0];
                 const paid = stmt?.withdrawnAt;
+                const usage = usageMap.get(c.id);
                 return (
                   <Link
                     key={c.id}
                     href={`/credit-cards/${c.id}/reconcile?month=${month}`}
-                    className="group flex items-center justify-between px-5 py-4 transition-colors hover:bg-[oklch(var(--sky)/0.12)]"
+                    className="group grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 px-5 py-4 transition-colors hover:bg-[oklch(var(--sky)/0.12)] sm:grid-cols-[1fr_auto_auto]"
                   >
+                    {/* 1列目: カード名 */}
                     <div className="flex items-center gap-3">
                       <span className="font-display text-[10px] tracking-widest text-[oklch(var(--sss))] transition-transform group-hover:rotate-45">
                         ✕
                       </span>
-                      <span className="font-jp text-[15px] text-foreground">
+                      <span className="font-jp text-[15px] font-medium text-foreground">
                         {c.name}
                       </span>
                     </div>
-                    <span className="flex items-center gap-3">
-                      {stmt ? (
-                        paid ? (
-                          <span className="font-jp text-[13px] font-medium text-[oklch(var(--sky-deep))]">
-                            引落済
-                          </span>
-                        ) : (
-                          <span className="numeric text-[18px] text-[oklch(var(--sunset))]">
-                            {formatCurrency(stmt.confirmedAmount)}
-                          </span>
-                        )
-                      ) : (
-                        <span className="font-jp text-[13px] text-muted-foreground">
-                          未入力
+
+                    {/* 2列目: 利用合計（ぱっと見の主役） */}
+                    <div className="col-start-1 row-start-2 flex items-baseline gap-2 pl-6 sm:col-start-2 sm:row-start-1 sm:flex-col sm:items-end sm:pl-0">
+                      <span className="font-jp text-[10px] tracking-wider text-muted-foreground">
+                        利用合計
+                      </span>
+                      <span className="flex items-baseline gap-1">
+                        <span className="numeric text-[22px] leading-none text-foreground">
+                          {formatCurrency(usage?.amount ?? 0)}
                         </span>
-                      )}
+                        {usage && usage.count > 0 && (
+                          <span className="font-jp text-[10px] text-muted-foreground">
+                            / {usage.count}件
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* 3列目: 請求状態 + 矢印 */}
+                    <div className="row-start-1 flex items-center justify-end gap-3 sm:col-start-3">
+                      <div className="flex flex-col items-end">
+                        <span className="font-jp text-[10px] tracking-wider text-muted-foreground">
+                          請求
+                        </span>
+                        {stmt ? (
+                          paid ? (
+                            <span className="font-jp text-[13px] font-medium text-[oklch(var(--sky-deep))]">
+                              引落済
+                            </span>
+                          ) : (
+                            <span className="numeric text-[16px] text-[oklch(var(--sunset))]">
+                              {formatCurrency(stmt.confirmedAmount)}
+                            </span>
+                          )
+                        ) : (
+                          <span className="font-jp text-[13px] text-muted-foreground">
+                            未入力
+                          </span>
+                        )}
+                      </div>
                       <span
                         aria-hidden
                         className="font-display text-[oklch(var(--sky-deep))] transition-transform group-hover:translate-x-1"
                       >
                         →
                       </span>
-                    </span>
+                    </div>
                   </Link>
                 );
               })}
