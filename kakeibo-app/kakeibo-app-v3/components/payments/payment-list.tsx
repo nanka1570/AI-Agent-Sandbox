@@ -1,0 +1,179 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2, Plus, Upload, Receipt } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  PaymentForm,
+  type PaymentItem,
+} from "@/components/payments/payment-form";
+import { DeleteConfirmDialog } from "@/components/common/delete-confirm-dialog";
+import { deletePayment } from "@/lib/actions/payment-actions";
+import { formatCurrency } from "@/lib/utils/format";
+import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/constants";
+
+interface CardOption {
+  id: string;
+  name: string;
+}
+interface CategoryOption {
+  id: string;
+  name: string;
+  color: string;
+}
+
+interface EnrichedPayment extends PaymentItem {
+  cardName: string | null;
+  categoryName: string;
+  categoryColor: string;
+}
+
+interface PaymentListProps {
+  payments: EnrichedPayment[];
+  cards: CardOption[];
+  categories: CategoryOption[];
+}
+
+export function PaymentList({
+  payments: initial,
+  cards,
+  categories,
+}: PaymentListProps) {
+  const router = useRouter();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<EnrichedPayment | undefined>();
+  const [deleteTarget, setDeleteTarget] = useState<EnrichedPayment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    const result = await deletePayment(deleteTarget.id);
+    if (result.success) {
+      toast.success("支払いを削除しました");
+      router.refresh();
+    } else {
+      toast.error(result.error ?? "削除に失敗しました");
+    }
+    setIsDeleting(false);
+    setDeleteTarget(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          onClick={() => {
+            setEditing(undefined);
+            setFormOpen(true);
+          }}
+          disabled={cards.length === 0}
+        >
+          <Plus className="size-4" />
+          支払いを登録
+        </Button>
+        <Link href="/payments/import">
+          <Button variant="outline" disabled={cards.length === 0}>
+            <Upload className="size-4" />
+            CSV 取り込み
+          </Button>
+        </Link>
+      </div>
+
+      {cards.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          先に「クレジットカード」を登録してください。
+        </div>
+      ) : initial.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-8 text-center">
+          <Receipt className="size-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            支払いがまだ登録されていません
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {initial.map((p) => {
+            const status = PAYMENT_STATUSES[p.status as PaymentStatus] ??
+              PAYMENT_STATUSES.unconfirmed;
+            const dateStr =
+              typeof p.usageDate === "string"
+                ? p.usageDate.slice(0, 10)
+                : format(p.usageDate, "yyyy-MM-dd");
+            return (
+              <div
+                key={p.id}
+                className="flex items-center gap-3 rounded-lg border bg-card p-3"
+              >
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: p.categoryColor }}
+                    />
+                    <p className="text-sm font-medium">
+                      {p.categoryName}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {p.cardName ?? "カード未設定"}
+                      </span>
+                    </p>
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {dateStr}
+                    {p.memo && <span className="ml-2">{p.memo}</span>}
+                  </p>
+                </div>
+                <p className="font-bold">{formatCurrency(p.amount)}</p>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => {
+                    setEditing(p);
+                    setFormOpen(true);
+                  }}
+                  aria-label="編集"
+                >
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setDeleteTarget(p)}
+                  aria-label="削除"
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <PaymentForm
+        key={editing?.id ?? "new"}
+        payment={editing}
+        cards={cards}
+        categories={categories}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSuccess={() => router.refresh()}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="支払いを削除"
+        description={`${formatCurrency(deleteTarget?.amount ?? 0)} の支払いを削除しますか？`}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
+
+    </div>
+  );
+}

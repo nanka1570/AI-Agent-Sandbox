@@ -1,0 +1,372 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   Angel Beats! テーマ
+   死後の学園 / 夕暮れの空 / SSS タクティカル / 桜吹雪 / 羽根
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-jp), system-ui, sans-serif;
+  --font-display: var(--font-display), "RocknRoll One", sans-serif;
+  --font-jp: var(--font-jp), "Noto Sans JP", sans-serif;
+  --font-hand: var(--font-hand), cursive;
+  --font-numeric: var(--font-numeric), "DM Serif Display", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+
+  /* Angel Beats! パレット */
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-sunset: var(--sunset);
+  --color-sss: var(--sss);
+  --color-kanade: var(--kanade);
+  --color-feather: var(--feather);
+  --color-blackboard: var(--blackboard);
+}
+
+:root {
+  --radius: 0.125rem; /* 制服のカチッとした直線感 */
+
+  /* 空色ベース */
+  --background: oklch(0.97 0.025 240);
+  --foreground: oklch(0.22 0.05 250);
+
+  /* カードはほぼ白——羽根の色 */
+  --card: oklch(0.995 0.005 240);
+  --card-foreground: oklch(0.22 0.05 250);
+  --popover: oklch(0.995 0.005 240);
+  --popover-foreground: oklch(0.22 0.05 250);
+
+  /* 制服ネイビー */
+  --primary: oklch(0.28 0.08 255);
+  --primary-foreground: oklch(0.99 0.005 240);
+
+  --secondary: oklch(0.92 0.035 235);
+  --secondary-foreground: oklch(0.28 0.08 255);
+  --muted: oklch(0.92 0.035 235);
+  --muted-foreground: oklch(0.5 0.05 250);
+  --accent: oklch(0.88 0.055 235);
+  --accent-foreground: oklch(0.28 0.08 255);
+
+  /* SSS 赤 */
+  --destructive: oklch(0.58 0.22 25);
+
+  --border: oklch(0.78 0.05 235);
+  --input: oklch(0.85 0.04 235);
+  --ring: oklch(0.55 0.14 240);
+
+  /* チャート: 夕焼けグラデーション */
+  --chart-1: oklch(0.58 0.22 25);    /* SSS 赤 */
+  --chart-2: oklch(0.55 0.14 240);   /* 制服青 */
+  --chart-3: oklch(0.75 0.15 85);    /* 夕日金 */
+  --chart-4: oklch(0.7 0.14 20);     /* 夕焼け桃 */
+  --chart-5: oklch(0.45 0.12 280);   /* 夕暮れ紫 */
+
+  --sidebar: oklch(0.97 0.025 240);
+  --sidebar-foreground: oklch(0.22 0.05 250);
+  --sidebar-primary: oklch(0.28 0.08 255);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.88 0.055 235);
+  --sidebar-accent-foreground: oklch(0.28 0.08 255);
+  --sidebar-border: oklch(0.78 0.05 235);
+  --sidebar-ring: oklch(0.55 0.14 240);
+
+  /* Semantic */
+  --sky: oklch(0.75 0.1 235);
+  --sky-deep: oklch(0.42 0.14 245);
+  --sunset: oklch(0.72 0.17 40);
+  --sss: oklch(0.58 0.22 25);
+  --kanade: oklch(0.85 0.08 0 / 0.9);
+  --feather: oklch(0.99 0.005 240);
+  --blackboard: oklch(0.25 0.04 160);
+}
+
+.dark {
+  --background: oklch(0.18 0.04 250);
+  --foreground: oklch(0.97 0.015 240);
+  --card: oklch(0.22 0.05 250);
+  --card-foreground: oklch(0.97 0.015 240);
+  --popover: oklch(0.22 0.05 250);
+  --popover-foreground: oklch(0.97 0.015 240);
+  --primary: oklch(0.75 0.1 235);
+  --primary-foreground: oklch(0.18 0.04 250);
+  --secondary: oklch(0.28 0.05 250);
+  --secondary-foreground: oklch(0.97 0.015 240);
+  --muted: oklch(0.28 0.05 250);
+  --muted-foreground: oklch(0.72 0.04 240);
+  --accent: oklch(0.32 0.06 250);
+  --accent-foreground: oklch(0.97 0.015 240);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.65 0.14 240);
+  --chart-1: oklch(0.65 0.22 25);
+  --chart-2: oklch(0.7 0.15 240);
+  --chart-3: oklch(0.78 0.15 85);
+  --chart-4: oklch(0.75 0.14 20);
+  --chart-5: oklch(0.55 0.14 280);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-feature-settings: "palt" 1, "kern" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply text-foreground;
+    font-family: var(--font-jp), "Noto Sans JP", system-ui, sans-serif;
+    letter-spacing: 0.01em;
+    position: relative;
+    min-height: 100vh;
+
+    /* 夕暮れの空 — 上はシアン、中央は夕焼け桃、底はクリーム */
+    background:
+      radial-gradient(
+        ellipse 1400px 700px at 90% -5%,
+        oklch(0.78 0.18 50 / 0.8) 0%,
+        oklch(0.82 0.14 30 / 0.4) 35%,
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 1000px 600px at 5% 8%,
+        oklch(0.8 0.12 20 / 0.55) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 800px 500px at 50% 100%,
+        oklch(0.92 0.06 235 / 0.5) 0%,
+        transparent 70%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(0.72 0.14 235) 0%,
+        oklch(0.82 0.1 230) 20%,
+        oklch(0.93 0.06 225) 50%,
+        oklch(0.97 0.03 235) 80%,
+        oklch(0.96 0.04 70) 100%
+      );
+    background-attachment: fixed;
+  }
+
+  /* 雲の層 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 500px 80px at 20% 22%, oklch(1 0 0 / 0.7) 0%, transparent 60%),
+      radial-gradient(ellipse 400px 60px at 70% 32%, oklch(1 0 0 / 0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 350px 50px at 45% 18%, oklch(1 0 0 / 0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 300px 45px at 85% 12%, oklch(1 0 0 / 0.55) 0%, transparent 60%);
+    z-index: 0;
+  }
+
+  /* ゴッドレイ */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(
+        110deg,
+        transparent 38%,
+        oklch(1 0 0 / 0.16) 46%,
+        transparent 54%
+      ),
+      linear-gradient(
+        120deg,
+        transparent 58%,
+        oklch(1 0 0 / 0.1) 65%,
+        transparent 72%
+      );
+    z-index: 0;
+  }
+
+  main, header, footer, nav {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 見出し: タクティカル + 学園 */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), "RocknRoll One", sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  /* 金額は DM Serif Display — ドラマティック */
+  .font-numeric,
+  .numeric {
+    font-family: var(--font-numeric), "DM Serif Display", Georgia, serif;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .font-display {
+    font-family: var(--font-display), "RocknRoll One", sans-serif;
+  }
+
+  .font-hand {
+    font-family: var(--font-hand), cursive;
+  }
+
+  .font-jp {
+    font-family: var(--font-jp), "Noto Sans JP", sans-serif;
+  }
+}
+
+/* ——— ユーティリティ ——— */
+@layer utilities {
+  /* SSS 識別バッジ */
+  .sss-tag {
+    font-family: var(--font-display), sans-serif;
+    letter-spacing: 0.2em;
+    font-size: 10px;
+    padding: 3px 10px;
+    background: oklch(0.28 0.08 255);
+    color: oklch(0.99 0.005 240);
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+
+  /* 戦術ラベル（赤いダイアゴナル） */
+  .tactical {
+    position: relative;
+    padding-left: 18px;
+  }
+  .tactical::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 10px;
+    height: 2px;
+    background: oklch(0.58 0.22 25);
+    transform: translateY(-50%) skewX(-20deg);
+  }
+
+  /* 羽根カード */
+  .feather-card {
+    background: oklch(0.995 0.005 240 / 0.88);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    border: 1px solid oklch(1 0 0 / 0.6);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.9) inset,
+      0 0 0 1px oklch(0.78 0.08 235 / 0.25),
+      0 16px 40px -20px oklch(0.3 0.14 245 / 0.35),
+      0 4px 10px -6px oklch(0.3 0.14 245 / 0.15);
+  }
+
+  /* 赤斜線ライン（SSS 旗風） */
+  .red-stripe {
+    background: repeating-linear-gradient(
+      -45deg,
+      oklch(0.58 0.22 25) 0 2px,
+      transparent 2px 8px
+    );
+  }
+
+  /* 空の切り取り */
+  .sky-cut {
+    clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%);
+  }
+}
+
+/* ——— 桜吹雪アニメーション ——— */
+.sakura {
+  position: fixed;
+  top: -50px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(40px, 110vh, 0) rotate(540deg);
+    opacity: 0;
+  }
+}
+
+/* ——— ヒーロー発光 ——— */
+@keyframes aura {
+  0%, 100% {
+    filter: drop-shadow(0 0 24px oklch(0.75 0.1 235 / 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px oklch(0.72 0.17 40 / 0.45));
+  }
+}
+
+.hero-aura {
+  animation: aura 4s ease-in-out infinite;
+}
+
+/* ——— スクロールで登場 ——— */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slide-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}

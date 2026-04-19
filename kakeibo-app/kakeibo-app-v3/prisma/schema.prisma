@@ -1,0 +1,163 @@
+// kakeibo-app v3 Prisma schema
+// 設計書: docs/02_functional-design.md
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  name             String
+  type             String
+  balance          Int
+  balanceUpdatedAt DateTime @map("balance_updated_at")
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  balanceHistories     BalanceHistory[]
+  payments             Payment[]
+  creditCards          CreditCard[]
+  creditCardStatements CreditCardStatement[]
+
+  @@index([userId, sortOrder])
+  @@map("accounts")
+}
+
+model Salary {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  month     String
+  amount    Int
+  payDay    Int      @map("pay_day")
+  memo      String?
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, month])
+  @@map("salaries")
+}
+
+model CreditCard {
+  id                      String   @id @default(uuid())
+  userId                  String   @map("user_id")
+  name                    String
+  brand                   String?
+  closingDay              Int      @map("closing_day")
+  paymentDay              Int      @map("payment_day")
+  paymentMonthOffset      Int      @default(1) @map("payment_month_offset")
+  confirmationDay         Int?     @map("confirmation_day")
+  confirmationMonthOffset Int?     @map("confirmation_month_offset")
+  accountId               String?  @map("account_id")
+  memo                    String?
+  sortOrder               Int      @default(0) @map("sort_order")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  account    Account?              @relation(fields: [accountId], references: [id])
+  payments   Payment[]
+  statements CreditCardStatement[]
+
+  @@index([userId, sortOrder])
+  @@map("credit_cards")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  color     String
+  sortOrder Int      @default(0) @map("sort_order")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payments Payment[]
+  budgets  Budget[]
+
+  @@index([userId, sortOrder])
+  @@map("categories")
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  categoryId String   @map("category_id")
+  month      String
+  amount     Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, month])
+  @@index([userId, month])
+  @@map("budgets")
+}
+
+model Payment {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  usageDate        DateTime @map("usage_date") @db.Date
+  month            String
+  amount           Int
+  status           String   @default("unconfirmed")
+  categoryId       String   @map("category_id")
+  creditCardId     String?  @map("credit_card_id")
+  accountId        String?  @map("account_id")
+  memo             String?
+  isRecurring      Boolean  @default(false) @map("is_recurring")
+  recurringGroupId String?  @map("recurring_group_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  creditCard CreditCard? @relation(fields: [creditCardId], references: [id])
+  account    Account?    @relation(fields: [accountId], references: [id])
+
+  @@index([userId, month])
+  @@index([userId, usageDate])
+  @@index([userId, creditCardId, month])
+  @@index([userId, recurringGroupId])
+  @@map("payments")
+}
+
+model CreditCardStatement {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  creditCardId    String    @map("credit_card_id")
+  month           String
+  confirmedAmount Int       @map("confirmed_amount")
+  withdrawnAmount Int?      @map("withdrawn_amount")
+  withdrawnAt     DateTime? @map("withdrawn_at")
+  accountId       String?   @map("account_id")
+  memo            String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  account    Account?   @relation(fields: [accountId], references: [id])
+
+  @@unique([userId, creditCardId, month])
+  @@map("credit_card_statements")
+}
+
+model BalanceHistory {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  accountId  String   @map("account_id")
+  balance    Int
+  recordedAt DateTime @default(now()) @map("recorded_at")
+  source     String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId, accountId, recordedAt])
+  @@map("balance_histories")
+}
