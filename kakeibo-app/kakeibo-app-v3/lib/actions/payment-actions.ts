@@ -239,3 +239,139 @@ export async function deletePayment(id: string): Promise<ActionResult> {
     return { success: false, error: "支払いの削除に失敗しました" };
   }
 }
+
+export async function updatePaymentGroup(
+  id: string,
+  data: unknown,
+): Promise<ActionResult<{ count: number }>> {
+  const parsed = paymentSchema.safeParse(data);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "入力内容に誤りがあります",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const userId = await getAuthUserId();
+    const target = await prisma.payment.findUnique({ where: { id, userId } });
+    if (!target) return { success: false, error: "支払いが見つかりません" };
+    if (!target.recurringGroupId) {
+      return { success: false, error: "定期支払ではありません" };
+    }
+
+    const categoryId =
+      parsed.data.categoryId ?? (await ensureFallbackCategory(userId));
+
+    let linkedAccountId: string | null = null;
+    let cardFields: {
+      paymentDay: number;
+      paymentMonthOffset: number;
+      confirmationDay: number | null;
+      confirmationMonthOffset: number | null;
+    } | null = null;
+    if (parsed.data.source === "card" && parsed.data.creditCardId) {
+      const card = await prisma.creditCard.findUnique({
+        where: { id: parsed.data.creditCardId, userId },
+        select: {
+          accountId: true,
+          paymentDay: true,
+          paymentMonthOffset: true,
+          confirmationDay: true,
+          confirmationMonthOffset: true,
+        },
+      });
+      if (!card) return { success: false, error: "カードが見つかりません" };
+      linkedAccountId = card.accountId;
+      cardFields = {
+        paymentDay: card.paymentDay,
+        paymentMonthOffset: card.paymentMonthOffset,
+        confirmationDay: card.confirmationDay,
+        confirmationMonthOffset: card.confirmationMonthOffset,
+      };
+    } else if (parsed.data.source === "account" && parsed.data.accountId) {
+      linkedAccountId = parsed.data.accountId;
+    } else {
+      return { success: false, error: "支払い元が不正です" };
+    }
+
+    const futureRows = await prisma.payment.findMany({
+      where: {
+        userId,
+        recurringGroupId: target.recurringGroupId,
+        usageDate: { gte: target.usageDate },
+      },
+      select: { id: true, usageDate: true },
+      orderBy: { usageDate: "asc" },
+    });
+
+    await prisma.$transaction(
+      futureRows.map((row) => {
+        const month = format(row.usageDate, "yyyy-MM");
+        let status: string;
+        if (cardFields) {
+          status = determineAutoStatus({
+            usageMonth: month,
+            paymentMonthOffset: cardFields.paymentMonthOffset,
+            paymentDay: cardFields.paymentDay,
+            confirmationDay: cardFields.confirmationDay,
+            confirmationMonthOffset: cardFields.confirmationMonthOffset,
+          });
+        } else {
+          status = computeAccountStatus(row.usageDate);
+        }
+        return prisma.payment.update({
+          where: { id: row.id, userId },
+          data: {
+            amount: parsed.data.amount,
+            status,
+            categoryId,
+            creditCardId:
+              parsed.data.source === "card"
+                ? (parsed.data.creditCardId ?? null)
+                : null,
+            accountId: linkedAccountId,
+            memo: parsed.data.memo ?? null,
+          },
+        });
+      }),
+    );
+
+    revalidatePath("/payments");
+    revalidatePath("/");
+    revalidatePath("/calendar");
+    return { success: true, data: { count: futureRows.length } };
+  } catch (e) {
+    console.error(e);
+    return { success: false, error: "定期支払の一括更新に失敗しました" };
+  }
+}
+
+export async function deletePaymentGroup(
+  id: string,
+): Promise<ActionResult<{ count: number }>> {
+  try {
+    const userId = await getAuthUserId();
+    const target = await prisma.payment.findUnique({ where: { id, userId } });
+    if (!target) return { success: false, error: "支払いが見つかりません" };
+    if (!target.recurringGroupId) {
+      return { success: false, error: "定期支払ではありません" };
+    }
+
+    const result = await prisma.payment.deleteMany({
+      where: {
+        userId,
+        recurringGroupId: target.recurringGroupId,
+        usageDate: { gte: target.usageDate },
+      },
+    });
+
+    revalidatePath("/payments");
+    revalidatePath("/");
+    revalidatePath("/calendar");
+    return { success: true, data: { count: result.count } };
+  } catch {
+    return { success: false, error: "定期支払の一括削除に失敗しました" };
+  }
+}

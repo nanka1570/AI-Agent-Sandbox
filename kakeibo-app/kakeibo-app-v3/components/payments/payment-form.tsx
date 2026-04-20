@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -28,7 +28,11 @@ import {
   MAX_INSTALLMENTS,
   type PaymentInput,
 } from "@/lib/validations/payment";
-import { createPayment, updatePayment } from "@/lib/actions/payment-actions";
+import {
+  createPayment,
+  updatePayment,
+  updatePaymentGroup,
+} from "@/lib/actions/payment-actions";
 
 const LAST_INPUT_LS_KEY = "kakeibo:payment-form:last";
 
@@ -68,6 +72,7 @@ export interface PaymentItem {
   creditCardId: string | null;
   accountId: string | null;
   memo: string | null;
+  recurringGroupId?: string | null;
 }
 
 interface CardOption {
@@ -111,7 +116,9 @@ export function PaymentForm({
   onSuccess,
 }: PaymentFormProps) {
   const isEditing = !!payment;
+  const isRecurring = !!payment?.recurringGroupId;
   const [isPending, startTransition] = useTransition();
+  const [editScope, setEditScope] = useState<"one" | "future">("one");
 
   const initialUsageDate = payment?.usageDate
     ? toDateString(payment.usageDate)
@@ -201,7 +208,9 @@ export function PaymentForm({
   const onSubmit = (formData: PaymentInput) => {
     startTransition(async () => {
       const result = isEditing
-        ? await updatePayment(payment.id, formData)
+        ? isRecurring && editScope === "future"
+          ? await updatePaymentGroup(payment.id, formData)
+          : await updatePayment(payment.id, formData)
         : await createPayment(formData);
 
       if (result.success) {
@@ -213,7 +222,13 @@ export function PaymentForm({
         });
         toast.success(
           isEditing
-            ? "支払いを更新しました"
+            ? isRecurring && editScope === "future"
+              ? `定期支払の未来分 ${
+                  "data" in result && result.data && "count" in result.data
+                    ? result.data.count
+                    : ""
+                } 件を更新しました`
+              : "支払いを更新しました"
             : (formData.installments ?? 1) > 1
               ? `${formData.installments}回分の支払いを登録しました`
               : "支払いを登録しました",
@@ -236,6 +251,37 @@ export function PaymentForm({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {isEditing && isRecurring && (
+            <div className="space-y-2 rounded-md border bg-muted/40 p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                この支払いは定期支払の一部です。適用範囲を選択してください。
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={editScope === "one" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditScope("one")}
+                >
+                  この回だけ
+                </Button>
+                <Button
+                  type="button"
+                  variant={editScope === "future" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditScope("future")}
+                >
+                  この回以降すべて
+                </Button>
+              </div>
+              {editScope === "future" && (
+                <p className="text-[11px] text-muted-foreground">
+                  利用日は各レコードの元の日付を維持し、金額・カテゴリ・支払い元・メモのみ一括反映します。
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>支払い元</Label>
             <Controller

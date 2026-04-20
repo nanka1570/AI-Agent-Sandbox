@@ -22,7 +22,10 @@ import {
   type PaymentItem,
 } from "@/components/payments/payment-form";
 import { DeleteConfirmDialog } from "@/components/common/delete-confirm-dialog";
-import { deletePayment } from "@/lib/actions/payment-actions";
+import {
+  deletePayment,
+  deletePaymentGroup,
+} from "@/lib/actions/payment-actions";
 import { formatCurrency } from "@/lib/utils/format";
 import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/constants";
 
@@ -64,6 +67,7 @@ export function PaymentList({
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<EnrichedPayment | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<EnrichedPayment | null>(null);
+  const [deleteScope, setDeleteScope] = useState<"one" | "future">("one");
   const [isDeleting, setIsDeleting] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -113,15 +117,23 @@ export function PaymentList({
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setIsDeleting(true);
-    const result = await deletePayment(deleteTarget.id);
+    const useGroup = deleteTarget.recurringGroupId && deleteScope === "future";
+    const result = useGroup
+      ? await deletePaymentGroup(deleteTarget.id)
+      : await deletePayment(deleteTarget.id);
     if (result.success) {
-      toast.success("支払いを削除しました");
+      toast.success(
+        useGroup && "data" in result && result.data
+          ? `定期支払 ${result.data.count} 件を削除しました`
+          : "支払いを削除しました",
+      );
       router.refresh();
     } else {
       toast.error(result.error ?? "削除に失敗しました");
     }
     setIsDeleting(false);
     setDeleteTarget(null);
+    setDeleteScope("one");
   };
 
   return (
@@ -217,6 +229,11 @@ export function PaymentList({
                             {p.categoryName}
                           </p>
                           <Badge variant={status.variant}>{status.label}</Badge>
+                          {p.recurringGroupId && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              定期
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {dateStr}
@@ -267,9 +284,42 @@ export function PaymentList({
 
       <DeleteConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteScope("one");
+          }
+        }}
         title="支払いを削除"
-        description={`${formatCurrency(deleteTarget?.amount ?? 0)} の支払いを削除しますか？`}
+        description={
+          deleteTarget?.recurringGroupId ? (
+            <div className="space-y-3">
+              <p>
+                {formatCurrency(deleteTarget?.amount ?? 0)} の支払いは定期支払の一部です。
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={deleteScope === "one" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDeleteScope("one")}
+                >
+                  この回だけ削除
+                </Button>
+                <Button
+                  type="button"
+                  variant={deleteScope === "future" ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() => setDeleteScope("future")}
+                >
+                  この回以降すべて削除
+                </Button>
+              </div>
+            </div>
+          ) : (
+            `${formatCurrency(deleteTarget?.amount ?? 0)} の支払いを削除しますか？`
+          )
+        }
         onConfirm={handleDelete}
         isDeleting={isDeleting}
       />
