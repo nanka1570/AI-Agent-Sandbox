@@ -26,6 +26,29 @@ import {
 import { paymentSchema, type PaymentInput } from "@/lib/validations/payment";
 import { createPayment, updatePayment } from "@/lib/actions/payment-actions";
 
+const LAST_INPUT_LS_KEY = "kakeibo:payment-form:last";
+
+type LastInput = { creditCardId?: string; categoryId?: string };
+
+function loadLastInput(): LastInput {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LAST_INPUT_LS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLastInput(v: LastInput) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_INPUT_LS_KEY, JSON.stringify(v));
+  } catch {
+    // quota/private mode は無視
+  }
+}
+
 export interface PaymentItem {
   id: string;
   usageDate: Date | string;
@@ -79,6 +102,20 @@ export function PaymentForm({
       ? toDateString(payment.usageDate)
       : (defaultUsageDate ?? format(new Date(), "yyyy-MM-dd"));
 
+  const pickDefaultCard = (): string => {
+    if (payment?.creditCardId) return payment.creditCardId;
+    const last = loadLastInput().creditCardId;
+    if (last && cards.some((c) => c.id === last)) return last;
+    return cards[0]?.id ?? "";
+  };
+
+  const pickDefaultCategory = (): string | null => {
+    if (payment?.categoryId) return payment.categoryId;
+    const last = loadLastInput().categoryId;
+    if (last && categories.some((c) => c.id === last)) return last;
+    return categories[0]?.id ?? null;
+  };
+
   const {
     register,
     handleSubmit,
@@ -90,11 +127,11 @@ export function PaymentForm({
   } = useForm<PaymentInput>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      creditCardId: payment?.creditCardId ?? cards[0]?.id ?? "",
+      creditCardId: pickDefaultCard(),
       month: payment?.month ?? initialUsageDate.slice(0, 7),
       usageDate: initialUsageDate,
       amount: payment?.amount ?? 0,
-      categoryId: payment?.categoryId ?? categories[0]?.id ?? null,
+      categoryId: pickDefaultCategory(),
       memo: payment?.memo ?? null,
     },
   });
@@ -104,14 +141,15 @@ export function PaymentForm({
   useEffect(() => {
     if (open) {
       reset({
-        creditCardId: payment?.creditCardId ?? cards[0]?.id ?? "",
+        creditCardId: pickDefaultCard(),
         month: payment?.month ?? initialUsageDate.slice(0, 7),
         usageDate: initialUsageDate,
         amount: payment?.amount ?? 0,
-        categoryId: payment?.categoryId ?? categories[0]?.id ?? null,
+        categoryId: pickDefaultCategory(),
         memo: payment?.memo ?? null,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, payment, reset, cards, categories, initialUsageDate]);
 
   useEffect(() => {
@@ -127,6 +165,10 @@ export function PaymentForm({
         : await createPayment(formData);
 
       if (result.success) {
+        saveLastInput({
+          creditCardId: formData.creditCardId,
+          categoryId: formData.categoryId ?? undefined,
+        });
         toast.success(isEditing ? "支払いを更新しました" : "支払いを登録しました");
         onSuccess?.();
         reset();

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Plus, Upload, Receipt } from "lucide-react";
+import { Pencil, Trash2, Plus, Upload, Receipt, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -49,6 +49,29 @@ export function PaymentList({
   const [editing, setEditing] = useState<EnrichedPayment | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<EnrichedPayment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const grouped = useMemo(() => {
+    const buckets = new Map<string | null, EnrichedPayment[]>();
+    for (const p of initial) {
+      const key = p.creditCardId ?? null;
+      const arr = buckets.get(key);
+      if (arr) arr.push(p);
+      else buckets.set(key, [p]);
+    }
+    const order: (string | null)[] = cards.map((c) => c.id);
+    if (buckets.has(null)) order.push(null);
+    return order
+      .filter((k) => buckets.has(k))
+      .map((key) => {
+        const items = buckets.get(key) ?? [];
+        const name =
+          key === null
+            ? "カード未設定"
+            : (cards.find((c) => c.id === key)?.name ?? "カード未設定");
+        const total = items.reduce((s, p) => s + p.amount, 0);
+        return { key, name, items, total };
+      });
+  }, [initial, cards]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -97,61 +120,75 @@ export function PaymentList({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {initial.map((p) => {
-            const status = PAYMENT_STATUSES[p.status as PaymentStatus] ??
-              PAYMENT_STATUSES.unconfirmed;
-            const dateStr =
-              typeof p.usageDate === "string"
-                ? p.usageDate.slice(0, 10)
-                : format(p.usageDate, "yyyy-MM-dd");
-            return (
-              <div
-                key={p.id}
-                className="flex items-center gap-3 rounded-lg border bg-card p-3"
-              >
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="size-2.5 rounded-full"
-                      style={{ backgroundColor: p.categoryColor }}
-                    />
-                    <p className="text-sm font-medium">
-                      {p.categoryName}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {p.cardName ?? "カード未設定"}
-                      </span>
-                    </p>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {dateStr}
-                    {p.memo && <span className="ml-2">{p.memo}</span>}
-                  </p>
-                </div>
-                <p className="font-bold">{formatCurrency(p.amount)}</p>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => {
-                    setEditing(p);
-                    setFormOpen(true);
-                  }}
-                  aria-label="編集"
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setDeleteTarget(p)}
-                  aria-label="削除"
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
+        <div className="space-y-6">
+          {grouped.map((g) => (
+            <section key={g.key ?? "__none"} className="space-y-2">
+              <header className="flex items-center gap-3 rounded-md bg-muted/60 px-3 py-2">
+                <CreditCard className="size-4 text-muted-foreground" />
+                <h2 className="text-sm font-bold">{g.name}</h2>
+                <span className="text-xs text-muted-foreground">
+                  {g.items.length} 件
+                </span>
+                <span className="ml-auto text-base font-bold">
+                  {formatCurrency(g.total)}
+                </span>
+              </header>
+              <div className="space-y-2">
+                {g.items.map((p) => {
+                  const status =
+                    PAYMENT_STATUSES[p.status as PaymentStatus] ??
+                    PAYMENT_STATUSES.unconfirmed;
+                  const dateStr =
+                    typeof p.usageDate === "string"
+                      ? p.usageDate.slice(0, 10)
+                      : format(p.usageDate, "yyyy-MM-dd");
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-lg border bg-card p-3"
+                    >
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="size-2.5 rounded-full"
+                            style={{ backgroundColor: p.categoryColor }}
+                          />
+                          <p className="text-sm font-medium">
+                            {p.categoryName}
+                          </p>
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {dateStr}
+                          {p.memo && <span className="ml-2">{p.memo}</span>}
+                        </p>
+                      </div>
+                      <p className="font-bold">{formatCurrency(p.amount)}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => {
+                          setEditing(p);
+                          setFormOpen(true);
+                        }}
+                        aria-label="編集"
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setDeleteTarget(p)}
+                        aria-label="削除"
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </section>
+          ))}
         </div>
       )}
 
