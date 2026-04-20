@@ -10,6 +10,7 @@ import {
   Receipt,
   CreditCard,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -29,6 +30,10 @@ interface CardOption {
   id: string;
   name: string;
 }
+interface AccountOption {
+  id: string;
+  name: string;
+}
 interface CategoryOption {
   id: string;
   name: string;
@@ -37,6 +42,7 @@ interface CategoryOption {
 
 interface EnrichedPayment extends PaymentItem {
   cardName: string | null;
+  accountName: string | null;
   categoryName: string;
   categoryColor: string;
 }
@@ -44,12 +50,14 @@ interface EnrichedPayment extends PaymentItem {
 interface PaymentListProps {
   payments: EnrichedPayment[];
   cards: CardOption[];
+  accounts: AccountOption[];
   categories: CategoryOption[];
 }
 
 export function PaymentList({
   payments: initial,
   cards,
+  accounts,
   categories,
 }: PaymentListProps) {
   const router = useRouter();
@@ -69,27 +77,38 @@ export function PaymentList({
   };
 
   const grouped = useMemo(() => {
-    const buckets = new Map<string | null, EnrichedPayment[]>();
+    // key 形式: "card:<id>" | "account:<id>" | "none"
+    const buckets = new Map<string, EnrichedPayment[]>();
     for (const p of initial) {
-      const key = p.creditCardId ?? null;
+      const key = p.creditCardId
+        ? `card:${p.creditCardId}`
+        : p.accountId
+          ? `account:${p.accountId}`
+          : "none";
       const arr = buckets.get(key);
       if (arr) arr.push(p);
       else buckets.set(key, [p]);
     }
-    const order: (string | null)[] = cards.map((c) => c.id);
-    if (buckets.has(null)) order.push(null);
+    const order: string[] = [
+      ...cards.map((c) => `card:${c.id}`),
+      ...accounts.map((a) => `account:${a.id}`),
+      "none",
+    ];
     return order
       .filter((k) => buckets.has(k))
       .map((key) => {
         const items = buckets.get(key) ?? [];
-        const name =
-          key === null
-            ? "カード未設定"
-            : (cards.find((c) => c.id === key)?.name ?? "カード未設定");
+        const [kind, id] = key.split(":");
+        let name = "未設定";
+        if (kind === "card") {
+          name = cards.find((c) => c.id === id)?.name ?? "カード";
+        } else if (kind === "account") {
+          name = accounts.find((a) => a.id === id)?.name ?? "口座";
+        }
         const total = items.reduce((s, p) => s + p.amount, 0);
-        return { key, name, items, total };
+        return { key, kind, name, items, total };
       });
-  }, [initial, cards]);
+  }, [initial, cards, accounts]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -113,7 +132,7 @@ export function PaymentList({
             setEditing(undefined);
             setFormOpen(true);
           }}
-          disabled={cards.length === 0}
+          disabled={cards.length === 0 && accounts.length === 0}
         >
           <Plus className="size-4" />
           支払いを登録
@@ -126,9 +145,9 @@ export function PaymentList({
         </Link>
       </div>
 
-      {cards.length === 0 ? (
+      {cards.length === 0 && accounts.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          先に「クレジットカード」を登録してください。
+          先に「クレジットカード」または「口座」を登録してください。
         </div>
       ) : initial.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-8 text-center">
@@ -140,7 +159,7 @@ export function PaymentList({
       ) : (
         <div className="space-y-6">
           {grouped.map((g) => {
-            const groupKey = g.key ?? "__none";
+            const groupKey = g.key;
             const isOpen = !collapsed.has(groupKey);
             return (
             <section key={groupKey} className="space-y-2">
@@ -155,8 +174,17 @@ export function PaymentList({
                     isOpen ? "" : "-rotate-90"
                   }`}
                 />
-                <CreditCard className="size-4 text-muted-foreground" />
+                {g.kind === "account" ? (
+                  <Wallet className="size-4 text-muted-foreground" />
+                ) : (
+                  <CreditCard className="size-4 text-muted-foreground" />
+                )}
                 <h2 className="text-sm font-bold">{g.name}</h2>
+                {g.kind === "account" && (
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    口座引き落とし
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground">
                   {g.items.length} 件
                 </span>
@@ -230,6 +258,7 @@ export function PaymentList({
         key={editing?.id ?? "new"}
         payment={editing}
         cards={cards}
+        accounts={accounts}
         categories={categories}
         open={formOpen}
         onOpenChange={setFormOpen}

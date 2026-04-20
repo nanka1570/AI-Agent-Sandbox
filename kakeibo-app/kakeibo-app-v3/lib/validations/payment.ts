@@ -3,24 +3,53 @@ import { MONTH_PARAM_REGEX } from "@/lib/constants";
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-export const paymentSchema = z.object({
-  creditCardId: z.string().min(1, "カードを選択してください"),
-  month: z
-    .string()
-    .regex(MONTH_PARAM_REGEX, "YYYY-MM 形式で入力してください"),
-  usageDate: z
-    .string()
-    .regex(DATE_REGEX, "YYYY-MM-DD 形式で入力してください")
-    .nullable()
-    .optional(),
-  amount: z.number().int().min(1, "1円以上で入力してください"),
-  categoryId: z.string().nullable().optional(),
-  memo: z
-    .string()
-    .max(200, "200文字以内で入力してください")
-    .nullable()
-    .optional(),
-});
+export const MAX_INSTALLMENTS = 420;
+
+export const paymentSchema = z
+  .object({
+    source: z.enum(["card", "account"]),
+    creditCardId: z.string().nullable().optional(),
+    accountId: z.string().nullable().optional(),
+    month: z
+      .string()
+      .regex(MONTH_PARAM_REGEX, "YYYY-MM 形式で入力してください"),
+    usageDate: z
+      .string()
+      .regex(DATE_REGEX, "YYYY-MM-DD 形式で入力してください")
+      .nullable()
+      .optional(),
+    amount: z.number().int().min(1, "1円以上で入力してください"),
+    categoryId: z.string().nullable().optional(),
+    memo: z
+      .string()
+      .max(200, "200文字以内で入力してください")
+      .nullable()
+      .optional(),
+    installments: z
+      .number()
+      .int()
+      .min(1, "1回以上で入力してください")
+      .max(MAX_INSTALLMENTS, `${MAX_INSTALLMENTS}回以下で入力してください`),
+  })
+  .superRefine((val, ctx) => {
+    if (val.source === "card") {
+      if (!val.creditCardId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["creditCardId"],
+          message: "カードを選択してください",
+        });
+      }
+    } else if (val.source === "account") {
+      if (!val.accountId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["accountId"],
+          message: "口座を選択してください",
+        });
+      }
+    }
+  });
 
 export type PaymentInput = z.infer<typeof paymentSchema>;
 

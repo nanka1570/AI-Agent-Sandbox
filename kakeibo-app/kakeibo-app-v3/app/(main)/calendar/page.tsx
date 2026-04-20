@@ -24,7 +24,7 @@ export default async function CalendarPage({
   const monthStart = new Date(year, m - 1, 1);
   const monthEnd = new Date(year, m, 0, 23, 59, 59, 999);
 
-  const [payments, cards, categories] = await Promise.all([
+  const [payments, cards, accounts, categories] = await Promise.all([
     prisma.payment.findMany({
       where: {
         userId,
@@ -38,6 +38,11 @@ export default async function CalendarPage({
       },
     }),
     prisma.creditCard.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.account.findMany({
       where: { userId },
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
@@ -72,6 +77,7 @@ export default async function CalendarPage({
         month={month}
         data={data}
         cards={cards}
+        accounts={accounts}
         categories={categories}
       />
     </div>

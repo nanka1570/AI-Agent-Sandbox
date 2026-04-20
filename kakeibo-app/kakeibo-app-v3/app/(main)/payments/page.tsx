@@ -7,7 +7,7 @@ import { PaymentList } from "@/components/payments/payment-list";
 export default async function PaymentsPage() {
   const userId = await getAuthUserId();
 
-  const [payments, cards, categories] = await Promise.all([
+  const [payments, cards, accounts, categories] = await Promise.all([
     prisma.payment.findMany({
       where: { userId },
       orderBy: { usageDate: "desc" },
@@ -19,12 +19,19 @@ export default async function PaymentsPage() {
         status: true,
         categoryId: true,
         creditCardId: true,
+        accountId: true,
         memo: true,
         category: { select: { name: true, color: true } },
         creditCard: { select: { name: true } },
+        account: { select: { name: true } },
       },
     }),
     prisma.creditCard.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.account.findMany({
       where: { userId },
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
@@ -44,8 +51,10 @@ export default async function PaymentsPage() {
     status: p.status,
     categoryId: p.categoryId,
     creditCardId: p.creditCardId,
+    accountId: p.accountId,
     memo: p.memo,
     cardName: p.creditCard?.name ?? null,
+    accountName: p.account?.name ?? null,
     categoryName: p.category.name,
     categoryColor: p.category.color,
   }));
@@ -58,7 +67,12 @@ export default async function PaymentsPage() {
           カード利用を 1 円単位で記録。CSV で一括取り込みもできます。
         </p>
       </div>
-      <PaymentList payments={enriched} cards={cards} categories={categories} />
+      <PaymentList
+        payments={enriched}
+        cards={cards}
+        accounts={accounts}
+        categories={categories}
+      />
     </div>
   );
 }

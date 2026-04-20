@@ -32,6 +32,10 @@ interface CardOption {
   id: string;
   name: string;
 }
+interface AccountOption {
+  id: string;
+  name: string;
+}
 interface CategoryOption {
   id: string;
   name: string;
@@ -42,6 +46,7 @@ interface MonthCalendarProps {
   month: string;
   data: CalendarData;
   cards: CardOption[];
+  accounts: AccountOption[];
   categories: CategoryOption[];
 }
 
@@ -49,6 +54,7 @@ export function MonthCalendar({
   month,
   data,
   cards,
+  accounts,
   categories,
 }: MonthCalendarProps) {
   const router = useRouter();
@@ -153,6 +159,7 @@ export function MonthCalendar({
         <PaymentForm
           key={selectedDay}
           cards={cards}
+          accounts={accounts}
           categories={categories}
           defaultUsageDate={selectedDay}
           open={formOpen}
