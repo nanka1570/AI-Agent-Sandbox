@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Plus, Upload, Receipt, CreditCard } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  Upload,
+  Receipt,
+  CreditCard,
+  ChevronDown,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -49,6 +57,16 @@ export function PaymentList({
   const [editing, setEditing] = useState<EnrichedPayment | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<EnrichedPayment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleCollapsed = (key: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const grouped = useMemo(() => {
     const buckets = new Map<string | null, EnrichedPayment[]>();
@@ -121,9 +139,22 @@ export function PaymentList({
         </div>
       ) : (
         <div className="space-y-6">
-          {grouped.map((g) => (
-            <section key={g.key ?? "__none"} className="space-y-2">
-              <header className="flex items-center gap-3 rounded-md bg-muted/60 px-3 py-2">
+          {grouped.map((g) => {
+            const groupKey = g.key ?? "__none";
+            const isOpen = !collapsed.has(groupKey);
+            return (
+            <section key={groupKey} className="space-y-2">
+              <button
+                type="button"
+                onClick={() => toggleCollapsed(groupKey)}
+                className="flex w-full items-center gap-3 rounded-md bg-muted/60 px-3 py-2 transition-colors hover:bg-muted"
+                aria-expanded={isOpen}
+              >
+                <ChevronDown
+                  className={`size-4 text-muted-foreground transition-transform ${
+                    isOpen ? "" : "-rotate-90"
+                  }`}
+                />
                 <CreditCard className="size-4 text-muted-foreground" />
                 <h2 className="text-sm font-bold">{g.name}</h2>
                 <span className="text-xs text-muted-foreground">
@@ -132,7 +163,8 @@ export function PaymentList({
                 <span className="ml-auto text-base font-bold">
                   {formatCurrency(g.total)}
                 </span>
-              </header>
+              </button>
+              {isOpen && (
               <div className="space-y-2">
                 {g.items.map((p) => {
                   const status =
@@ -187,8 +219,10 @@ export function PaymentList({
                   );
                 })}
               </div>
+              )}
             </section>
-          ))}
+            );
+          })}
         </div>
       )}
 
