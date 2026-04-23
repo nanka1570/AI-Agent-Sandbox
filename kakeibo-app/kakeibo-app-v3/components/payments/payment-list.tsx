@@ -11,6 +11,8 @@ import {
   CreditCard,
   ChevronDown,
   Wallet,
+  Repeat,
+  Settings2,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -22,6 +24,7 @@ import {
   type PaymentItem,
 } from "@/components/payments/payment-form";
 import { DeleteConfirmDialog } from "@/components/common/delete-confirm-dialog";
+import { SubscriptionOverrideDialog } from "@/components/subscriptions/subscription-override-dialog";
 import {
   deletePayment,
   deletePaymentGroup,
@@ -50,8 +53,27 @@ interface EnrichedPayment extends PaymentItem {
   categoryColor: string;
 }
 
+export interface VirtualSubscriptionPayment {
+  subscriptionId: string;
+  month: string;
+  usageDate: Date;
+  amount: number;
+  baseAmount: number;
+  overridden: boolean;
+  source: "card" | "account";
+  creditCardId: string | null;
+  accountId: string | null;
+  name: string;
+  categoryName: string;
+  categoryColor: string;
+  cardName: string | null;
+  accountName: string | null;
+  memo: string | null;
+}
+
 interface PaymentListProps {
   payments: EnrichedPayment[];
+  subscriptions?: VirtualSubscriptionPayment[];
   cards: CardOption[];
   accounts: AccountOption[];
   categories: CategoryOption[];
@@ -59,6 +81,7 @@ interface PaymentListProps {
 
 export function PaymentList({
   payments: initial,
+  subscriptions = [],
   cards,
   accounts,
   categories,
@@ -70,6 +93,8 @@ export function PaymentList({
   const [deleteScope, setDeleteScope] = useState<"one" | "future">("one");
   const [isDeleting, setIsDeleting] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [overrideTarget, setOverrideTarget] =
+    useState<VirtualSubscriptionPayment | null>(null);
 
   const toggleCollapsed = (key: string) => {
     setCollapsed((prev) => {
@@ -156,6 +181,77 @@ export function PaymentList({
           </Button>
         </Link>
       </div>
+
+      {subscriptions.length > 0 && (
+        <section className="space-y-2">
+          <div className="flex items-center gap-2 rounded-md bg-muted/60 px-3 py-2">
+            <Repeat className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-bold">定期支払（仮想表示）</h2>
+            <Link
+              href="/subscriptions"
+              className="ml-auto text-[11px] text-muted-foreground underline"
+            >
+              管理
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {subscriptions.map((s) => {
+              const dateStr = format(s.usageDate, "yyyy-MM-dd");
+              const src =
+                s.source === "card"
+                  ? (s.cardName ?? "カード")
+                  : (s.accountName ?? "口座");
+              return (
+                <div
+                  key={`${s.subscriptionId}:${s.month}`}
+                  className="flex items-center gap-3 rounded-lg border border-dashed bg-card/60 p-3"
+                >
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="size-2.5 rounded-full"
+                        style={{ backgroundColor: s.categoryColor }}
+                      />
+                      <p className="text-sm font-medium">{s.name}</p>
+                      <span className="text-[11px] text-muted-foreground">
+                        {s.categoryName}
+                      </span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        定期
+                      </span>
+                      {s.overridden && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+                          今月のみ変更
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {dateStr} / {src}
+                      {s.memo && <span className="ml-2">{s.memo}</span>}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">{formatCurrency(s.amount)}</p>
+                    {s.overridden && s.amount !== s.baseAmount && (
+                      <p className="text-[10px] text-muted-foreground line-through">
+                        {formatCurrency(s.baseAmount)}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setOverrideTarget(s)}
+                    aria-label="今月だけ変更"
+                  >
+                    <Settings2 className="size-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {cards.length === 0 && accounts.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -281,6 +377,20 @@ export function PaymentList({
         onOpenChange={setFormOpen}
         onSuccess={() => router.refresh()}
       />
+
+      {overrideTarget && (
+        <SubscriptionOverrideDialog
+          open={!!overrideTarget}
+          onOpenChange={(open) => !open && setOverrideTarget(null)}
+          subscriptionId={overrideTarget.subscriptionId}
+          subscriptionName={overrideTarget.name}
+          month={overrideTarget.month}
+          baseAmount={overrideTarget.baseAmount}
+          currentAmount={overrideTarget.amount}
+          overridden={overrideTarget.overridden}
+          onSuccess={() => router.refresh()}
+        />
+      )}
 
       <DeleteConfirmDialog
         open={!!deleteTarget}

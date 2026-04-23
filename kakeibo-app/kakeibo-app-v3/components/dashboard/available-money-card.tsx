@@ -86,7 +86,7 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
                 使えるお金
               </h2>
               <p className="mt-2 max-w-md font-jp text-[13px] leading-relaxed text-muted-foreground">
-                口座残高 ＋ 未到来の手取り − 未払い支払い − 請求差額
+                口座残高 ＋ 未到来の手取り − 未払い支払い − 請求差額 − 定期支払
               </p>
             </div>
 
@@ -156,7 +156,7 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
           </div>
 
           {/* 内訳 */}
-          <div className="mt-6 grid grid-cols-2 divide-x divide-y divide-[oklch(var(--border))] border border-[oklch(var(--border))] md:grid-cols-4 md:divide-y-0">
+          <div className="mt-6 grid grid-cols-2 divide-x divide-y divide-[oklch(var(--border))] border border-[oklch(var(--border))] md:grid-cols-5 md:divide-y-0">
             <Figure
               label="口座残高"
               value={breakdown.accountsTotal}
@@ -172,6 +172,12 @@ export function AvailableMoneyCard({ data }: AvailableMoneyCardProps) {
             <Figure
               label="未払いの支払い"
               value={breakdown.unpaidPayments}
+              sign="−"
+              tone="sss"
+            />
+            <Figure
+              label="定期支払"
+              value={breakdown.subscriptions}
               sign="−"
               tone="sss"
             />

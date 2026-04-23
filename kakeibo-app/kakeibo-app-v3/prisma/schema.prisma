@@ -24,6 +24,7 @@ model Account {
   payments             Payment[]
   creditCards          CreditCard[]
   creditCardStatements CreditCardStatement[]
+  subscriptions        Subscription[]
 
   @@index([userId, sortOrder])
   @@map("accounts")
@@ -60,9 +61,10 @@ model CreditCard {
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
-  account    Account?              @relation(fields: [accountId], references: [id])
-  payments   Payment[]
-  statements CreditCardStatement[]
+  account       Account?              @relation(fields: [accountId], references: [id])
+  payments      Payment[]
+  statements    CreditCardStatement[]
+  subscriptions Subscription[]
 
   @@index([userId, sortOrder])
   @@map("credit_cards")
@@ -78,8 +80,9 @@ model Category {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  payments Payment[]
-  budgets  Budget[]
+  payments      Payment[]
+  budgets       Budget[]
+  subscriptions Subscription[]
 
   @@index([userId, sortOrder])
   @@map("categories")
@@ -146,6 +149,50 @@ model CreditCardStatement {
 
   @@unique([userId, creditCardId, month])
   @@map("credit_card_statements")
+}
+
+model Subscription {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  name         String
+  amount       Int
+  source       String
+  creditCardId String?  @map("credit_card_id")
+  accountId    String?  @map("account_id")
+  categoryId   String   @map("category_id")
+  dayOfMonth   Int      @map("day_of_month")
+  startMonth   String   @map("start_month")
+  endMonth     String?  @map("end_month")
+  memo         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  creditCard CreditCard? @relation(fields: [creditCardId], references: [id])
+  account    Account?    @relation(fields: [accountId], references: [id])
+  overrides  SubscriptionOverride[]
+
+  @@index([userId])
+  @@index([userId, startMonth])
+  @@map("subscriptions")
+}
+
+model SubscriptionOverride {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  subscriptionId String   @map("subscription_id")
+  month          String
+  amount         Int?
+  skip           Boolean  @default(false)
+  memo           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, month])
+  @@index([userId, month])
+  @@map("subscription_overrides")
 }
 
 model BalanceHistory {

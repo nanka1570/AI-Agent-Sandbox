@@ -10,9 +10,10 @@ const navLinks = [
   { href: "/salary", label: "手取り", code: "02" },
   { href: "/credit-cards", label: "カード", code: "03" },
   { href: "/payments", label: "支払い", code: "04" },
-  { href: "/calendar", label: "カレンダー", code: "05" },
-  { href: "/budget", label: "予算", code: "06" },
-  { href: "/reports", label: "レポート", code: "07" },
+  { href: "/subscriptions", label: "定期", code: "05" },
+  { href: "/calendar", label: "カレンダー", code: "06" },
+  { href: "/budget", label: "予算", code: "07" },
+  { href: "/reports", label: "レポート", code: "08" },
 ] as const;
 
 export function HeaderNav() {

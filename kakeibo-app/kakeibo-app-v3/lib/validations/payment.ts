@@ -3,8 +3,6 @@ import { MONTH_PARAM_REGEX } from "@/lib/constants";
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-export const MAX_INSTALLMENTS = 420;
-
 export const paymentSchema = z
   .object({
     source: z.enum(["card", "account"]),
@@ -25,11 +23,6 @@ export const paymentSchema = z
       .max(200, "200文字以内で入力してください")
       .nullable()
       .optional(),
-    installments: z
-      .number()
-      .int()
-      .min(1, "1回以上で入力してください")
-      .max(MAX_INSTALLMENTS, `${MAX_INSTALLMENTS}回以下で入力してください`),
   })
   .superRefine((val, ctx) => {
     if (val.source === "card") {

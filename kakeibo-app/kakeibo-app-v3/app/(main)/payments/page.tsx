@@ -3,11 +3,17 @@ export const dynamic = "force-dynamic";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { PaymentList } from "@/components/payments/payment-list";
+import { generateAllOccurrences } from "@/lib/utils/subscription-occurrences";
+import { getCurrentMonthJST, addMonthsToMonth } from "@/lib/utils/date";
 
 export default async function PaymentsPage() {
   const userId = await getAuthUserId();
 
-  const [payments, cards, accounts, categories] = await Promise.all([
+  const currentMonth = getCurrentMonthJST();
+  const horizon = addMonthsToMonth(currentMonth, 2);
+
+  const [payments, cards, accounts, categories, subs, overrides] =
+    await Promise.all([
     prisma.payment.findMany({
       where: { userId },
       orderBy: { usageDate: "desc" },
@@ -42,6 +48,33 @@ export default async function PaymentsPage() {
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true, color: true },
     }),
+    prisma.subscription.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        amount: true,
+        source: true,
+        creditCardId: true,
+        accountId: true,
+        categoryId: true,
+        dayOfMonth: true,
+        startMonth: true,
+        endMonth: true,
+        memo: true,
+        category: { select: { name: true, color: true } },
+      },
+    }),
+    prisma.subscriptionOverride.findMany({
+      where: { userId, month: { gte: currentMonth, lte: horizon } },
+      select: {
+        subscriptionId: true,
+        month: true,
+        amount: true,
+        skip: true,
+        memo: true,
+      },
+    }),
   ]);
 
   const enriched = payments.map((p) => ({
@@ -61,6 +94,35 @@ export default async function PaymentsPage() {
     categoryColor: p.category.color,
   }));
 
+  const occs = generateAllOccurrences(subs, currentMonth, horizon, overrides);
+  const subMetaById = new Map(subs.map((s) => [s.id, s]));
+  const virtualPayments = occs.map((o) => {
+    const sub = subMetaById.get(o.subscriptionId);
+    return {
+      subscriptionId: o.subscriptionId,
+      month: o.month,
+      usageDate: o.usageDate,
+      amount: o.amount,
+      baseAmount: sub?.amount ?? o.amount,
+      overridden: o.overridden,
+      source: o.source,
+      creditCardId: o.creditCardId,
+      accountId: o.accountId,
+      name: sub?.name ?? "定期",
+      categoryName: sub?.category.name ?? "",
+      categoryColor: sub?.category.color ?? "#9ca3af",
+      cardName:
+        o.source === "card" && o.creditCardId
+          ? (cards.find((c) => c.id === o.creditCardId)?.name ?? null)
+          : null,
+      accountName:
+        o.source === "account" && o.accountId
+          ? (accounts.find((a) => a.id === o.accountId)?.name ?? null)
+          : null,
+      memo: o.memo,
+    };
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -71,6 +133,7 @@ export default async function PaymentsPage() {
       </div>
       <PaymentList
         payments={enriched}
+        subscriptions={virtualPayments}
         cards={cards}
         accounts={accounts}
         categories={categories}

@@ -22,6 +22,7 @@ interface DayPayment {
   id: string;
   amount: number;
   categoryColor: string;
+  virtual?: boolean;
 }
 
 interface CalendarData {
@@ -140,8 +141,11 @@ export function MonthCalendar({
                     {items.slice(0, 4).map((it) => (
                       <span
                         key={it.id}
-                        className="size-1.5 rounded-full"
+                        className={`size-1.5 rounded-full ${
+                          it.virtual ? "ring-1 ring-offset-1 ring-border" : ""
+                        }`}
                         style={{ backgroundColor: it.categoryColor }}
+                        title={it.virtual ? "定期支払" : undefined}
                       />
                     ))}
                   </div>

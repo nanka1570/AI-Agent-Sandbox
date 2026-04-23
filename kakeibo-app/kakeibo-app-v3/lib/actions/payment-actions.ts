@@ -1,13 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/supabase/server";
 import { paymentSchema } from "@/lib/validations/payment";
 import { determineAutoStatus } from "@/lib/utils/status";
 import { ensureFallbackCategory } from "@/lib/utils/fallback-category";
-import { format, addMonths } from "date-fns";
+import { format } from "date-fns";
 import { getNowJST } from "@/lib/utils/date";
 import type { ActionResult } from "@/lib/types";
 import type { Payment } from "@prisma/client";
@@ -63,7 +62,7 @@ export async function createPayment(
 
   try {
     const userId = await getAuthUserId();
-    const firstUsageDate = toUsageDate(parsed.data.usageDate, parsed.data.month);
+    const usageDate = toUsageDate(parsed.data.usageDate, parsed.data.month);
 
     if (parsed.data.source === "card" && parsed.data.creditCardId) {
       const card = await prisma.creditCard.findUnique({
@@ -91,10 +90,6 @@ export async function createPayment(
     const categoryId =
       parsed.data.categoryId ?? (await ensureFallbackCategory(userId));
 
-    const installments = parsed.data.installments ?? 1;
-    const isRecurring = installments > 1;
-    const recurringGroupId = isRecurring ? randomUUID() : null;
-
     let linkedAccountId: string | null = null;
     if (parsed.data.source === "card" && parsed.data.creditCardId) {
       const card = await prisma.creditCard.findUnique({
@@ -106,18 +101,14 @@ export async function createPayment(
       linkedAccountId = parsed.data.accountId ?? null;
     }
 
-    const rows: Array<Omit<Payment, "id" | "createdAt" | "updatedAt">> = [];
-    for (let i = 0; i < installments; i++) {
-      const usageDate = addMonths(firstUsageDate, i);
-      const month = format(usageDate, "yyyy-MM");
-      const status =
-        parsed.data.source === "card" && parsed.data.creditCardId
-          ? await computeCardStatus(userId, parsed.data.creditCardId, usageDate)
-          : computeAccountStatus(usageDate);
-      const memo = isRecurring
-        ? `${parsed.data.memo ?? ""}${parsed.data.memo ? " " : ""}（${i + 1}/${installments}回目）`.trim()
-        : (parsed.data.memo ?? null);
-      rows.push({
+    const month = format(usageDate, "yyyy-MM");
+    const status =
+      parsed.data.source === "card" && parsed.data.creditCardId
+        ? await computeCardStatus(userId, parsed.data.creditCardId, usageDate)
+        : computeAccountStatus(usageDate);
+
+    const created = await prisma.payment.create({
+      data: {
         userId,
         usageDate,
         month,
@@ -125,27 +116,20 @@ export async function createPayment(
         status,
         categoryId,
         creditCardId:
-          parsed.data.source === "card" ? (parsed.data.creditCardId ?? null) : null,
+          parsed.data.source === "card"
+            ? (parsed.data.creditCardId ?? null)
+            : null,
         accountId: linkedAccountId,
-        memo,
-        isRecurring,
-        recurringGroupId,
-      });
-    }
-
-    if (isRecurring) {
-      await prisma.payment.createMany({ data: rows });
-    } else {
-      await prisma.payment.create({ data: rows[0] });
-    }
+        memo: parsed.data.memo ?? null,
+        isRecurring: false,
+        recurringGroupId: null,
+      },
+    });
 
     revalidatePath("/payments");
     revalidatePath("/");
     revalidatePath("/calendar");
-    return {
-      success: true,
-      data: { ...rows[0], id: "", createdAt: new Date(), updatedAt: new Date() } as Payment,
-    };
+    return { success: true, data: created };
   } catch (e) {
     console.error(e);
     return { success: false, error: "支払いの作成に失敗しました" };

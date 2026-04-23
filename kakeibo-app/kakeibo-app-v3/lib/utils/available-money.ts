@@ -1,12 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { calculateSalaryCycle } from "@/lib/utils/salary-cycle";
-import { getCurrentMonthJST, getNowJST } from "@/lib/utils/date";
+import {
+  getCurrentMonthJST,
+  getNowJST,
+  addMonthsToMonth,
+} from "@/lib/utils/date";
+import { generateAllOccurrences } from "@/lib/utils/subscription-occurrences";
 
 export interface AvailableMoneyBreakdown {
   accountsTotal: number;
   incomingSalary: number;
   unpaidPayments: number;
   statementGap: number;
+  subscriptions: number;
 }
 
 export interface AvailableMoneyResult {
@@ -21,7 +27,8 @@ export async function getAvailableMoney(
   const today = getNowJST();
   today.setHours(0, 0, 0, 0);
 
-  const [accounts, salaries, statements, unpaidAll] = await Promise.all([
+  const [accounts, salaries, statements, unpaidAll, subs, overrides] =
+    await Promise.all([
     prisma.account.findMany({
       where: { userId },
       select: { balance: true },
@@ -41,6 +48,32 @@ export async function getAvailableMoney(
     prisma.payment.findMany({
       where: { userId, status: { not: "paid" } },
       select: { amount: true, creditCardId: true, month: true },
+    }),
+    prisma.subscription.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        amount: true,
+        source: true,
+        creditCardId: true,
+        accountId: true,
+        categoryId: true,
+        dayOfMonth: true,
+        startMonth: true,
+        endMonth: true,
+        memo: true,
+      },
+    }),
+    prisma.subscriptionOverride.findMany({
+      where: { userId },
+      select: {
+        subscriptionId: true,
+        month: true,
+        amount: true,
+        skip: true,
+        memo: true,
+      },
     }),
   ]);
 
@@ -75,8 +108,24 @@ export async function getAvailableMoney(
     return sum + (stmt.confirmedAmount - paymentsSum);
   }, 0);
 
+  // Subscription 仮想 occurrence: 今月分を「未引落の支払い」として加算。
+  // 有限契約 (endMonth あり) は次月以降の残債も合算する。
+  const horizonEnd = addMonthsToMonth(currentMonth, 60);
+  const occs = generateAllOccurrences(subs, currentMonth, horizonEnd, overrides);
+  const subscriptions = occs.reduce((sum, o) => {
+    const sub = subs.find((s) => s.id === o.subscriptionId);
+    if (!sub) return sum;
+    if (sub.endMonth) return sum + o.amount;
+    if (o.month === currentMonth) return sum + o.amount;
+    return sum;
+  }, 0);
+
   const total =
-    accountsTotal + incomingSalary - unpaidPayments - statementGap;
+    accountsTotal +
+    incomingSalary -
+    unpaidPayments -
+    statementGap -
+    subscriptions;
 
   return {
     total,
@@ -85,6 +134,7 @@ export async function getAvailableMoney(
       incomingSalary,
       unpaidPayments,
       statementGap,
+      subscriptions,
     },
   };
 }

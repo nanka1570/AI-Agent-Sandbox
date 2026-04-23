@@ -333,7 +333,8 @@ function ActionLink({
         className="absolute right-0 top-0 red-stripe h-1 w-16 opacity-70 transition-all group-hover:w-24"
       />
       <span className="font-display text-[9px] tracking-[0.25em] text-[oklch(var(--sss))]">
-        // {code}
+        {"// "}
+        {code}
       </span>
       <span className="font-jp text-[17px] font-bold text-foreground">
         {title}

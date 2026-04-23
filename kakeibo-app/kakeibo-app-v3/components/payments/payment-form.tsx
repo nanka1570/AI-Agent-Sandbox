@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/select";
 import {
   paymentSchema,
-  MAX_INSTALLMENTS,
   type PaymentInput,
 } from "@/lib/validations/payment";
 import {
@@ -174,13 +173,11 @@ export function PaymentForm({
       amount: payment?.amount ?? 0,
       categoryId: pickDefaultCategory(),
       memo: payment?.memo ?? null,
-      installments: 1,
     },
   });
 
   const watchUsageDate = watch("usageDate");
   const watchSource = watch("source");
-  const watchInstallments = watch("installments");
 
   useEffect(() => {
     if (open) {
@@ -193,7 +190,6 @@ export function PaymentForm({
         amount: payment?.amount ?? 0,
         categoryId: pickDefaultCategory(),
         memo: payment?.memo ?? null,
-        installments: 1,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,9 +225,7 @@ export function PaymentForm({
                     : ""
                 } 件を更新しました`
               : "支払いを更新しました"
-            : (formData.installments ?? 1) > 1
-              ? `${formData.installments}回分の支払いを登録しました`
-              : "支払いを登録しました",
+            : "支払いを登録しました",
         );
         onSuccess?.();
         reset();
@@ -429,27 +423,13 @@ export function PaymentForm({
           </div>
 
           {!isEditing && (
-            <div className="space-y-2">
-              <Label>
-                回数（分割・定期支払・1 で単発）
-              </Label>
-              <Input
-                type="number"
-                min={1}
-                max={MAX_INSTALLMENTS}
-                {...register("installments", { valueAsNumber: true })}
-              />
-              {(watchInstallments ?? 1) > 1 && (
-                <p className="text-xs text-muted-foreground">
-                  {watchUsageDate?.slice(0, 7)} 月分から毎月同額で {watchInstallments} 件登録します
-                </p>
-              )}
-              {errors.installments && (
-                <p className="text-sm text-destructive">
-                  {errors.installments.message}
-                </p>
-              )}
-            </div>
+            <p className="rounded-md border border-dashed bg-muted/40 p-3 text-[11px] text-muted-foreground">
+              毎月同額で続く支払い（サブスク・分割ローン等）は{" "}
+              <a href="/subscriptions" className="underline">
+                定期支払
+              </a>
+              から登録してください。
+            </p>
           )}
 
           <div className="space-y-2">

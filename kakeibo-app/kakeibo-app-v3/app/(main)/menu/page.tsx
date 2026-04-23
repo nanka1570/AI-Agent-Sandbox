@@ -5,6 +5,7 @@ import {
   CreditCard,
   Tag,
   PiggyBank,
+  Repeat,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -14,6 +15,7 @@ const menuItems = [
   { href: "/accounts", label: "口座", icon: Landmark },
   { href: "/salary", label: "手取り", icon: Wallet },
   { href: "/credit-cards", label: "クレジットカード", icon: CreditCard },
+  { href: "/subscriptions", label: "定期支払", icon: Repeat },
   { href: "/categories", label: "カテゴリ", icon: Tag },
   { href: "/budget", label: "予算", icon: PiggyBank },
 ] as const;
