@@ -83,9 +83,12 @@ async function main() {
       select: { name: true },
     });
 
-    const name =
+    const rawName =
       (first.memo && first.memo.trim()) ||
       (category ? `${category.name}（定期）` : "定期支払");
+    // memo の「（n/N回目）」パターンを除去（Subscription は 1 件で扱うため無意味）
+    const name = rawName.replace(/\s*[（(]\s*\d+\s*\/\s*\d+\s*回目\s*[）)]\s*/g, "").trim() || rawName;
+    const installmentTotal = payments.length;
 
     console.log(
       `  - group=${g.recurringGroupId.slice(0, 8)}… user=${g.userId.slice(0, 8)}… ${payments.length}件 ` +
@@ -106,6 +109,7 @@ async function main() {
         dayOfMonth,
         startMonth,
         endMonth,
+        installmentTotal,
         memo: first.memo,
       },
     });

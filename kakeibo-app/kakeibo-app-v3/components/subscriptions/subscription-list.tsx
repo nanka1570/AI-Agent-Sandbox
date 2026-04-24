@@ -137,6 +137,11 @@ export function SubscriptionList({
                 <p className="text-xs text-muted-foreground">
                   毎月{s.dayOfMonth}日 / {s.startMonth} 〜{" "}
                   {s.endMonth ?? "無期限"}
+                  {s.installmentTotal && (
+                    <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-900 dark:bg-sky-900/40 dark:text-sky-200">
+                      全{s.installmentTotal}回
+                    </span>
+                  )}
                   {s.memo && <span className="ml-2">{s.memo}</span>}
                 </p>
               </div>

@@ -43,6 +43,7 @@ export interface SubscriptionItem {
   dayOfMonth: number;
   startMonth: string;
   endMonth: string | null;
+  installmentTotal: number | null;
   memo: string | null;
 }
 
@@ -111,6 +112,7 @@ export function SubscriptionForm({
       dayOfMonth: defaultDay,
       startMonth: defaultStartMonth,
       endMonth: subscription?.endMonth ?? null,
+      installmentTotal: subscription?.installmentTotal ?? null,
       memo: subscription?.memo ?? null,
     },
   });
@@ -129,6 +131,7 @@ export function SubscriptionForm({
         dayOfMonth: defaultDay,
         startMonth: defaultStartMonth,
         endMonth: subscription?.endMonth ?? null,
+        installmentTotal: subscription?.installmentTotal ?? null,
         memo: subscription?.memo ?? null,
       });
     }
@@ -363,6 +366,29 @@ export function SubscriptionForm({
             )}
             <p className="text-[11px] text-muted-foreground">
               分割ローンの場合は最終回の月を指定してください。
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sub-installments">分割払いの総回数（任意）</Label>
+            <Input
+              id="sub-installments"
+              type="number"
+              min={2}
+              max={420}
+              placeholder="例: 12（12回分割）"
+              {...register("installmentTotal", {
+                setValueAs: (v) =>
+                  v === "" || v == null ? null : Number(v),
+              })}
+            />
+            {errors.installmentTotal && (
+              <p className="text-sm text-destructive">
+                {errors.installmentTotal.message}
+              </p>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              入力すると「3/12回目」のように月ごとに回数が増えます。Netflix 等の通常契約は空欄で OK。
             </p>
           </div>
 

@@ -11,6 +11,7 @@ export interface SubscriptionLite {
   dayOfMonth: number;
   startMonth: string;
   endMonth: string | null;
+  installmentTotal: number | null;
   memo: string | null;
 }
 
@@ -34,10 +35,18 @@ export interface VirtualOccurrence {
   usageDate: Date;
   memo: string | null;
   overridden: boolean;
+  installmentNumber: number | null;
+  installmentTotal: number | null;
 }
 
 function compareMonth(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function monthsDiff(from: string, to: string): number {
+  const [fy, fm] = from.split("-").map(Number);
+  const [ty, tm] = to.split("-").map(Number);
+  return (ty - fy) * 12 + (tm - fm);
 }
 
 function overrideKey(subscriptionId: string, month: string): string {
@@ -81,6 +90,9 @@ export function generateOccurrences(
     const day = resolveDay(sub.dayOfMonth, y, m);
     const amount = ov?.amount != null ? ov.amount : sub.amount;
     const memo = ov?.memo ?? sub.memo;
+    const installmentNumber = sub.installmentTotal
+      ? monthsDiff(sub.startMonth, cursor) + 1
+      : null;
     result.push({
       subscriptionId: sub.id,
       name: sub.name,
@@ -93,6 +105,8 @@ export function generateOccurrences(
       usageDate: new Date(Date.UTC(y, m - 1, day)),
       memo,
       overridden: ov != null,
+      installmentNumber,
+      installmentTotal: sub.installmentTotal,
     });
     cursor = addMonthsToMonth(cursor, 1);
   }

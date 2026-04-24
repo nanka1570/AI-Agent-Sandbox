@@ -62,6 +62,7 @@ export async function getAvailableMoney(
         dayOfMonth: true,
         startMonth: true,
         endMonth: true,
+        installmentTotal: true,
         memo: true,
       },
     }),

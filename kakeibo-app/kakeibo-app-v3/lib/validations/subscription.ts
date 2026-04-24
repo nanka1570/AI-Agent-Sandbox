@@ -25,6 +25,13 @@ export const subscriptionSchema = z
       .regex(MONTH_PARAM_REGEX, "YYYY-MM 形式で入力してください")
       .nullable()
       .optional(),
+    installmentTotal: z
+      .number()
+      .int()
+      .min(2, "2回以上を指定してください")
+      .max(420, "420回以下を指定してください")
+      .nullable()
+      .optional(),
     memo: z
       .string()
       .max(200, "200文字以内で入力してください")
@@ -51,6 +58,13 @@ export const subscriptionSchema = z
         code: "custom",
         path: ["endMonth"],
         message: "終了月は開始月以降にしてください",
+      });
+    }
+    if (val.installmentTotal != null && !val.endMonth) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endMonth"],
+        message: "分割払いの場合は終了月を指定してください",
       });
     }
   });

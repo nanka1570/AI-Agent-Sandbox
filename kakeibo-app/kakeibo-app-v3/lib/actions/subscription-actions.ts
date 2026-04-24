@@ -55,6 +55,7 @@ export async function createSubscription(
         dayOfMonth: v.dayOfMonth,
         startMonth: v.startMonth,
         endMonth: v.endMonth ?? null,
+        installmentTotal: v.installmentTotal ?? null,
         memo: v.memo ?? null,
       },
     });
@@ -103,6 +104,7 @@ export async function updateSubscription(
         dayOfMonth: v.dayOfMonth,
         startMonth: v.startMonth,
         endMonth: v.endMonth ?? null,
+        installmentTotal: v.installmentTotal ?? null,
         memo: v.memo ?? null,
       },
     });

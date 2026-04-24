@@ -67,6 +67,7 @@ export default async function CalendarPage({
         dayOfMonth: true,
         startMonth: true,
         endMonth: true,
+        installmentTotal: true,
         memo: true,
         category: { select: { color: true } },
       },

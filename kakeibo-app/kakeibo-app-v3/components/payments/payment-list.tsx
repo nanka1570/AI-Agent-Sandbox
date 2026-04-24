@@ -60,6 +60,8 @@ export interface VirtualSubscriptionPayment {
   amount: number;
   baseAmount: number;
   overridden: boolean;
+  installmentNumber: number | null;
+  installmentTotal: number | null;
   source: "card" | "account";
   creditCardId: string | null;
   accountId: string | null;
@@ -219,6 +221,11 @@ export function PaymentList({
                       <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                         定期
                       </span>
+                      {s.installmentTotal && s.installmentNumber && (
+                        <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-900 dark:bg-sky-900/40 dark:text-sky-200">
+                          {s.installmentNumber}/{s.installmentTotal}回目
+                        </span>
+                      )}
                       {s.overridden && (
                         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
                           今月のみ変更

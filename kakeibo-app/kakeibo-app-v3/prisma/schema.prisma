@@ -160,10 +160,11 @@ model Subscription {
   creditCardId String?  @map("credit_card_id")
   accountId    String?  @map("account_id")
   categoryId   String   @map("category_id")
-  dayOfMonth   Int      @map("day_of_month")
-  startMonth   String   @map("start_month")
-  endMonth     String?  @map("end_month")
-  memo         String?
+  dayOfMonth       Int      @map("day_of_month")
+  startMonth       String   @map("start_month")
+  endMonth         String?  @map("end_month")
+  installmentTotal Int?     @map("installment_total")
+  memo             String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
