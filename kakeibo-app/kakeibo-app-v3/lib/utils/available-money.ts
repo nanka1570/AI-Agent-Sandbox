@@ -1,10 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { calculateSalaryCycle } from "@/lib/utils/salary-cycle";
-import {
-  getCurrentMonthJST,
-  getNowJST,
-  addMonthsToMonth,
-} from "@/lib/utils/date";
+import { getCurrentMonthJST, getNowJST } from "@/lib/utils/date";
 import { generateAllOccurrences } from "@/lib/utils/subscription-occurrences";
 
 export interface AvailableMoneyBreakdown {
@@ -109,17 +105,11 @@ export async function getAvailableMoney(
     return sum + (stmt.confirmedAmount - paymentsSum);
   }, 0);
 
-  // Subscription 仮想 occurrence: 今月分を「未引落の支払い」として加算。
-  // 有限契約 (endMonth あり) は次月以降の残債も合算する。
-  const horizonEnd = addMonthsToMonth(currentMonth, 60);
-  const occs = generateAllOccurrences(subs, currentMonth, horizonEnd, overrides);
-  const subscriptions = occs.reduce((sum, o) => {
-    const sub = subs.find((s) => s.id === o.subscriptionId);
-    if (!sub) return sum;
-    if (sub.endMonth) return sum + o.amount;
-    if (o.month === currentMonth) return sum + o.amount;
-    return sum;
-  }, 0);
+  // Subscription 仮想 occurrence: 当月分のみを「未引落の支払い」として加算。
+  // 分割払いの残債（来月以降）はここでは差し引かない。月が進むごとに自動で
+  // 当月分が differs から差し引かれる。
+  const occs = generateAllOccurrences(subs, currentMonth, currentMonth, overrides);
+  const subscriptions = occs.reduce((sum, o) => sum + o.amount, 0);
 
   const total =
     accountsTotal +
