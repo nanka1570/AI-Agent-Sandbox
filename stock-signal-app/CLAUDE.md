@@ -47,5 +47,5 @@
 
 ## 注意事項
 
-- 実装計画の詳細: `~/.claude/plans/cheerful-floating-pony.md`
+- 設計判断・シグナル仕様: `docs/design-decisions.md`、運用手順: `docs/maintenance.md`（人間向けドキュメント。仕様変更時はここも更新する）
 - スペック駆動開発の基本ルールは `~/.claude/CLAUDE.md`（グローバル設定）を参照
