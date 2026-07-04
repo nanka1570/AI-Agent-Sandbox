@@ -1,0 +1,49 @@
+// Prisma スキーマ定義
+// 米国テック株 売買シグナルアプリ（stock-signal-app）のデータモデル
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 銘柄マスタ（NASDAQ-100 の静的リストから投入）
+model Stock {
+  ticker      String       @id
+  name        String
+  sector      String // セクターフィルタ用
+  prices      DailyPrice[]
+  fundamental Fundamental?
+}
+
+// 日足株価（yahoo-finance2 chart() のキャッシュ）
+model DailyPrice {
+  ticker   String
+  date     DateTime // UTC 00:00 に正規化して保存
+  open     Float
+  high     Float
+  low      Float
+  close    Float
+  adjClose Float // 指標計算・チャート表示はすべてこちらを使う（株式分割対応）
+  volume   Float // BigInt は JSON シリアライズ不可のため Float
+
+  stock Stock @relation(fields: [ticker], references: [ticker], onDelete: Cascade)
+
+  @@id([ticker, date])
+}
+
+// ファンダメンタルズ（現在値のみ・24時間キャッシュ）
+model Fundamental {
+  ticker        String   @id
+  per           Float? // 実績 PER（trailing）
+  forwardPer    Float? // 予想 PER
+  peg           Float?
+  revenueGrowth Float? // 収益成長率
+  profitMargin  Float? // 利益率
+  fetchedAt     DateTime
+
+  stock Stock @relation(fields: [ticker], references: [ticker], onDelete: Cascade)
+}
