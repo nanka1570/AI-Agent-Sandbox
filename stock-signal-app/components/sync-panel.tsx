@@ -40,19 +40,19 @@ export function SyncPanel({ tickers }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {running && (
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-600 dark:text-gray-300">
           同期中… {done}/{tickers.length}
         </span>
       )}
       {!running && failed.length > 0 && (
-        <span className="text-sm text-red-600">
+        <span className="text-sm text-red-600 dark:text-red-400">
           失敗: {failed.join(", ")}
         </span>
       )}
       {!running && failed.length > 0 && (
         <button
           onClick={() => sync(failed)}
-          className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+          className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
         >
           失敗分を再実行
         </button>

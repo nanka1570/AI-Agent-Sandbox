@@ -42,7 +42,7 @@ export function DashboardTable({ summaries }: Props) {
           aria-label="セクターで絞り込み"
           value={sector}
           onChange={(e) => setSector(e.target.value)}
-          className="rounded-md border bg-white px-2 py-1.5"
+          className="rounded-md border bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-800"
         >
           <option value="all">全セクター</option>
           {SECTORS.map((s) => (
@@ -55,7 +55,7 @@ export function DashboardTable({ summaries }: Props) {
           aria-label="シグナルで絞り込み"
           value={signalFilter}
           onChange={(e) => setSignalFilter(e.target.value as SignalFilter)}
-          className="rounded-md border bg-white px-2 py-1.5"
+          className="rounded-md border bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-800"
         >
           <option value="all">全シグナル</option>
           <option value="buy">買いシグナルあり</option>
@@ -65,17 +65,17 @@ export function DashboardTable({ summaries }: Props) {
           aria-label="並び順"
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="rounded-md border bg-white px-2 py-1.5"
+          className="rounded-md border bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-800"
         >
           <option value="ticker">ティッカー順</option>
           <option value="score">ファンダスコア順</option>
         </select>
-        <span className="text-gray-500">{rows.length} 銘柄</span>
+        <span className="text-gray-500 dark:text-gray-400">{rows.length} 銘柄</span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div className="overflow-x-auto rounded-lg border bg-white dark:border-gray-700 dark:bg-gray-900">
         <table className="w-full text-sm">
-          <thead className="border-b bg-gray-50 text-left text-xs text-gray-600">
+          <thead className="border-b bg-gray-50 text-left text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
             <tr>
               <th className="px-3 py-2">ティッカー</th>
               <th className="px-3 py-2">銘柄名</th>
@@ -88,17 +88,20 @@ export function DashboardTable({ summaries }: Props) {
           </thead>
           <tbody>
             {rows.map((s) => (
-              <tr key={s.ticker} className="border-b last:border-b-0 hover:bg-gray-50">
+              <tr
+                key={s.ticker}
+                className="border-b last:border-b-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
+              >
                 <td className="px-3 py-2 font-mono font-medium">
                   <Link
                     href={`/stocks/${s.ticker}`}
-                    className="text-blue-700 hover:underline"
+                    className="text-blue-700 hover:underline dark:text-blue-400"
                   >
                     {s.ticker}
                   </Link>
                 </td>
                 <td className="px-3 py-2">{s.name}</td>
-                <td className="px-3 py-2 text-gray-600">{s.sector}</td>
+                <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{s.sector}</td>
                 <td
                   className="px-3 py-2 text-right font-mono"
                   title={s.latestDate ? `${s.latestDate} 時点` : undefined}
@@ -111,7 +114,7 @@ export function DashboardTable({ summaries }: Props) {
                   {s.hasEnoughData ? (
                     <SignalBadge signal={s.smaSignal} />
                   ) : (
-                    <span className="text-xs text-gray-400">データ不足</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">データ不足</span>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -131,12 +134,12 @@ export function DashboardTable({ summaries }: Props) {
 
 function SignalBadge({ signal }: { signal: SerializedSignal | null }) {
   if (!signal) {
-    return <span className="text-xs text-gray-400">中立</span>;
+    return <span className="text-xs text-gray-400 dark:text-gray-500">中立</span>;
   }
   const style =
     signal.type === "buy"
-      ? "bg-green-100 text-green-800"
-      : "bg-red-100 text-red-800";
+      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
   return (
     <span
       title={`${signal.date}: ${signal.reason}`}

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-/* 本アプリはライトテーマ固定（白背景カードで設計しているため、
-   ブラウザがダークモードでも配色を変えない）。
-   色は layout.tsx / 各コンポーネントの Tailwind クラスで指定する */
+/* ブラウザの設定（ライト/ダーク）に追従する。
+   色は各コンポーネントの Tailwind クラスで指定し、
+   ダークモードの配色は dark: 変種で定義する */
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 }
 
 @theme inline {

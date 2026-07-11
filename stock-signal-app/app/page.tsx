@@ -16,7 +16,7 @@ export default async function DashboardPage() {
         <SyncPanel tickers={tickers} />
       </div>
       {summaries.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
+        <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
           データがまだありません。「データ更新」を押して株価データを取得してください（初回は数分かかります）。
         </div>
       ) : (

@@ -29,18 +29,18 @@ export default function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
-        <header className="border-b bg-white">
+      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+        <header className="border-b bg-white dark:border-gray-800 dark:bg-gray-900">
           <nav className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
             <Link href="/" className="text-lg font-bold">
               Stock Signal
             </Link>
-            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
+            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
               ダッシュボード
             </Link>
             <Link
               href="/backtest"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
             >
               バックテスト
             </Link>
@@ -49,8 +49,8 @@ export default function RootLayout({
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
           {children}
         </main>
-        <footer className="border-t bg-white">
-          <p className="mx-auto max-w-6xl px-4 py-3 text-xs text-gray-500">
+        <footer className="border-t bg-white dark:border-gray-800 dark:bg-gray-900">
+          <p className="mx-auto max-w-6xl px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
             本アプリは学習・分析用ツールです。表示されるシグナルは過去データに基づく参考情報であり、投資判断はご自身の責任で行ってください。
           </p>
         </footer>
