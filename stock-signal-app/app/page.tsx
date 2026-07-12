@@ -1,6 +1,6 @@
 import { DashboardTable } from "@/components/dashboard-table";
 import { SyncPanel } from "@/components/sync-panel";
-import { BENCHMARK, NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { ALL_STOCKS, BENCHMARK } from "@/lib/constants/nasdaq100";
 import { getVix, VIX_PANIC_LEVEL } from "@/lib/data/market";
 import { getStockSummaries } from "@/lib/queries";
 
@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic"; // 同期後に常に最新の DB を読
 export default async function DashboardPage() {
   const [summaries, vix] = await Promise.all([getStockSummaries(), getVix()]);
   // ベンチマーク（QQQ）も一緒に同期する（逆行高の判定に使う）
-  const tickers = [...NASDAQ100.map((s) => s.ticker), BENCHMARK.ticker];
+  const tickers = [...ALL_STOCKS.map((s) => s.ticker), BENCHMARK.ticker];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-baseline gap-4">
-          <h1 className="text-xl font-bold">NASDAQ-100 シグナル一覧</h1>
+          <h1 className="text-xl font-bold">米国テック株シグナル一覧</h1>
           {vix != null && (
             <span
               className={`text-sm font-mono ${

@@ -1,6 +1,6 @@
 import { subYears } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { BENCHMARK, NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { ALL_STOCKS, BENCHMARK } from "@/lib/constants/nasdaq100";
 import { fetchDailyPrices } from "./yahoo";
 
 export interface SyncResult {
@@ -14,9 +14,9 @@ export async function syncStock(ticker: string): Promise<SyncResult> {
   const info =
     ticker === BENCHMARK.ticker
       ? BENCHMARK
-      : NASDAQ100.find((s) => s.ticker === ticker);
+      : ALL_STOCKS.find((s) => s.ticker === ticker);
   if (!info) {
-    throw new Error(`NASDAQ-100 に含まれない銘柄です: ${ticker}`);
+    throw new Error(`分析対象に含まれない銘柄です: ${ticker}`);
   }
 
   await prisma.stock.upsert({

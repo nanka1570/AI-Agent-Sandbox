@@ -8,7 +8,7 @@ test("ダッシュボードに銘柄一覧・タイプ分類・逆行高が表�
 }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "NASDAQ-100 シグナル一覧" })
+    page.getByRole("heading", { name: "米国テック株シグナル一覧" })
   ).toBeVisible();
 
   // シード済みの 2 銘柄が表示される（QQQ はベンチマークなので一覧に出ない）

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { ALL_STOCKS } from "@/lib/constants/nasdaq100";
 import type { BacktestResult } from "@/lib/backtest/run";
 
 // API から返る JSON は Date が文字列になる
@@ -71,7 +71,7 @@ export default function BacktestPage() {
             onChange={(e) => setTicker(e.target.value)}
             className="rounded-md border px-2 py-1.5 font-mono dark:border-gray-600 dark:bg-gray-800"
           >
-            {NASDAQ100.map((s) => (
+            {ALL_STOCKS.map((s) => (
               <option key={s.ticker} value={s.ticker}>
                 {s.ticker} — {s.name}
               </option>

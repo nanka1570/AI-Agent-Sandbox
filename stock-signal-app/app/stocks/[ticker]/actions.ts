@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { BENCHMARK, NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { ALL_STOCKS, BENCHMARK } from "@/lib/constants/nasdaq100";
 import { prisma } from "@/lib/prisma";
 
 const MAX_MEMO_LENGTH = 4000;
@@ -19,7 +19,7 @@ export async function saveMemo(
 ): Promise<SaveMemoResult> {
   const upper = ticker.toUpperCase();
   const known =
-    upper === BENCHMARK.ticker || NASDAQ100.some((s) => s.ticker === upper);
+    upper === BENCHMARK.ticker || ALL_STOCKS.some((s) => s.ticker === upper);
   if (!known) {
     return { ok: false, error: `未知の銘柄です: ${ticker}` };
   }

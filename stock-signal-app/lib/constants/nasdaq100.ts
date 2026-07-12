@@ -30,6 +30,27 @@ export const BENCHMARK: StockInfo = {
   sector: "ベンチマーク",
 };
 
+// NASDAQ-100 に含まれない主要テック銘柄（NYSE 上場・ADR 含む）
+// 更新手順は NASDAQ100 と同じ（docs/maintenance.md 参照）
+export const EXTRA_TECH: StockInfo[] = [
+  { ticker: "ORCL", name: "Oracle", sector: "情報技術" },
+  { ticker: "CRM", name: "Salesforce", sector: "情報技術" },
+  { ticker: "IBM", name: "IBM", sector: "情報技術" },
+  { ticker: "NOW", name: "ServiceNow", sector: "情報技術" },
+  { ticker: "TSM", name: "TSMC (ADR)", sector: "情報技術" },
+  { ticker: "SAP", name: "SAP (ADR)", sector: "情報技術" },
+  { ticker: "ACN", name: "Accenture", sector: "情報技術" },
+  { ticker: "ANET", name: "Arista Networks", sector: "情報技術" },
+  { ticker: "DELL", name: "Dell Technologies", sector: "情報技術" },
+  { ticker: "SNOW", name: "Snowflake", sector: "情報技術" },
+  { ticker: "NET", name: "Cloudflare", sector: "情報技術" },
+  { ticker: "MDB", name: "MongoDB", sector: "情報技術" },
+  { ticker: "SMCI", name: "Super Micro Computer", sector: "情報技術" },
+  { ticker: "UBER", name: "Uber Technologies", sector: "資本財・サービス" },
+  { ticker: "SPOT", name: "Spotify (ADR)", sector: "コミュニケーション・サービス" },
+  { ticker: "COIN", name: "Coinbase", sector: "金融" },
+];
+
 export const NASDAQ100: StockInfo[] = [
   // 情報技術
   { ticker: "NVDA", name: "NVIDIA", sector: "情報技術" },
@@ -144,3 +165,6 @@ export const NASDAQ100: StockInfo[] = [
   // 不動産
   { ticker: "CSGP", name: "CoStar Group", sector: "不動産" },
 ];
+
+// 分析対象の全銘柄（NASDAQ-100 + 追加テック。ベンチマークは含まない）
+export const ALL_STOCKS: StockInfo[] = [...NASDAQ100, ...EXTRA_TECH];

@@ -1,5 +1,5 @@
 import { runBacktest } from "@/lib/backtest/run";
-import { NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { ALL_STOCKS } from "@/lib/constants/nasdaq100";
 import { prisma } from "@/lib/prisma";
 import {
   evaluatePriceCross,
@@ -31,9 +31,9 @@ export async function POST(req: Request) {
   if (!RULES.includes(rule as Rule)) {
     return Response.json({ error: `不明なルールです: ${rule}` }, { status: 400 });
   }
-  if (!NASDAQ100.some((s) => s.ticker === ticker.toUpperCase())) {
+  if (!ALL_STOCKS.some((s) => s.ticker === ticker.toUpperCase())) {
     return Response.json(
-      { error: `NASDAQ-100 に含まれない銘柄です: ${ticker}` },
+      { error: `分析対象に含まれない銘柄です: ${ticker}` },
       { status: 400 }
     );
   }
