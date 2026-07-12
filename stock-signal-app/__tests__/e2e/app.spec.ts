@@ -60,6 +60,12 @@ test("銘柄詳細にテクニカル状態・チャート・ファンダ判定�
   // 手動メモ欄（国別売上など API で取れない情報用）
   await expect(page.getByText(/手動メモ/)).toBeVisible();
   await expect(page.getByRole("button", { name: "メモを保存" })).toBeVisible();
+
+  // AI 下書きボタン: API キー未設定の環境では無効化 + 案内を表示
+  await expect(
+    page.getByRole("button", { name: "AI で下書きを生成" })
+  ).toBeDisabled();
+  await expect(page.getByText(/AI 下書きは未設定/)).toBeVisible();
 });
 
 test("バックテストを実行すると結果が表示される", async ({ page }) => {

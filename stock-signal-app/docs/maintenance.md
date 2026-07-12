@@ -76,6 +76,19 @@ sudo apt-get install libnspr4 libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 \
 
 Next.js 16 は同一ディレクトリで dev サーバーを二重起動できない。起動中の `npm run dev` を止めてから `npm run test:e2e` を実行する。
 
+## AI 下書き機能の有効化（課金開始時）
+
+銘柄詳細ページの「AI で下書きを生成」（SEC の年次報告書から国別売上・事業構成を抽出）は、Anthropic API キーを設定すると使える。未設定の間はボタンが無効化されるだけで、他の機能に影響はない。
+
+1. <https://platform.claude.com/> で API キーを取得（従量課金の設定が必要）
+2. `.env.example` を `.env.local` にコピーし、`ANTHROPIC_API_KEY=sk-ant-...` を設定
+3. dev サーバーを再起動
+
+- **コスト目安**: 既定モデル（claude-haiku-4-5）で 1 銘柄あたり約 1〜2 円。年次報告書は年 1 回しか変わらないため、実行は銘柄ごとに年数回で十分
+- **モデル変更**: `.env.local` の `AI_MODEL` で差し替え（精度重視なら `claude-sonnet-5` 等。コスト増）
+- **注意**: 生成されるのは「下書き」。出典 URL が末尾に付くので、保存前に原文と照合すること
+- **SEC EDGAR 側の障害時**: `lib/ai/edgar.ts` が取得部。SEC はレート制限（10 req/秒）があるが手動実行なら影響なし
+
 ### 型エラー「Cannot find module '@/generated/prisma/client'」
 
 Prisma クライアントが未生成。`npx prisma generate` を実行する（`npm install` の postinstall でも実行される）。

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { generateMemoDraftFromFiling, isAiConfigured } from "@/lib/ai/extract";
 import { ALL_STOCKS, BENCHMARK } from "@/lib/constants/nasdaq100";
 import { prisma } from "@/lib/prisma";
 
@@ -40,4 +41,37 @@ export async function saveMemo(
   }
   revalidatePath(`/stocks/${upper}`);
   return { ok: true };
+}
+
+export interface GenerateDraftResult {
+  ok: boolean;
+  draft?: string;
+  error?: string;
+}
+
+// SEC EDGAR の年次報告書から AI（Claude）で国別売上・事業構成を抽出し、
+// メモ欄の下書きを生成する。API キー未設定時はエラーメッセージを返す
+export async function generateMemoDraft(
+  ticker: string
+): Promise<GenerateDraftResult> {
+  const upper = ticker.toUpperCase();
+  if (!ALL_STOCKS.some((s) => s.ticker === upper)) {
+    return { ok: false, error: `未知の銘柄です: ${ticker}` };
+  }
+  if (!isAiConfigured()) {
+    return {
+      ok: false,
+      error:
+        "AI 下書きは未設定です。.env.local に ANTHROPIC_API_KEY を設定してください",
+    };
+  }
+  try {
+    const result = await generateMemoDraftFromFiling(upper);
+    return { ok: true, draft: result.draft };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "下書きの生成に失敗しました",
+    };
+  }
 }

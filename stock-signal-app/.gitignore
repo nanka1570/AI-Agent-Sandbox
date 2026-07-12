@@ -50,3 +50,6 @@ prisma/test.db*
 # Playwright
 test-results/
 playwright-report/
+
+# .env.example はテンプレートなのでコミット対象
+!.env.example

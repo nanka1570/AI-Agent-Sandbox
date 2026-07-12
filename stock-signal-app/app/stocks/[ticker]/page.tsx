@@ -16,6 +16,7 @@ import {
   type Signal,
 } from "@/lib/signals/evaluate";
 import { KAIRI_WARN_PCT } from "@/lib/signals/technical-state";
+import { isAiConfigured } from "@/lib/ai/extract";
 import { getStockDetail } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -251,7 +252,11 @@ export default async function StockDetailPage({
           国別売上（中国比率）や事業構成（装置販売 vs 保守サービス）は無料 API
           では取得できないため、10-K・決算資料で確認した内容をここに記録する。
         </p>
-        <MemoForm ticker={stock.ticker} initialMemo={stock.memo ?? ""} />
+        <MemoForm
+          ticker={stock.ticker}
+          initialMemo={stock.memo ?? ""}
+          aiEnabled={isAiConfigured()}
+        />
       </section>
     </div>
   );
