@@ -47,14 +47,14 @@ export function PriceChart({ data }: { data: ChartPoint[] }) {
               tick={{ fontSize: 11, fill: "currentColor" }}
               tickFormatter={(v: number) => `$${v}`}
             />
-            <Tooltip />
+            <Tooltip isAnimationActive={false} />
             <Legend />
-            <Line type="monotone" dataKey="adjClose" name="調整後終値" stroke="#3b82f6" dot={false} strokeWidth={1.5} />
-            <Line type="monotone" dataKey="sma5" name="SMA5" stroke="#22c55e" dot={false} strokeWidth={1} />
-            <Line type="monotone" dataKey="sma25" name="SMA25" stroke="#f59e0b" dot={false} strokeWidth={1} />
-            <Line type="monotone" dataKey="sma200" name="SMA200" stroke="#ef4444" dot={false} strokeWidth={1} />
-            <Line type="monotone" dataKey="bbUpper" name="+2σ" stroke="#94a3b8" dot={false} strokeWidth={1} strokeDasharray="4 3" />
-            <Line type="monotone" dataKey="bbLower" name="-2σ" stroke="#94a3b8" dot={false} strokeWidth={1} strokeDasharray="4 3" />
+            <Line type="monotone" dataKey="adjClose" name="調整後終値" stroke="#3b82f6" dot={false} isAnimationActive={false} strokeWidth={1.5} />
+            <Line type="monotone" dataKey="sma5" name="SMA5" stroke="#22c55e" dot={false} isAnimationActive={false} strokeWidth={1} />
+            <Line type="monotone" dataKey="sma25" name="SMA25" stroke="#f59e0b" dot={false} isAnimationActive={false} strokeWidth={1} />
+            <Line type="monotone" dataKey="sma200" name="SMA200" stroke="#ef4444" dot={false} isAnimationActive={false} strokeWidth={1} />
+            <Line type="monotone" dataKey="bbUpper" name="+2σ" stroke="#94a3b8" dot={false} isAnimationActive={false} strokeWidth={1} strokeDasharray="4 3" />
+            <Line type="monotone" dataKey="bbLower" name="-2σ" stroke="#94a3b8" dot={false} isAnimationActive={false} strokeWidth={1} strokeDasharray="4 3" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -75,7 +75,7 @@ export function PriceChart({ data }: { data: ChartPoint[] }) {
                 v >= 1e6 ? `${(v / 1e6).toFixed(0)}M` : `${v}`
               }
             />
-            <Tooltip />
+            <Tooltip isAnimationActive={false} />
             <Bar dataKey="volume" name="出来高" fill="#64748b" isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
@@ -95,8 +95,8 @@ export function PriceChart({ data }: { data: ChartPoint[] }) {
             />
             <XAxis dataKey="date" minTickGap={60} tick={{ fontSize: 11, fill: "currentColor" }} />
             <YAxis domain={[0, 100]} ticks={[0, 30, 50, 70, 100]} tick={{ fontSize: 11, fill: "currentColor" }} />
-            <Tooltip />
-            <Line type="monotone" dataKey="rsi" name="RSI" stroke="#8b5cf6" dot={false} strokeWidth={1.5} />
+            <Tooltip isAnimationActive={false} />
+            <Line type="monotone" dataKey="rsi" name="RSI" stroke="#8b5cf6" dot={false} isAnimationActive={false} strokeWidth={1.5} />
           </LineChart>
         </ResponsiveContainer>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">

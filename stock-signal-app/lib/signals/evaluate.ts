@@ -25,6 +25,8 @@ export const SMA_LONG_PERIOD = 200;
 export const MIN_DATA_POINTS = SMA_LONG_PERIOD + 1;
 // 短期シグナル（5/25 クロス）に必要な最低データ数
 export const MIN_SHORT_DATA_POINTS = SMA_MID_PERIOD + 1;
+// 「現在シグナル」= 直近この営業日数以内に発生したシグナル（ダッシュボード・詳細で共通）
+export const RECENT_TRADING_DAYS = 5;
 
 // ゴールデンクロス（5日線が25日線を上抜け）→ 買い
 // デッドクロス（下抜け）→ 売り

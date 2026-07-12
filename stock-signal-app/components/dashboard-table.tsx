@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Badge, SignalTypeBadge } from "@/components/badge";
 import { SECTORS } from "@/lib/constants/nasdaq100";
 import type { SerializedSignal, StockSummary } from "@/lib/queries";
 
@@ -164,7 +165,7 @@ export function DashboardTable({ summaries }: Props) {
                     <span className="inline-flex items-center gap-1">
                       <SignalBadge signal={s.shortSignal} />
                       {s.speculativeBuy && (
-                        <Warn label="投機" title="テクニカル買い × 業績赤字（Intel 型）= 投機と自覚する" />
+                        <Badge tone="orange" title="テクニカル買い × 業績赤字（Intel 型）= 投機と自覚する">投機</Badge>
                       )}
                     </span>
                   ) : (
@@ -187,7 +188,7 @@ export function DashboardTable({ summaries }: Props) {
                         {s.longTrend === "up" ? "上昇" : "下落"}
                       </span>
                       {s.perfectOrder && (
-                        <Tag tone="green" label="PO" title="パーフェクトオーダー: 全MAが上向きに整列（強いトレンド継続）" />
+                        <Badge tone="green" title="パーフェクトオーダー: 全MAが上向きに整列（強いトレンド継続）">PO</Badge>
                       )}
                     </span>
                   )}
@@ -195,13 +196,13 @@ export function DashboardTable({ summaries }: Props) {
                 <td className="px-3 py-2">
                   <span className="inline-flex flex-wrap items-center gap-1">
                     {s.volumeSurgeBullish && (
-                      <Tag tone="green" label="急増+陽線" title="出来高急増 + 大陽線 = 強い買いのサイン" />
+                      <Badge tone="green" title="出来高急増 + 大陽線 = 強い買いのサイン">急増+陽線</Badge>
                     )}
                     {s.volumeFadeAtHigh && (
-                      <Warn label="高値圏で減" title="高値圏で出来高減少 = 買いの勢い低下（利確検討パターン）" />
+                      <Badge tone="orange" title="高値圏で出来高減少 = 買いの勢い低下（利確検討パターン）">高値圏で減</Badge>
                     )}
                     {s.lowVolumeRally && (
-                      <Warn label="薄商い上昇" title="出来高を伴わない上昇 = 信頼しない" />
+                      <Badge tone="orange" title="出来高を伴わない上昇 = 信頼しない">薄商い上昇</Badge>
                     )}
                     {!s.volumeSurgeBullish && !s.volumeFadeAtHigh && !s.lowVolumeRally && (
                       <Muted>—</Muted>
@@ -221,13 +222,13 @@ export function DashboardTable({ summaries }: Props) {
                 <td className="px-3 py-2">
                   <span className="inline-flex flex-wrap items-center gap-1">
                     {s.bbPosition === "lower" && (
-                      <Tag tone="green" label="BB下限" title="ボリンジャーバンド-2σタッチ = 買い検討" />
+                      <Badge tone="green" title="ボリンジャーバンド-2σタッチ = 買い検討">BB下限</Badge>
                     )}
                     {s.bbPosition === "upper" && (
-                      <Warn label="BB上限" title="+2σタッチ = 買われすぎ警戒（ただし上限張り付きは強さの証明でもある）" />
+                      <Badge tone="orange" title="+2σタッチ = 買われすぎ警戒（ただし上限張り付きは強さの証明でもある）">BB上限</Badge>
                     )}
                     {s.counterTrendUp && (
-                      <Tag tone="green" label="逆行高" title="指数が下落した日に上昇 = 相対的に強い" />
+                      <Badge tone="green" title="指数が下落した日に上昇 = 相対的に強い">逆行高</Badge>
                     )}
                     {s.bbPosition == null && !s.counterTrendUp && <Muted>—</Muted>}
                   </span>
@@ -265,51 +266,11 @@ function SignalBadge({ signal }: { signal: SerializedSignal | null }) {
   if (!signal) {
     return <Muted>中立</Muted>;
   }
-  const style =
-    signal.type === "buy"
-      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
   return (
-    <span
+    <SignalTypeBadge
+      type={signal.type}
       title={`${signal.date}: ${signal.reason}`}
-      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${style}`}
-    >
-      {signal.type === "buy" ? "買い" : "売り"}
-    </span>
-  );
-}
-
-function Tag({
-  tone,
-  label,
-  title,
-}: {
-  tone: "green" | "red";
-  label: string;
-  title: string;
-}) {
-  const style =
-    tone === "green"
-      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-  return (
-    <span
-      title={title}
-      className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${style}`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function Warn({ label, title }: { label: string; title: string }) {
-  return (
-    <span
-      title={title}
-      className="inline-block rounded bg-orange-100 px-1.5 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-    >
-      {label}
-    </span>
+    />
   );
 }
 

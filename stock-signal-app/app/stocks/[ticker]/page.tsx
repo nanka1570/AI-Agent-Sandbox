@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge, SignalTypeBadge } from "@/components/badge";
 import { MemoForm } from "@/components/memo-form";
 import { PriceChart, type ChartPoint } from "@/components/price-chart";
 import { bollinger } from "@/lib/indicators/bollinger";
@@ -7,6 +8,7 @@ import { rsi } from "@/lib/indicators/rsi";
 import { sma } from "@/lib/indicators/sma";
 import { parseSurprises } from "@/lib/fundamentals/score";
 import {
+  RECENT_TRADING_DAYS,
   SMA_LONG_PERIOD,
   SMA_MID_PERIOD,
   SMA_SHORT_PERIOD,
@@ -59,7 +61,9 @@ export default async function StockDetailPage({
   );
   const recentSignals = [...allSignals].reverse().slice(0, 10);
   const cutoff =
-    bars.length >= 5 ? bars[bars.length - 5].date : new Date(0);
+    bars.length >= RECENT_TRADING_DAYS
+      ? bars[bars.length - RECENT_TRADING_DAYS].date
+      : new Date(0);
   const current = recentSignal(
     allSignals.filter((s) => s.rule !== "rsi"),
     cutoff
@@ -260,20 +264,14 @@ function TechnicalPanel({
 }) {
   if (!st) return null;
   const ma = (label: string, above: boolean | null) => (
-    <span
+    <Badge
       key={label}
-      className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-        above == null
-          ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
-          : above
-            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-      }`}
+      tone={above == null ? "gray" : above ? "green" : "red"}
       title={above == null ? "データ不足" : above ? `価格が${label}の上` : `価格が${label}の下`}
     >
       {label}
       {above == null ? "—" : above ? "↑" : "↓"}
-    </span>
+    </Badge>
   );
 
   return (
@@ -304,9 +302,7 @@ function TechnicalPanel({
           )}
         </span>
         {st.perfectOrder && (
-          <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-            パーフェクトオーダー（強いトレンド継続）
-          </span>
+          <Badge tone="green">パーフェクトオーダー（強いトレンド継続）</Badge>
         )}
         <span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -326,37 +322,25 @@ function TechnicalPanel({
           )}
         </span>
         {st.bbPosition === "upper" && (
-          <span
-            className="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+          <Badge
+            tone="orange"
             title="買われすぎ警戒。ただし上限張り付きの上昇は強さの証明でもある（両面で見る）"
           >
             BB +2σ タッチ
-          </span>
+          </Badge>
         )}
         {st.bbPosition === "lower" && (
-          <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-            BB -2σ タッチ（買い検討）
-          </span>
+          <Badge tone="green">BB -2σ タッチ（買い検討）</Badge>
         )}
-        {st.volumeSurgeBullish && (
-          <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-            出来高急増 + 大陽線
-          </span>
-        )}
+        {st.volumeSurgeBullish && <Badge tone="green">出来高急増 + 大陽線</Badge>}
         {st.volumeFadeAtHigh && (
-          <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-            高値圏で出来高減少（利確検討）
-          </span>
+          <Badge tone="orange">高値圏で出来高減少（利確検討）</Badge>
         )}
         {st.lowVolumeRally && (
-          <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-            出来高を伴わない上昇（信頼しない）
-          </span>
+          <Badge tone="orange">出来高を伴わない上昇（信頼しない）</Badge>
         )}
         {st.counterTrendUp && (
-          <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-            逆行高（地合いが悪い日に上昇 = 相対的に強い）
-          </span>
+          <Badge tone="green">逆行高（地合いが悪い日に上昇 = 相対的に強い）</Badge>
         )}
       </div>
       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -367,15 +351,9 @@ function TechnicalPanel({
 }
 
 function SignalLabel({ signal }: { signal: Signal }) {
-  const style =
-    signal.type === "buy"
-      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
   return (
-    <span
-      className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${style}`}
-    >
-      {signal.type === "buy" ? "買い" : "売り"}
+    <span className="shrink-0">
+      <SignalTypeBadge type={signal.type} />
     </span>
   );
 }

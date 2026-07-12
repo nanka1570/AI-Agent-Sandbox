@@ -11,6 +11,7 @@ import {
   evaluateSmaCross,
   MIN_DATA_POINTS,
   MIN_SHORT_DATA_POINTS,
+  RECENT_TRADING_DAYS,
   recentSignal,
   type Signal,
 } from "@/lib/signals/evaluate";
@@ -20,8 +21,6 @@ import {
   type TechnicalState,
 } from "@/lib/signals/technical-state";
 
-// 「現在シグナル」= 直近 5 営業日以内に発生したシグナル
-const RECENT_TRADING_DAYS = 5;
 // ダッシュボードのシグナル・状態判定に読む日数（SMA200 + 高値圏判定の 250 日に足りる量）
 const DASHBOARD_LOOKBACK = 320;
 
