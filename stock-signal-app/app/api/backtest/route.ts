@@ -2,10 +2,14 @@ import { runBacktest } from "@/lib/backtest/run";
 import { NASDAQ100 } from "@/lib/constants/nasdaq100";
 import { prisma } from "@/lib/prisma";
 import {
+  evaluatePriceCross,
   evaluateRsi,
   evaluateSmaCross,
-  MIN_DATA_POINTS,
+  MIN_SHORT_DATA_POINTS,
 } from "@/lib/signals/evaluate";
+
+const RULES = ["sma-cross", "price-cross", "rsi"] as const;
+type Rule = (typeof RULES)[number];
 
 interface BacktestRequest {
   ticker?: string;
@@ -24,7 +28,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (rule !== "sma-cross" && rule !== "rsi") {
+  if (!RULES.includes(rule as Rule)) {
     return Response.json({ error: `不明なルールです: ${rule}` }, { status: 400 });
   }
   if (!NASDAQ100.some((s) => s.ticker === ticker.toUpperCase())) {
@@ -46,13 +50,7 @@ export async function POST(req: Request) {
     select: { date: true, adjClose: true },
   });
 
-  if (rule === "sma-cross" && prices.length < MIN_DATA_POINTS) {
-    return Response.json(
-      { error: "SMA クロスの判定にはデータが不足しています（200 営業日以上必要）" },
-      { status: 422 }
-    );
-  }
-  if (prices.length < 20) {
+  if (prices.length < MIN_SHORT_DATA_POINTS) {
     return Response.json(
       { error: "価格データが不足しています。先にダッシュボードでデータ更新を実行してください" },
       { status: 422 }
@@ -60,7 +58,11 @@ export async function POST(req: Request) {
   }
 
   const signals =
-    rule === "sma-cross" ? evaluateSmaCross(prices) : evaluateRsi(prices);
+    rule === "sma-cross"
+      ? evaluateSmaCross(prices) // 5日線が25日線をクロス
+      : rule === "price-cross"
+        ? evaluatePriceCross(prices) // 価格が25日線をクロス
+        : evaluateRsi(prices);
 
   try {
     const result = runBacktest(prices, signals, { from: fromDate, to: toDate });

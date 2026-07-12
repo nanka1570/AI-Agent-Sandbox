@@ -1,18 +1,35 @@
 import { DashboardTable } from "@/components/dashboard-table";
 import { SyncPanel } from "@/components/sync-panel";
-import { NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { BENCHMARK, NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { getVix, VIX_PANIC_LEVEL } from "@/lib/data/market";
 import { getStockSummaries } from "@/lib/queries";
 
 export const dynamic = "force-dynamic"; // 同期後に常に最新の DB を読む
 
 export default async function DashboardPage() {
-  const summaries = await getStockSummaries();
-  const tickers = NASDAQ100.map((s) => s.ticker);
+  const [summaries, vix] = await Promise.all([getStockSummaries(), getVix()]);
+  // ベンチマーク（QQQ）も一緒に同期する（逆行高の判定に使う）
+  const tickers = [...NASDAQ100.map((s) => s.ticker), BENCHMARK.ticker];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">NASDAQ-100 シグナル一覧</h1>
+        <div className="flex items-baseline gap-4">
+          <h1 className="text-xl font-bold">NASDAQ-100 シグナル一覧</h1>
+          {vix != null && (
+            <span
+              className={`text-sm font-mono ${
+                vix >= VIX_PANIC_LEVEL
+                  ? "font-bold text-red-600 dark:text-red-400"
+                  : "text-gray-600 dark:text-gray-400"
+              }`}
+              title="VIX 30 以上 = 市場パニック（かつ長期目線では買い場になりうる）"
+            >
+              VIX {vix.toFixed(1)}
+              {vix >= VIX_PANIC_LEVEL && "（パニック水準）"}
+            </span>
+          )}
+        </div>
         <SyncPanel tickers={tickers} />
       </div>
       {summaries.length === 0 ? (

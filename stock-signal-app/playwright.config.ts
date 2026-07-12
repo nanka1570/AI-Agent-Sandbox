@@ -11,7 +11,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- -p 3100",
     url: "http://localhost:3100",
-    env: { DATABASE_FILE: "prisma/test.db" },
+    env: { DATABASE_FILE: "prisma/test.db", DISABLE_VIX: "1" },
     reuseExistingServer: false,
     timeout: 60_000,
   },

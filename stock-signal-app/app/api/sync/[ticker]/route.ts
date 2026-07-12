@@ -9,8 +9,11 @@ export async function POST(
 ) {
   const { ticker } = await ctx.params;
   try {
-    const result = await syncStock(ticker.toUpperCase());
-    await getFundamental(ticker.toUpperCase());
+    const upper = ticker.toUpperCase();
+    const result = await syncStock(upper);
+    if (upper !== "QQQ") {
+      await getFundamental(upper); // ベンチマークはファンダ不要
+    }
     return Response.json(result);
   } catch (error) {
     const message =

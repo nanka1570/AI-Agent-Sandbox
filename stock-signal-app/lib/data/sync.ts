@@ -1,6 +1,6 @@
 import { subYears } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { NASDAQ100 } from "@/lib/constants/nasdaq100";
+import { BENCHMARK, NASDAQ100 } from "@/lib/constants/nasdaq100";
 import { fetchDailyPrices } from "./yahoo";
 
 export interface SyncResult {
@@ -11,7 +11,10 @@ export interface SyncResult {
 // 1 銘柄分の日足を差分同期する（初回は過去5年分）
 // 既存最新日は途中値の可能性があるため、その日を含めて取り直す。何度実行しても安全
 export async function syncStock(ticker: string): Promise<SyncResult> {
-  const info = NASDAQ100.find((s) => s.ticker === ticker);
+  const info =
+    ticker === BENCHMARK.ticker
+      ? BENCHMARK
+      : NASDAQ100.find((s) => s.ticker === ticker);
   if (!info) {
     throw new Error(`NASDAQ-100 に含まれない銘柄です: ${ticker}`);
   }

@@ -23,7 +23,9 @@ function defaultFrom(): string {
 
 export default function BacktestPage() {
   const [ticker, setTicker] = useState("AAPL");
-  const [rule, setRule] = useState<"sma-cross" | "rsi">("sma-cross");
+  const [rule, setRule] = useState<"sma-cross" | "price-cross" | "rsi">(
+    "sma-cross"
+  );
   const [from, setFrom] = useState(defaultFrom());
   const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,8 @@ export default function BacktestPage() {
             onChange={(e) => setRule(e.target.value as typeof rule)}
             className="rounded-md border px-2 py-1.5 dark:border-gray-600 dark:bg-gray-800"
           >
-            <option value="sma-cross">ゴールデンクロス（SMA50/200）</option>
+            <option value="sma-cross">ゴールデンクロス（5日/25日線）</option>
+            <option value="price-cross">価格×25日線クロス</option>
             <option value="rsi">RSI（30 買い / 70 売り）</option>
           </select>
         </label>

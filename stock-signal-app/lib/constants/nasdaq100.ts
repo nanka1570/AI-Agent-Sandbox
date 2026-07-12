@@ -22,6 +22,14 @@ export const SECTORS = [
   "不動産",
 ] as const;
 
+// 逆行高（地合いが悪い日の上昇）判定用のベンチマーク
+// NASDAQ-100 連動 ETF。ダッシュボードの銘柄一覧には表示しない
+export const BENCHMARK: StockInfo = {
+  ticker: "QQQ",
+  name: "Invesco QQQ（ベンチマーク）",
+  sector: "ベンチマーク",
+};
+
 export const NASDAQ100: StockInfo[] = [
   // 情報技術
   { ticker: "NVDA", name: "NVIDIA", sector: "情報技術" },

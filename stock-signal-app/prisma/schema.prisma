@@ -10,11 +10,12 @@ datasource db {
   provider = "sqlite"
 }
 
-// 銘柄マスタ（NASDAQ-100 の静的リストから投入）
+// 銘柄マスタ（NASDAQ-100 の静的リストから投入。QQQ はベンチマーク用）
 model Stock {
   ticker      String       @id
   name        String
   sector      String // セクターフィルタ用
+  memo        String? // 国別売上・事業構成など API で取れない情報の手動メモ
   prices      DailyPrice[]
   fundamental Fundamental?
 }
@@ -35,14 +36,36 @@ model DailyPrice {
   @@id([ticker, date])
 }
 
-// ファンダメンタルズ（現在値のみ・24時間キャッシュ）
+// ファンダメンタルズ（24時間キャッシュ）
+// 現在値 + fundamentalsTimeSeries 由来の年次推移フラグを保持する
 model Fundamental {
   ticker        String   @id
+  // 割安度
   per           Float? // 実績 PER（trailing）
   forwardPer    Float? // 予想 PER
+  pbr           Float? // PBR（priceToBook）
   peg           Float?
+  // 収益性
+  roe           Float? // ROE（0.20 = 20%）
+  operatingMargin Float? // 営業利益率
+  profitMargin  Float? // 純利益率
   revenueGrowth Float? // 収益成長率
-  profitMargin  Float? // 利益率
+  // 安全性
+  currentRatio  Float? // 流動比率（2.0 = 200%）
+  equityRatio   Float? // 自己資本比率（年次 BS の最新値）
+  debtToEquity  Float? // DE レシオ（1.0 = 1倍）
+  debtTrend     String? // 負債推移: "down" | "flat" | "up"
+  // キャッシュフロー
+  operatingCashflow Float?
+  freeCashflow  Float?
+  ocfTrend      String? // 営業CF推移: "up" | "flat" | "down"
+  fcfNegativeStreak Boolean? // 年次 FCF がマイナス継続（直近2年以上）
+  sharesTrend   String? // 発行済株式数: "down" | "flat" | "up"（up = 希薄化）
+  // 配当
+  dividendYield Float?
+  payoutRatio   Float? // 配当性向（1.0 = 100%）
+  // 決算サプライズ（直近4四半期、JSON: [{quarter, actual, estimate, surprisePct}]）
+  surprises     String?
   fetchedAt     DateTime
 
   stock Stock @relation(fields: [ticker], references: [ticker], onDelete: Cascade)

@@ -27,23 +27,41 @@ function utcDay(offsetFromToday: number): Date {
 }
 
 // 前半 250 日は 300 → 200 へ下降、後半 150 日は 200 → 400 へ上昇
-// （後半のどこかで SMA50 が SMA200 を上抜け、ゴールデンクロスが発生する）
+// （後半のどこかで 5 日線が 25 日線を上抜け、ゴールデンクロスが発生する）
 function syntheticPrice(i: number): number {
   if (i < 250) return 300 - (100 * i) / 249;
   return 200 + (200 * (i - 250)) / 149;
 }
 
+type FundamentalSeed = {
+  per: number | null;
+  forwardPer: number | null;
+  pbr: number | null;
+  peg: number | null;
+  roe: number | null;
+  operatingMargin: number | null;
+  profitMargin: number | null;
+  revenueGrowth: number | null;
+  currentRatio: number | null;
+  equityRatio: number | null;
+  debtToEquity: number | null;
+  debtTrend: string | null;
+  operatingCashflow: number | null;
+  freeCashflow: number | null;
+  ocfTrend: string | null;
+  fcfNegativeStreak: boolean | null;
+  sharesTrend: string | null;
+  dividendYield: number | null;
+  payoutRatio: number | null;
+  surprises: string | null;
+};
+
 async function seedStock(
   ticker: string,
   name: string,
   sector: string,
-  fundamental: {
-    per: number | null;
-    forwardPer: number | null;
-    peg: number | null;
-    revenueGrowth: number | null;
-    profitMargin: number | null;
-  }
+  fundamental: FundamentalSeed | null,
+  priceOf: (i: number) => number = syntheticPrice
 ) {
   await prisma.stock.upsert({
     where: { ticker },
@@ -53,7 +71,7 @@ async function seedStock(
   await prisma.dailyPrice.deleteMany({ where: { ticker } });
   await prisma.dailyPrice.createMany({
     data: Array.from({ length: DAYS }, (_, i) => {
-      const price = syntheticPrice(i);
+      const price = priceOf(i);
       return {
         ticker,
         date: utcDay(i - DAYS + 1),
@@ -66,29 +84,84 @@ async function seedStock(
       };
     }),
   });
-  await prisma.fundamental.upsert({
-    where: { ticker },
-    update: { ...fundamental, fetchedAt: new Date() },
-    create: { ticker, ...fundamental, fetchedAt: new Date() },
-  });
+  if (fundamental) {
+    await prisma.fundamental.upsert({
+      where: { ticker },
+      update: { ...fundamental, fetchedAt: new Date() },
+      create: { ticker, ...fundamental, fetchedAt: new Date() },
+    });
+  }
 }
 
+const surprisesJson = (pcts: number[]) =>
+  JSON.stringify(
+    pcts.map((p, i) => ({
+      quarter: `2026-0${i + 1}-01`,
+      actual: 1 + p,
+      estimate: 1,
+      surprisePct: p,
+    }))
+  );
+
 async function main() {
+  // AAPL: 高収益・高マージン → 「実績先行の王者型」に分類される
   await seedStock("AAPL", "Apple", "情報技術", {
     per: 30,
     forwardPer: 25,
+    pbr: 40,
     peg: 1.8,
-    revenueGrowth: 0.12,
+    roe: 0.35,
+    operatingMargin: 0.32,
     profitMargin: 0.25,
+    revenueGrowth: 0.12,
+    currentRatio: 1.0,
+    equityRatio: 0.2,
+    debtToEquity: 1.5,
+    debtTrend: "down",
+    operatingCashflow: 100e9,
+    freeCashflow: 90e9,
+    ocfTrend: "up",
+    fcfNegativeStreak: false,
+    sharesTrend: "down",
+    dividendYield: 0.005,
+    payoutRatio: 0.15,
+    surprises: surprisesJson([0.02, 0.01, 0.03, 0.02]),
   });
+
+  // NVDA: サプライズ大幅超過の継続 → 「V字回復型」に分類される
   await seedStock("NVDA", "NVIDIA", "情報技術", {
     per: 55,
     forwardPer: 48,
+    pbr: 30,
     peg: null,
+    roe: 0.9,
+    operatingMargin: 0.6,
+    profitMargin: 0.5,
     revenueGrowth: 0.6,
-    profitMargin: null,
+    currentRatio: 4.0,
+    equityRatio: 0.7,
+    debtToEquity: 0.2,
+    debtTrend: "down",
+    operatingCashflow: 60e9,
+    freeCashflow: 50e9,
+    ocfTrend: "up",
+    fcfNegativeStreak: false,
+    sharesTrend: "flat",
+    dividendYield: 0,
+    payoutRatio: null,
+    surprises: surprisesJson([0.1, 0.08, 0.12, 0.09]),
   });
-  console.log(`E2E シード完了: ${file} に 2 銘柄 × ${DAYS} 日分`);
+
+  // QQQ: 逆行高判定用ベンチマーク（最終日だけ下落させ、個別銘柄の逆行高を発生させる）
+  await seedStock(
+    "QQQ",
+    "Invesco QQQ（ベンチマーク）",
+    "ベンチマーク",
+    null,
+    (i) => (i === DAYS - 1 ? syntheticPrice(i) * 0.97 : syntheticPrice(i))
+  );
+
+  console.log(`E2E シード完了: ${file} に 3 銘柄 × ${DAYS} 日分`);
 }
 
 main()
