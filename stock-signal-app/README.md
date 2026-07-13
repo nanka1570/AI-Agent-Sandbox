@@ -76,6 +76,7 @@ docs/                 # 設計判断・運用手順
 
 - [docs/design-decisions.md](./docs/design-decisions.md) — 設計判断の理由とシグナル仕様（なぜ SQLite か、なぜ調整後終値か、など）
 - [docs/maintenance.md](./docs/maintenance.md) — 運用手順（銘柄リストの更新、DB リセット、yahoo-finance2 が壊れたときの対処）
+- [docs/textbook/](./docs/textbook/README.md) — **学習用教科書**（全9章）。このアプリと同じものを自力で作れるようになるための教材。演習駆動で、本リポジトリのコードを「見本（解答例）」として参照する
 
 ## よくあるトラブル
 
